@@ -1,56 +1,49 @@
 #' Validate and Get Paths
 #'
-#' @param folder Folder path to check
-#' @return A character vector of valid file paths
-#' @export
-
-## 12. validate_and_get_paths
-#' Validate and Get Paths
+#' Check if the folder exists and verify the presence of expected data files.
+#' Stops execution with informative errors if any file is missing.
 #'
-#' Check if the folder exists and return valid file paths
-#'
-#' @param folder A character string specifying the folder path
-#' @return A character vector of file paths
+#' @param folder A character string specifying the folder path containing the data files.
+#' @return A named list of valid file paths.
 #' @export
 validate_and_get_paths <- function(folder) {
-  # Clean up the folder path (replace backslashes with forward slashes)
-  # Note the double backslashes in the pattern for escaping the backslash character itself
+  # Normalize folder path by replacing backslashes with forward slashes
   folder <- gsub("\\\\", "/", folder)
-  
-  if (dir.exists(folder)) {
-  } else {
-    stop(paste0("The folder", folder, "does not exist."))  # Stop execution
+
+  # Check if folder exists
+  if (!dir.exists(folder)) {
+    stop(paste0("The folder '", folder, "' does not exist."))
   }
-  
-  # Create a named list of paths for easier iteration and return
+
+  # Define expected files with their relative paths inside the folder
   file_paths <- list(
-    mzmine_data = mzmine.data,
-    mzmine_annotations = mzmine.annotations,
-    canopus_data = canopus.data,
-    csi_data = csi.data,
-    zodiac_data = zodiac.data,
-    ms2query_data = ms2query.data,
-    cytoscape = cytoscape
+    mzmine_data = file.path(folder, "ms1-and-ms2.csv"),
+    mzmine_annotations = file.path(folder, "data_annotations.csv"),
+    canopus_data = file.path(folder, "canopus_structure_summary.tsv"),
+    csi_data = file.path(folder, "structure_identifications_top-100.tsv"),
+    zodiac_data = file.path(folder, "formula_identifications.tsv"),
+    ms2query_data = file.path(folder, "ms2query.csv"),
+    cytoscape = file.path(folder, "cytoscape.csv")
   )
-  
-  # Define specific error messages for each file
+
+  # Corresponding error messages for missing files
   error_messages <- list(
-    mzmine_data = "The file or folder is missing for mzmine data (ms1-and-ms2.csv).",
-    mzmine_annotations = "The file or folder is missing for mzmine data (data_annotations.csv).",
-    canopus_data = "The file or folder is missing for canopus data (canopus_structure_summary.tsv).",
-    csi_data = "The file or folder is missing for csi:fingerID data (structure_identifications_top-100.tsv). Recompute for top K=100 hits.",
-    zodiac_data = "The file or folder is missing for zodiac data (formula_identifications.tsv).",
-    ms2query_data = "The file or folder is missing for ms2query data (ms2query.csv).",
-    cytoscape = "The file or folder is missing for cytoscape.csv."
+    mzmine_data = "The file 'ms1-and-ms2.csv' is missing from the folder.",
+    mzmine_annotations = "The file 'data_annotations.csv' is missing from the folder.",
+    canopus_data = "The file 'canopus_structure_summary.tsv' is missing from the folder.",
+    csi_data = "The file 'structure_identifications_top-100.tsv' is missing from the folder. Recompute for top K=100 hits.",
+    zodiac_data = "The file 'formula_identifications.tsv' is missing from the folder.",
+    ms2query_data = "The file 'ms2query.csv' is missing from the folder.",
+    cytoscape = "The file 'cytoscape.csv' is missing from the folder."
   )
-  
-  # Check if each file exists
+
+  # Check if each expected file exists; stop with message if missing
   for (name in names(file_paths)) {
     if (!file.exists(file_paths[[name]])) {
-      stop(error_messages[[name]]) # Stop execution with the specific error message
+      stop(error_messages[[name]])
     }
   }
-  
-  # If all checks pass, return the list of file paths
+
+  # Return named list of file paths if all files exist
   return(file_paths)
 }

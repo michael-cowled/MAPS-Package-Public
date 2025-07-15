@@ -7,11 +7,12 @@
 validate_and_get_paths(folder)
 }
 \arguments{
-\item{folder}{A character string specifying the folder path}
+\item{folder}{A character string specifying the folder path containing the data files.}
 }
 \value{
-A character vector of file paths
+A named list of valid file paths.
 }
 \description{
-Check if the folder exists and return valid file paths
+Check if the folder exists and verify the presence of expected data files.
+Stops execution with informative errors if any file is missing.
 }
