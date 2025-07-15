@@ -1,3 +1,9 @@
+#' Validate and Get Paths
+#'
+#' @param folder Folder path to check
+#' @return A character vector of valid file paths
+#' @export
+
 ## 1. check_and_install
 # Function to check and install missing packages, then load them
 check_and_install <- function(packages) {
