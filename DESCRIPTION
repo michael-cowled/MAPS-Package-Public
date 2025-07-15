@@ -1,0 +1,10 @@
+Package: MAPS.Package
+Title: Core Functions for MAPS: Metabolite Annotation and Propagation
+Version: 0.0.0.9000
+Authors@R: 
+    person("Michael", "Cowled", email = "michael.cowled@gmail.com", role = c("aut", "cre"))
+Description: Includes functions for standardising compound names to PubChem, propagating annotations, and performing various deduplication and consolidation tasks.
+License: MIT
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
