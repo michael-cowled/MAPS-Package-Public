@@ -1,4 +1,11 @@
 ## 12. validate_and_get_paths
+#' Validate and Get Paths
+#'
+#' Check if the folder exists and return valid file paths
+#'
+#' @param folder A character string specifying the folder path
+#' @return A character vector of file paths
+#' @export
 validate_and_get_paths <- function(folder) {
   # Clean up the folder path (replace backslashes with forward slashes)
   # Note the double backslashes in the pattern for escaping the backslash character itself
