@@ -7,19 +7,13 @@
 fix_compound_names(df, column)
 }
 \arguments{
-\item{df}{A data frame containing compound names to clean.}
+\item{df}{A data.frame or data.table with compound names.}
 
-\item{column}{A character vector of column names in \code{df} to clean.}
+\item{column}{A character vector of column names to clean.}
 }
 \value{
-A cleaned version of \code{df} with standardized compound name columns.
+A cleaned data frame.
 }
 \description{
 Applies regex-based cleanup and casing corrections to specified column(s) of a data frame.
-Useful for cleaning up messy annotations from GNPS or similar metabolomics tools.
-}
-\examples{
-\dontrun{
-cleaned_df <- fix_compound_names(my_annotations, column = "compound.name")
-}
 }
