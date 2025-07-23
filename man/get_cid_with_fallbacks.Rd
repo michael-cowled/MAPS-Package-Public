@@ -25,6 +25,7 @@ and it will be updated via \code{<<-} with new entries when successful lookups a
 }
 \examples{
 \dontrun{
+# Assuming cid_cache_df is initialized globally as per your setup
 get_cid_with_fallbacks("glucose")
 get_cid_with_fallbacks("some compound", smiles = "CCO")
 }
