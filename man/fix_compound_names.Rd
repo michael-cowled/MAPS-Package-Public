@@ -4,7 +4,7 @@
 \alias{fix_compound_names}
 \title{Clean and Standardize Compound Names}
 \usage{
-fix_compound_names(df, column)
+fix_compound_names(df, columns)
 }
 \arguments{
 \item{df}{A data.frame or data.table with compound names.}
