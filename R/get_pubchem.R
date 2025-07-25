@@ -1,3 +1,4 @@
+# get_pubchem.R
 #' Query PubChem for CIDs, Titles, or Properties
 #'
 #' Queries the PubChem REST API using a compound name, SMILES, or CID
@@ -9,7 +10,7 @@
 #'   \itemize{
 #'     \item \code{"cids"}: to retrieve the compound ID(s)
 #'     \item \code{"title"}: to get the PubChem title from a CID
-#'     \item \code{"properties"}: to fetch SMILES (MolecularFormula and MonoisotopicMass are no longer retrieved)
+#'     \item \code{"properties"}: to fetch SMILES
 #'   }
 #'
 #' @return Depending on the request type:
@@ -106,7 +107,7 @@ get_pubchem <- function(query, type, property = NULL) {
     } else return(NA_character_) # Return character NA on page fetch failure
 
   } else if (type == "cid" && property == "properties") {
-    # Only retrieve SMILES, MolecularFormula and MonoisotopicMass are no longer needed
+    # Only retrieve SMILES
     url <- paste0(base_url, "/compound/cid/", query, "/property/SMILES/XML")
     response <- tryCatch({
       xml <- xml2::read_xml(url)

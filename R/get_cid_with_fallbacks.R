@@ -1,3 +1,4 @@
+# get_cid_with_fallbacks.R
 #' Get CID from PubChem with Fallbacks and Caching
 #'
 #' Attempts to resolve a PubChem CID using compound name, SMILES, and synonyms.
@@ -7,7 +8,7 @@
 #' @param smiles A character string representing the compound SMILES (optional).
 #'
 #' @return A named list with keys: \code{CID}, \code{ResolvedName}, \code{SMILES},
-#'   \code{MolecularFormula}, and \code{MonoisotopicMass}, or \code{NULL} if all lookups fail.
+#'   or \code{NULL} if all lookups fail.
 #' @export
 #'
 #' @details This function expects a global object named \code{cid_cache_df} to exist,
@@ -52,9 +53,7 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
   if (!is.null(cached_entry) &&
       !is.na(cached_entry$CID[1]) &&
       !is.na(cached_entry$ResolvedName[1]) &&
-      !is.na(cached_entry$SMILES[1]) &&
-      !is.na(cached_entry$MolecularFormula[1]) &&
-      !is.na(cached_entry$MonoisotopicMass[1])) {
+      !is.na(cached_entry$SMILES[1])) {
     message(paste("  [CACHE HIT] Fully resolved CID found for:", name, " (CID:", cached_entry$CID[1], ")"))
     return(as.list(cached_entry[1, ]))
   }
@@ -62,7 +61,7 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
   # --- PubChem Lookup with Fallbacks ---
   resolved_cid <- NA_real_ # Initialize as numeric NA
   resolved_title <- NA_character_ # Initialize as character NA
-  resolved_props <- list(SMILES = NA_character_, MolecularFormula = NA_character_, MonoisotopicMass = NA_real_) # Initialize with NAs
+  resolved_props <- list(SMILES = NA_character_) # Initialize with NAs
 
   # Start with cached CID if available, even if incomplete
   if (!is.null(cached_entry) && !is.na(cached_entry$CID[1])) {
@@ -95,13 +94,9 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
     # Ensure temp_props is a list before accessing elements, and initialize missing with NA
     if (is.list(temp_props)) {
       resolved_props$SMILES <- if (!is.null(temp_props$SMILES) && !is.na(temp_props$SMILES)) temp_props$SMILES else NA_character_
-      resolved_props$MolecularFormula <- if (!is.null(temp_props$MolecularFormula) && !is.na(temp_props$MolecularFormula)) temp_props$MolecularFormula else NA_character_
-      resolved_props$MonoisotopicMass <- if (!is.null(temp_props$MonoisotopicMass) && !is.na(temp_props$MonoisotopicMass)) temp_props$MonoisotopicMass else NA_real_
     } else {
       # If temp_props is NULL (due to get_pubchem error), ensure all are NA
       resolved_props$SMILES <- NA_character_
-      resolved_props$MolecularFormula <- NA_character_
-      resolved_props$MonoisotopicMass <- NA_real_
     }
 
     # Attempt to get title
@@ -116,8 +111,6 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
     if (!is.null(cached_entry)) {
       if (is.na(resolved_title) && !is.na(cached_entry$ResolvedName[1])) resolved_title <- cached_entry$ResolvedName[1]
       if (is.na(resolved_props$SMILES) && !is.na(cached_entry$SMILES[1])) resolved_props$SMILES <- cached_entry$SMILES[1]
-      if (is.na(resolved_props$MolecularFormula) && !is.na(cached_entry$MolecularFormula[1])) resolved_props$MolecularFormula <- cached_entry$MolecularFormula[1]
-      if (is.na(resolved_props$MonoisotopicMass) && !is.na(cached_entry$MonoisotopicMass[1])) resolved_props$MonoisotopicMass <- cached_entry$MonoisotopicMass[1]
     }
 
     # Create the new/updated entry
@@ -126,8 +119,6 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
       ResolvedName = resolved_title,
       SMILES = resolved_props$SMILES,
       CID = resolved_cid,
-      MolecularFormula = resolved_props$MolecularFormula,
-      MonoisotopicMass = resolved_props$MonoisotopicMass,
       stringsAsFactors = FALSE
     )
 
@@ -146,8 +137,6 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
       updated_row$ResolvedName[1] <- ifelse(is.na(updated_row$ResolvedName[1]), final_entry$ResolvedName[1], updated_row$ResolvedName[1])
       updated_row$SMILES[1] <- ifelse(is.na(updated_row$SMILES[1]), final_entry$SMILES[1], updated_row$SMILES[1])
       updated_row$CID[1] <- ifelse(is.na(updated_row$CID[1]), final_entry$CID[1], updated_row$CID[1])
-      updated_row$MolecularFormula[1] <- ifelse(is.na(updated_row$MolecularFormula[1]), final_entry$MolecularFormula[1], updated_row$MolecularFormula[1])
-      updated_row$MonoisotopicMass[1] <- ifelse(is.na(updated_row$MonoisotopicMass[1]), final_entry$MonoisotopicMass[1], updated_row$MonoisotopicMass[1])
 
       cid_cache_df[existing_row_idx[1], ] <<- updated_row # Update the global cache
       message(paste("  [CACHE UPDATE] Updated CID cache for:", name))

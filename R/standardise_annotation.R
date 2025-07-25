@@ -1,3 +1,4 @@
+# standardise_annotation.R
 #' Standardise Compound Annotations Using PubChem
 #'
 #' For each row in a data frame, attempts to resolve compound annotations using PubChem.
@@ -37,7 +38,7 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
   # Define the structure for an empty cache
   empty_cache_template <- data.frame(
     LookupName = character(), ResolvedName = character(), SMILES = character(),
-    CID = numeric(), MolecularFormula = character(), MonoisotopicMass = numeric(),
+    CID = numeric(),
     stringsAsFactors = FALSE
   )
 
@@ -183,13 +184,6 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
                 CID = resolved_cid,
                 stringsAsFactors = FALSE
               )
-              # Ensure new columns for MolecularFormula and MonoisotopicMass are added as NA if they exist in cid_cache_df structure
-              if ("MolecularFormula" %in% names(cid_cache_df) && !("MolecularFormula" %in% names(new_cache_entry))) {
-                new_cache_entry$MolecularFormula <- NA_character_
-              }
-              if ("MonoisotopicMass" %in% names(cid_cache_df) && !("MonoisotopicMass" %in% names(new_cache_entry))) {
-                new_cache_entry$MonoisotopicMass <- NA_real_
-              }
 
               cid_cache_df <<- dplyr::bind_rows(cid_cache_df, new_cache_entry)
               message(paste("  [CACHE ADD] Added new CID cache entry from TSV for CID:", resolved_cid))
