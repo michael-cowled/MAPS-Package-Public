@@ -15,7 +15,7 @@ get_pubchem(query, type, property = NULL)
 \itemize{
 \item \code{"cids"}: to retrieve the compound ID(s)
 \item \code{"title"}: to get the PubChem title from a CID
-\item \code{"properties"}: to fetch SMILES, molecular formula, and mass
+\item \code{"properties"}: to fetch SMILES (MolecularFormula and MonoisotopicMass are no longer retrieved)
 }}
 }
 \value{
@@ -23,7 +23,7 @@ Depending on the request type:
 \itemize{
 \item A numeric CID
 \item A character string (compound title)
-\item A list with \code{SMILES}, \code{MolecularFormula}, and \code{MonoisotopicMass}
+\item A list with \code{SMILES}
 \item Or \code{NA} on failure or no result
 }
 }
