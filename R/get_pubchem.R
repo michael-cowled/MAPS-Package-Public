@@ -9,14 +9,14 @@
 #'   \itemize{
 #'     \item \code{"cids"}: to retrieve the compound ID(s)
 #'     \item \code{"title"}: to get the PubChem title from a CID
-#'     \item \code{"properties"}: to fetch SMILES, molecular formula, and mass
+#'     \item \code{"properties"}: to fetch SMILES (MolecularFormula and MonoisotopicMass are no longer retrieved)
 #'   }
 #'
 #' @return Depending on the request type:
 #'   \itemize{
 #'     \item A numeric CID
 #'     \item A character string (compound title)
-#'     \item A list with \code{SMILES}, \code{MolecularFormula}, and \code{MonoisotopicMass}
+#'     \item A list with \code{SMILES}
 #'     \item Or \code{NA} on failure or no result
 #'   }
 #' @export
@@ -106,7 +106,8 @@ get_pubchem <- function(query, type, property = NULL) {
     } else return(NA_character_) # Return character NA on page fetch failure
 
   } else if (type == "cid" && property == "properties") {
-    url <- paste0(base_url, "/compound/cid/", query, "/property/SMILES,MolecularFormula,MonoisotopicMass/XML")
+    # Only retrieve SMILES, MolecularFormula and MonoisotopicMass are no longer needed
+    url <- paste0(base_url, "/compound/cid/", query, "/property/SMILES/XML")
     response <- tryCatch({
       xml <- xml2::read_xml(url)
 
@@ -117,9 +118,7 @@ get_pubchem <- function(query, type, property = NULL) {
       }
 
       result <- list(
-        SMILES = safe_xml_text(xml, ".//SMILES"),
-        MolecularFormula = safe_xml_text(xml, ".//MolecularFormula"),
-        MonoisotopicMass = as.numeric(safe_xml_text(xml, ".//MonoisotopicMass")) # as.numeric(NA_character_) results in NA_real_
+        SMILES = safe_xml_text(xml, ".//SMILES")
       )
       Sys.sleep(0.2)
       return(result)
