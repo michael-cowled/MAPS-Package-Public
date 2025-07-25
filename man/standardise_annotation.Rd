@@ -4,7 +4,13 @@
 \alias{standardise_annotation}
 \title{Standardise Compound Annotations Using PubChem}
 \usage{
-standardise_annotation(data, name_col, smiles_col)
+standardise_annotation(
+  data,
+  name_col,
+  smiles_col,
+  filtered_merged_cid_data_path,
+  cid_cache_path = "cid_cache.csv"
+)
 }
 \arguments{
 \item{data}{A data frame containing compound annotations.}
@@ -12,22 +18,33 @@ standardise_annotation(data, name_col, smiles_col)
 \item{name_col}{Name of the column in \code{data} containing compound names (as a string).}
 
 \item{smiles_col}{Name of the column in \code{data} containing SMILES strings (as a string).}
+
+\item{filtered_merged_cid_data_path}{Path to the "Filtered_Merged_CID_Data.tsv" file.}
+
+\item{cid_cache_path}{Path to the "cid_cache.csv" file for loading/saving the cache.}
 }
 \value{
-A data frame with standardised annotations and additional PubChem info columns:
+A data frame with standardised annotations and an additional PubChem info column:
 \itemize{
 \item \code{CID}
-\item \code{MolecularFormula}
-\item \code{MonoisotopicMass}
 }
 }
 \description{
 For each row in a data frame, attempts to resolve compound annotations using PubChem.
-Updates the compound name, SMILES, and adds columns for CID, molecular formula, and monoisotopic mass.
+Updates the compound name, SMILES, and adds a column for CID.
 Rows containing "candidate" (case-insensitive) in the name column are excluded.
 }
 \examples{
 \dontrun{
-df <- standardise_annotation(data, "compound.name", "smiles")
+# Example data
+# data_to_process <- data.frame(
+#   compound.name = c("glucose", "aspirin", "unknown compound", "caffeine", "candidate drug"),
+#   smiles = c("C(C1C(C(C(C(O1)CO)O)O)O)O", "CC(=O)Oc1ccccc1C(=O)O", NA, "CN1C=NC2=C1C(=O)N(C(=O)N2C)C", NA),
+#   stringsAsFactors = FALSE
+# )
+
+# df <- standardise_annotation(data_to_process, "compound.name", "smiles",
+#                              "path/to/Filtered_Merged_CID_Data.tsv",
+#                              "path/to/cid_cache.csv")
 }
 }
