@@ -1,4 +1,3 @@
-# get_cid_with_fallbacks.R
 #' Get CID from PubChem with Fallbacks and Caching
 #'
 #' Attempts to resolve a PubChem CID using compound name, SMILES, and synonyms.
@@ -8,7 +7,7 @@
 #' @param smiles A character string representing the compound SMILES (optional).
 #'
 #' @return A named list with keys: \code{CID}, \code{ResolvedName}, \code{SMILES},
-#'   or \code{NULL} if all lookups fail.
+#'   or \code{NULL} if all lookups fail. MolecularFormula and MonoisotopicMass are no longer returned.
 #' @export
 #'
 #' @details This function expects a global object named \code{cid_cache_df} to exist,
@@ -48,19 +47,19 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
     }
   }
 
-  # If a cached entry is found and it has a CID and all properties, return it.
+  # If a cached entry is found and it has a CID and all properties (excluding removed ones), return it.
   # This prevents unnecessary API calls for fully resolved entries.
   if (!is.null(cached_entry) &&
       !is.na(cached_entry$CID[1]) &&
       !is.na(cached_entry$ResolvedName[1]) &&
       !is.na(cached_entry$SMILES[1])) {
     message(paste("  [CACHE HIT] Fully resolved CID found for:", name, " (CID:", cached_entry$CID[1], ")"))
-    return(as.list(cached_entry[1, ]))
+    return(as.list(cached_entry[1, c("CID", "ResolvedName", "SMILES")])) # Only return these columns
   }
 
   # --- PubChem Lookup with Fallbacks ---
   resolved_cid <- NA_real_ # Initialize as numeric NA
-  resolved_title <- NA_character_ # Initialize as character NA
+  # resolved_title will be determined more carefully below
   resolved_props <- list(SMILES = NA_character_) # Initialize with NAs
 
   # Start with cached CID if available, even if incomplete
@@ -88,32 +87,46 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
 
   # --- Retrieve Properties and Title based on the best CID found ---
   if (!is.na(resolved_cid)) {
-    # Attempt to get properties
+    # Attempt to get properties (now only SMILES)
     temp_props <- get_pubchem(resolved_cid, "cid", "properties")
 
     # Ensure temp_props is a list before accessing elements, and initialize missing with NA
     if (is.list(temp_props)) {
       resolved_props$SMILES <- if (!is.null(temp_props$SMILES) && !is.na(temp_props$SMILES)) temp_props$SMILES else NA_character_
     } else {
-      # If temp_props is NULL (due to get_pubchem error), ensure all are NA
+      # If temp_props is NULL (due to get_pubchem error), ensure SMILES is NA
       resolved_props$SMILES <- NA_character_
     }
 
-    # Attempt to get title
+    # Attempt to get title from PubChem
     temp_title <- get_pubchem(resolved_cid, "cid", "title")
-    if (is.character(temp_title) && !is.na(temp_title)) {
-      resolved_title <- temp_title
+    new_pubchem_title <- if (is.character(temp_title) && !is.na(temp_title)) temp_title else NA_character_
+
+    # Determine the best ResolvedName:
+    # 1. If we have a cached entry with a non-NA ResolvedName
+    # 2. If PubChem also gave us a new title, use the PubChem title
+    # 3. If PubChem did NOT give a new title (it's NA), use the cached one.
+    # 4. If no cached ResolvedName, but PubChem gave one, use the PubChem title.
+    # 5. Otherwise, fall back to the original 'name'.
+    resolved_title <- NA_character_ # Reset for new determination
+    if (!is.null(cached_entry) && !is.na(cached_entry$ResolvedName[1])) {
+      if (!is.na(new_pubchem_title)) {
+        resolved_title <- new_pubchem_title # PubChem title is available, use it
+      } else {
+        resolved_title <- cached_entry$ResolvedName[1] # PubChem title is NA, use cached
+      }
+    } else if (!is.na(new_pubchem_title)) {
+      resolved_title <- new_pubchem_title # No cached ResolvedName, but PubChem has one
     } else {
-      resolved_title <- name # Fallback to original name if title retrieval fails or returns NULL/NA
+      resolved_title <- name # Neither cache nor PubChem provided a better name
     }
 
-    # Merge with cached values if they are more complete
-    if (!is.null(cached_entry)) {
-      if (is.na(resolved_title) && !is.na(cached_entry$ResolvedName[1])) resolved_title <- cached_entry$ResolvedName[1]
-      if (is.na(resolved_props$SMILES) && !is.na(cached_entry$SMILES[1])) resolved_props$SMILES <- cached_entry$SMILES[1]
+    # Ensure SMILES is also merged if cached_entry has a better one
+    if (!is.null(cached_entry) && is.na(resolved_props$SMILES) && !is.na(cached_entry$SMILES[1])) {
+      resolved_props$SMILES <- cached_entry$SMILES[1]
     }
 
-    # Create the new/updated entry
+    # Create the new/updated entry - Note: MolecularFormula and MonoisotopicMass are excluded
     final_entry <- data.frame(
       LookupName = name,
       ResolvedName = resolved_title,
@@ -133,19 +146,23 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
       # Initialize updated_row with the current cached row's structure and values
       updated_row <- cid_cache_df[existing_row_idx[1], , drop = FALSE]
 
-      # Now, update the values, preferentially filling NA values
-      updated_row$ResolvedName[1] <- ifelse(is.na(updated_row$ResolvedName[1]), final_entry$ResolvedName[1], updated_row$ResolvedName[1])
+      # Directly assign final_entry's ResolvedName to updated_row's ResolvedName.
+      # This ensures the best ResolvedName determined above is always applied to the cache.
+      updated_row$ResolvedName[1] <- final_entry$ResolvedName[1]
       updated_row$SMILES[1] <- ifelse(is.na(updated_row$SMILES[1]), final_entry$SMILES[1], updated_row$SMILES[1])
       updated_row$CID[1] <- ifelse(is.na(updated_row$CID[1]), final_entry$CID[1], updated_row$CID[1])
 
+      # Explicitly remove MolecularFormula and MonoisotopicMass if they exist in updated_row
+      if ("MolecularFormula" %in% names(updated_row)) updated_row$MolecularFormula <- NULL
+      if ("MonoisotopicMass" %in% names(updated_row)) updated_row$MonoisotopicMass <- NULL
+
       cid_cache_df[existing_row_idx[1], ] <<- updated_row # Update the global cache
-      message(paste("  [CACHE UPDATE] Updated CID cache for:", name))
-      return(as.list(updated_row[1, ]))
+      return(as.list(updated_row[1, c("CID", "ResolvedName", "SMILES")])) # Only return these columns
     } else {
       # Add as a new row if no matching entry found
+      # No need to add MolecularFormula and MonoisotopicMass here, as they are removed from template.
       cid_cache_df <<- dplyr::bind_rows(cid_cache_df, final_entry)
-      message(paste("  [CACHE ADD] Added new CID cache entry for:", name))
-      return(as.list(final_entry[1, ]))
+      return(as.list(final_entry[1, c("CID", "ResolvedName", "SMILES")])) # Only return these columns
     }
   }
 

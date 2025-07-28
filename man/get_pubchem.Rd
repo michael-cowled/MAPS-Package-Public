@@ -15,7 +15,7 @@ get_pubchem(query, type, property = NULL)
 \itemize{
 \item \code{"cids"}: to retrieve the compound ID(s)
 \item \code{"title"}: to get the PubChem title from a CID
-\item \code{"properties"}: to fetch SMILES (MolecularFormula and MonoisotopicMass are no longer retrieved)
+\item \code{"properties"}: to fetch SMILES
 }}
 }
 \value{

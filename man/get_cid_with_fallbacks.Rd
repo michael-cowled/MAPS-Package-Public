@@ -13,7 +13,7 @@ get_cid_with_fallbacks(name, smiles = NA)
 }
 \value{
 A named list with keys: \code{CID}, \code{ResolvedName}, \code{SMILES},
-\code{MolecularFormula}, and \code{MonoisotopicMass}, or \code{NULL} if all lookups fail.
+or \code{NULL} if all lookups fail.
 }
 \description{
 Attempts to resolve a PubChem CID using compound name, SMILES, and synonyms.
