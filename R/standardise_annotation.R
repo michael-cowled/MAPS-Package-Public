@@ -254,6 +254,16 @@ standardise_annotation <- function(data, name_col, smiles_col, cid_database_path
   if (!is.null(db_con)) {
     dbDisconnect(db_con)
   }
+
+  if (!is.null(cid_cache_path)) {
+    tryCatch({
+      write.csv(cid_cache_df, cid_cache_path, row.names = FALSE)
+      message(paste("Cache updated and saved to:", cid_cache_path))
+    }, error = function(e) {
+      warning(paste("Failed to save CID cache:", e$message))
+    })
+  }
+
   close(pb)
   return(data)
 }

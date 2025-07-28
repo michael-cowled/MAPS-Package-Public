@@ -8,7 +8,7 @@ standardise_annotation(
   data,
   name_col,
   smiles_col,
-  filtered_merged_cid_data_path,
+  cid_database_path,
   cid_cache_path = "cid_cache.csv"
 )
 }
@@ -19,7 +19,7 @@ standardise_annotation(
 
 \item{smiles_col}{Name of the column in \code{data} containing SMILES strings (as a string).}
 
-\item{filtered_merged_cid_data_path}{Path to the "Filtered_Merged_CID_Data.tsv" file.}
+\item{cid_database_path}{Path to the "SQLite database" file.}
 
 \item{cid_cache_path}{Path to the "cid_cache.csv" file for loading/saving the cache.}
 }
@@ -44,7 +44,7 @@ Rows containing "candidate" (case-insensitive) in the name column are excluded.
 # )
 
 # df <- standardise_annotation(data_to_process, "compound.name", "smiles",
-#                              "path/to/Filtered_Merged_CID_Data.tsv",
+#                              "path/to/SQLite database",
 #                              "path/to/cid_cache.csv")
 }
 }
