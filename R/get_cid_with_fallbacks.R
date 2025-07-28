@@ -152,10 +152,6 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
       updated_row$SMILES[1] <- ifelse(is.na(updated_row$SMILES[1]), final_entry$SMILES[1], updated_row$SMILES[1])
       updated_row$CID[1] <- ifelse(is.na(updated_row$CID[1]), final_entry$CID[1], updated_row$CID[1])
 
-      # Explicitly remove MolecularFormula and MonoisotopicMass if they exist in updated_row
-      if ("MolecularFormula" %in% names(updated_row)) updated_row$MolecularFormula <- NULL
-      if ("MonoisotopicMass" %in% names(updated_row)) updated_row$MonoisotopicMass <- NULL
-
       cid_cache_df[existing_row_idx[1], ] <<- updated_row # Update the global cache
       return(as.list(updated_row[1, c("CID", "ResolvedName", "SMILES")])) # Only return these columns
     } else {

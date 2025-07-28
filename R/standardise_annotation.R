@@ -129,22 +129,17 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
   data[["CID"]] <- NA_real_ # Initialize as numeric NA
 
   # Load Filtered_Merged_CID_Data.tsv once outside the loop for efficiency
-  filtered_merged_data <- NULL
-  if (!is.null(filtered_merged_cid_data_path) && file.exists(filtered_merged_cid_data_path)) {
-    message(paste("Loading Filtered_Merged_CID_Data.tsv from:", filtered_merged_cid_data_path))
-    filtered_merged_data <- tryCatch({
-      read.delim(filtered_merged_cid_data_path, sep = "\t", stringsAsFactors = FALSE)
-    }, error = function(e) {
-      message(paste("  Error loading Filtered_Merged_CID_Data.tsv:", e$message))
-      return(NULL)
-    })
-    # Ensure expected columns are present
-    if (!is.null(filtered_merged_data) && !all(c("CID", "Title", "SMILES") %in% names(filtered_merged_data))) {
-      message("  Filtered_Merged_Data.tsv must contain 'CID', 'Title', and 'SMILES' columns.")
-      filtered_merged_data <- NULL
-    }
+  library(DBI)
+  library(RSQLite)
+
+  # Connect to the SQLite database instead of reading TSV
+  filtered_merged_db_path <- filtered_merged_cid_data_path  # Rename for clarity
+  db_con <- NULL
+  if (!is.null(filtered_merged_db_path) && file.exists(filtered_merged_db_path)) {
+    message(paste("Connecting to CID database at:", filtered_merged_db_path))
+    db_con <- dbConnect(SQLite(), filtered_merged_db_path)
   } else {
-    message("  Filtered_Merged_CID_Data.tsv path not provided or file does not exist. This fallback will not be used.")
+    message("  CID database path not provided or file does not exist. This fallback will not be used.")
   }
 
 
@@ -197,7 +192,11 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
       if ((is.na(resolved_name_from_lookup) || !nzchar(resolved_name_from_lookup)) &&
           (is.na(resolved_smiles_from_lookup) || !nzchar(resolved_smiles_from_lookup)) && # Check SMILES too
           !is.null(filtered_merged_data)) {
-        tsv_entry <- filtered_merged_data[filtered_merged_data$CID == resolved_cid, ]
+        tsv_entry <- NULL
+        if (!is.null(db_con)) {
+          query <- sprintf("SELECT Title, SMILES FROM cid_data WHERE CID = %d", resolved_cid)
+          tsv_entry <- dbGetQuery(db_con, query)
+        }
         if (nrow(tsv_entry) > 0) {
           # Use TSV Title and SMILES if lookup didn't provide them
           resolved_name_from_lookup <- tsv_entry$Title[1]
@@ -212,14 +211,6 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
             CID = resolved_cid,
             stringsAsFactors = FALSE
           )
-          # Ensure new columns for MolecularFormula and MonoisotopicMass are added as NA if they exist in cid_cache_df structure
-          # (though these should ideally not be in the template anymore)
-          if ("MolecularFormula" %in% names(cid_cache_df) && !("MolecularFormula" %in% names(new_cache_entry))) {
-            new_cache_entry$MolecularFormula <- NA_character_
-          }
-          if ("MonoisotopicMass" %in% names(cid_cache_df) && !("MonoisotopicMass" %in% names(new_cache_entry))) {
-            new_cache_entry$MonoisotopicMass <- NA_real_
-          }
 
           # Add/update cache entry only if it's new or has more complete data
           existing_cache_idx <- which(cid_cache_df$LookupName == current_name & cid_cache_df$CID == resolved_cid)
@@ -265,4 +256,8 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
 
   close(pb)
   return(data)
+
+  if (!is.null(db_con)) {
+    dbDisconnect(db_con)
+  }
 }
