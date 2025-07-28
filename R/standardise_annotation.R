@@ -7,7 +7,7 @@
 #' @param data A data frame containing compound annotations.
 #' @param name_col Name of the column in `data` containing compound names (as a string).
 #' @param smiles_col Name of the column in `data` containing SMILES strings (as a string).
-#' @param filtered_merged_cid_data_path Path to the "Filtered_Merged_CID_Data.tsv" file.
+#' @param cid_database_path Path to the "SQLite database" file.
 #' @param cid_cache_path Path to the "cid_cache.csv" file for loading/saving the cache.
 #'
 #' @return A data frame with standardised annotations and an additional PubChem info column:
@@ -26,10 +26,10 @@
 #' # )
 #'
 #' # df <- standardise_annotation(data_to_process, "compound.name", "smiles",
-#' #                              "path/to/Filtered_Merged_CID_Data.tsv",
+#' #                              "path/to/SQLite database",
 #' #                              "path/to/cid_cache.csv")
 #' }
-standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_cid_data_path, cid_cache_path = "cid_cache.csv") {
+standardise_annotation <- function(data, name_col, smiles_col, cid_database_path, cid_cache_path = "cid_cache.csv") {
   # Load dplyr silently for bind_rows
   suppressMessages(library(dplyr))
 
@@ -128,18 +128,18 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
   # Ensure output columns exist
   data[["CID"]] <- NA_real_ # Initialize as numeric NA
 
-  # Load Filtered_Merged_CID_Data.tsv once outside the loop for efficiency
+  # Load SQLite database once outside the loop for efficiency
   library(DBI)
   library(RSQLite)
 
   # Connect to the SQLite database instead of reading TSV
-  filtered_merged_db_path <- filtered_merged_cid_data_path  # Rename for clarity
+  cid_database_path <- cid_database_path  # Rename for clarity
   db_con <- NULL
-  if (!is.null(filtered_merged_db_path) && file.exists(filtered_merged_db_path)) {
-    message(paste("Connecting to CID database at:", filtered_merged_db_path))
-    db_con <- dbConnect(SQLite(), filtered_merged_db_path)
+  if (!is.null(cid_database_path) && file.exists(cid_database_path)) {
+    message(paste("Connecting to CID database at:", cid_database_path))
+    db_con <- dbConnect(SQLite(), cid_database_path)
   } else {
-    message("  CID database path not provided or file does not exist. This fallback will not be used.")
+    message("  CID database file not found. Skipping local DB fallback.")
   }
 
 
@@ -190,18 +190,17 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
       # Now, check the TSV file as a final fallback for name/SMILES if they are still NA from lookup
       # This is Step 5 from your original request, simplified and integrated.
       if ((is.na(resolved_name_from_lookup) || !nzchar(resolved_name_from_lookup)) &&
-          (is.na(resolved_smiles_from_lookup) || !nzchar(resolved_smiles_from_lookup)) && # Check SMILES too
-          !is.null(filtered_merged_data)) {
-        tsv_entry <- NULL
+          (is.na(resolved_smiles_from_lookup) || !nzchar(resolved_smiles_from_lookup))) {
+        db_entry <- NULL
         if (!is.null(db_con)) {
           query <- sprintf("SELECT Title, SMILES FROM cid_data WHERE CID = %d", resolved_cid)
-          tsv_entry <- dbGetQuery(db_con, query)
+          db_entry <- dbGetQuery(db_con, query)
         }
-        if (nrow(tsv_entry) > 0) {
+        if (nrow(db_entry) > 0) {
           # Use TSV Title and SMILES if lookup didn't provide them
-          resolved_name_from_lookup <- tsv_entry$Title[1]
-          resolved_smiles_from_lookup <- tsv_entry$SMILES[1]
-          message(paste("  [TSV LOOKUP] Found CID:", resolved_cid, "in TSV. Using TSV data."))
+          resolved_name_from_lookup <- db_entry$Title[1]
+          resolved_smiles_from_lookup <- db_entry$SMILES[1]
+          message(paste("  [DB LOOKUP] Found CID:", resolved_cid, "in SQLite DB. Querying DB..."))
 
           # Update cid_cache_df with TSV info if it's new or better
           new_cache_entry <- data.frame(
@@ -231,10 +230,8 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
           }
 
         } else {
-          message(paste("  CID", resolved_cid, "not found in Filtered_Merged_CID_Data.tsv."))
+          message(paste("  CID", resolved_cid, "not found in SQLite database."))
         }
-      } else if (is.null(filtered_merged_data)) {
-        message("  Filtered_Merged_CID_Data.tsv not loaded, skipping TSV lookup.")
       }
 
       # Update the main data frame with the best resolved information
@@ -254,10 +251,9 @@ standardise_annotation <- function(data, name_col, smiles_col, filtered_merged_c
     setTxtProgressBar(pb, i)
   }
 
-  close(pb)
-  return(data)
-
   if (!is.null(db_con)) {
     dbDisconnect(db_con)
   }
+  close(pb)
+  return(data)
 }
