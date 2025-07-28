@@ -246,6 +246,21 @@ standardise_annotation <- function(data, name_col, smiles_col, cid_database_path
     } else {
       data[["CID"]][i] <- -1
       message(paste("  No CID could be resolved for", current_name))
+
+      # Add to cid_cache_df to avoid future lookups
+      if (!(current_name %in% cid_cache_df$LookupName)) {
+        cid_cache_df <<- dplyr::bind_rows(
+          cid_cache_df,
+          data.frame(
+            LookupName = current_name,
+            ResolvedName = NA_character_,
+            SMILES = NA_character_,
+            CID = -1,
+            stringsAsFactors = FALSE
+          )
+        )
+        message("  [CACHE ADD] Stored failed CID lookup (-1) in cache for: ", current_name)
+      }
     }
 
     setTxtProgressBar(pb, i)
