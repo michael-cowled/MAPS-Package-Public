@@ -4,12 +4,12 @@
 \alias{get_pubchem}
 \title{Query PubChem for CIDs, Titles, or Properties}
 \usage{
-get_pubchem(query, type, property = NULL)
+get_pubchem(query, type, property = NULL, db_con = NULL)
 }
 \arguments{
 \item{query}{The input string to search for (compound name, SMILES, or CID).}
 
-\item{type}{A character string: one of \code{"name"}, \code{"smiles"}, \code{"synonym"}, or \code{"cid"}.}
+\item{type}{A character string: one of \code{"name"}, \code{"smiles"}, \code{\ "synonym"}, or \code{"cid"}.}
 
 \item{property}{A character string specifying what to retrieve. Options:
 \itemize{
@@ -17,6 +17,8 @@ get_pubchem(query, type, property = NULL)
 \item \code{"title"}: to get the PubChem title from a CID
 \item \code{"properties"}: to fetch SMILES
 }}
+
+\item{db_con}{An active DBI connection object to your SQLite database, or NULL if not available.}
 }
 \value{
 Depending on the request type:
@@ -33,10 +35,11 @@ to retrieve CIDs, compound titles, or molecular properties.
 }
 \examples{
 \dontrun{
-get_pubchem("glucose", type = "name", property = "cids")
-get_pubchem("50-99-7", type = "name", property = "cids")
-get_pubchem("CCO", type = "smiles", property = "cids")
-get_pubchem("5793", type = "cid", property = "title")
-get_pubchem("5793", type = "cid", property = "properties")
+# Assuming a db_con is established for properties lookup
+# get_pubchem("glucose", type = "name", property = "cids")
+# get_pubchem("50-99-7", type = "name", property = "cids")
+# get_pubchem("CCO", type = "smiles", property = "cids")
+# get_pubchem("5793", type = "cid", property = "title")
+# get_pubchem("5793", type = "cid", property = "properties", db_con = my_db_connection)
 }
 }
