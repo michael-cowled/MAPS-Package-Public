@@ -107,8 +107,8 @@ get_pubchem <- function(query, type, property = NULL) {
     } else return(NA_character_) # Return character NA on page fetch failure
 
   } else if (type == "cid" && property == "properties") {
-    # Retrieve CanonicalSMILES from PubChem
-    url <- paste0(base_url, "/compound/cid/", query, "/property/CanonicalSMILES/XML")
+    # Retrieve IsomericSMILES from PubChem
+    url <- paste0(base_url, "/compound/cid/", query, "/property/IsomericSMILES/XML")
     response <- tryCatch({
       xml <- xml2::read_xml(url)
 
@@ -117,7 +117,7 @@ get_pubchem <- function(query, type, property = NULL) {
       }
 
       result <- list(
-        SMILES = safe_xml_text(xml, ".//CanonicalSMILES")
+        SMILES = safe_xml_text(xml, ".//IsomericSMILES")
       )
       Sys.sleep(0.2)
       return(result)
