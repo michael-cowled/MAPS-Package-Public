@@ -1,12 +1,6 @@
 ## 14. deduplicate_data
 # Default values for gnps.data (but should work for others)
-deduplicate_data <- function(data, name_col, score_col) {
-  data %>%
-    arrange(desc({{score_col}})) %>%
-    group_by({{name_col}}) %>%
-    slice_head(n = 1) %>%
-    ungroup()
-}#' Deduplicate Data by Highest Score per Name
+#' Deduplicate Data by Highest Score per Name
 #'
 #' Selects the highest scoring entry per unique compound name.
 #'
@@ -22,8 +16,9 @@ deduplicate_data <- function(data, name_col, score_col) {
 #' deduplicated <- deduplicate_data(gnps.data, compound.name, confidence.score)
 #' }
 deduplicate_data <- function(data, name_col, score_col) {
-  dplyr::arrange(data, dplyr::desc({{score_col}})) %>%
-    dplyr::group_by({{name_col}}) %>%
-    dplyr::slice_head(n = 1) %>%
-    dplyr::ungroup()
+  data %>%
+    arrange(desc({{score_col}})) %>%
+    group_by({{name_col}}) %>%
+    slice_head(n = 1) %>%
+    ungroup()
 }

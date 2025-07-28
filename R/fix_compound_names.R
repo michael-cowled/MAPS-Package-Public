@@ -40,6 +40,9 @@ fix_compound_names <- function(df, columns) {
       }
     }
 
+    # Trim whitespace before capitalization
+    dt[[col]] <- trimws(dt[[col]])
+
     # Capitalization rules
 
     # 1. ALL CAPS -> Capitalize first letter only
