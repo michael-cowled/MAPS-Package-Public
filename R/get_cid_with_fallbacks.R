@@ -102,24 +102,21 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
     temp_title <- get_pubchem(resolved_cid, "cid", "title")
     new_pubchem_title <- if (is.character(temp_title) && !is.na(temp_title)) temp_title else NA_character_
 
-    # Determine the best ResolvedName:
-    # 1. If we have a cached entry with a non-NA ResolvedName
-    # 2. If PubChem also gave us a new title, use the PubChem title
-    # 3. If PubChem did NOT give a new title (it's NA), use the cached one.
-    # 4. If no cached ResolvedName, but PubChem gave one, use the PubChem title.
-    # 5. Otherwise, fall back to the original 'name'.
-    resolved_title <- NA_character_ # Reset for new determination
+    # Determine the best ResolvedName (cleaned to remove any "| ..." suffix)
+    resolved_title <- NA_character_
+
     if (!is.null(cached_entry) && !is.na(cached_entry$ResolvedName[1])) {
       if (!is.na(new_pubchem_title)) {
-        resolved_title <- new_pubchem_title # PubChem title is available, use it
+        resolved_title <- sub("\\s*\\|.*$", "", new_pubchem_title)  # Prefer new title, cleaned
       } else {
-        resolved_title <- cached_entry$ResolvedName[1] # PubChem title is NA, use cached
+        resolved_title <- sub("\\s*\\|.*$", "", cached_entry$ResolvedName[1])  # Clean cached ResolvedName
       }
     } else if (!is.na(new_pubchem_title)) {
-      resolved_title <- new_pubchem_title # No cached ResolvedName, but PubChem has one
+      resolved_title <- sub("\\s*\\|.*$", "", new_pubchem_title)  # Clean new title
     } else {
-      resolved_title <- name # Neither cache nor PubChem provided a better name
+      resolved_title <- sub("\\s*\\|.*$", "", name)  # Fallback to input name, cleaned
     }
+
 
     # Ensure SMILES is also merged if cached_entry has a better one
     if (!is.null(cached_entry) && is.na(resolved_props$SMILES) && !is.na(cached_entry$SMILES[1])) {

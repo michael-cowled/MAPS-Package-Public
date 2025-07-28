@@ -107,28 +107,25 @@ get_pubchem <- function(query, type, property = NULL) {
     } else return(NA_character_) # Return character NA on page fetch failure
 
   } else if (type == "cid" && property == "properties") {
-    # Only retrieve SMILES
-    url <- paste0(base_url, "/compound/cid/", query, "/property/SMILES/XML")
+    # Retrieve CanonicalSMILES from PubChem
+    url <- paste0(base_url, "/compound/cid/", query, "/property/CanonicalSMILES/XML")
     response <- tryCatch({
       xml <- xml2::read_xml(url)
 
-      # Explicitly check if xml object is NULL or an error after read_xml
-      # If so, return NULL from this tryCatch block, which will then be handled by the caller
       if (is.null(xml) || inherits(xml, "try-error")) {
         stop("XML object is NULL or an error after read_xml, forcing NULL return.")
       }
 
       result <- list(
-        SMILES = safe_xml_text(xml, ".//SMILES")
+        SMILES = safe_xml_text(xml, ".//CanonicalSMILES")
       )
       Sys.sleep(0.2)
       return(result)
     }, error = function(e) {
       message(paste("  [get_pubchem ERROR] Failed to retrieve properties for CID", query, ":", e$message))
-      # This return NULL handles cases where read_xml fails completely, or safe_xml_text fails
       return(NULL)
     })
-    return(response) # This 'response' can be NULL if the tryCatch block returns NULL
+    return(response)
 
   } else {
     message("Invalid query type or property.")

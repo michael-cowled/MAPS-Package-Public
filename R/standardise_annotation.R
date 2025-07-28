@@ -244,7 +244,6 @@ standardise_annotation <- function(data, name_col, smiles_col, cid_database_path
       }
 
     } else {
-      data[["CID"]][i] <- -1
       message(paste("  No CID could be resolved for", current_name))
 
       # Add to cid_cache_df to avoid future lookups
