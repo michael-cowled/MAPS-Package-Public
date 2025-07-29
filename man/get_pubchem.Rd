@@ -9,7 +9,7 @@ get_pubchem(query, type, property = NULL, db_con = NULL)
 \arguments{
 \item{query}{The input string to search for (compound name, SMILES, or CID).}
 
-\item{type}{A character string: one of \code{"name"}, \code{"smiles"}, \code{\ "synonym"}, or \code{"cid"}.}
+\item{type}{A character string: one of \code{"name"}, \code{"smiles"}, \code{"synonym"}, or \code{"cid"}.}
 
 \item{property}{A character string specifying what to retrieve. Options:
 \itemize{

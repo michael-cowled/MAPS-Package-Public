@@ -29,156 +29,96 @@
 #' #                              "path/to/SQLite database",
 #' #                              "path/to/cid_cache.csv")
 #' }
-standardise_annotation <- function(data, name_col, smiles_col, cid_database_path, cid_cache_path = "cid_cache.csv") {
-  suppressMessages(library(dplyr))
+standardise_annotation <- function(df,
+                                   name_col = "compound_name",
+                                   smiles_col = "smiles",
+                                   cid_cache_path = NULL,
+                                   db_con = NULL,
+                                   cid_database_path = NULL) {
+
   library(DBI)
   library(RSQLite)
+  library(dplyr)
 
-  # --- Load CID Cache ---
-  empty_cache_template <- data.frame(
-    LookupName = character(), ResolvedName = character(), SMILES = character(), CID = numeric(),
-    stringsAsFactors = FALSE
-  )
+  # --- Handle DB connection ---
+  internal_con <- FALSE
+  if (!is.null(db_con) && dbIsValid(db_con)) {
+    message("[DB CONNECT] Using externally provided DB connection.")
+  } else if (!is.null(cid_database_path) && file.exists(cid_database_path)) {
+    message("[DB CONNECT] Opening internal connection to: ", cid_database_path)
+    db_con <- dbConnect(SQLite(), cid_database_path)
+    internal_con <- TRUE
+    on.exit({
+      if (dbIsValid(db_con)) {
+        dbDisconnect(db_con)
+        message("[DB DISCONNECT] Closed internal DB connection.")
+      }
+    }, add = TRUE)
+  } else {
+    stop("No valid database connection or database path provided.")
+  }
 
-  if (!exists("cid_cache_df", envir = .GlobalEnv) || !is.data.frame(get("cid_cache_df", envir = .GlobalEnv))) {
-    if (file.exists(cid_cache_path)) {
-      cid_cache_df_loaded <- tryCatch({
-        read.csv(cid_cache_path, stringsAsFactors = FALSE)
+  # --- Load existing cache ---
+  cache <- if (!is.null(cid_cache_path) && file.exists(cid_cache_path)) {
+    read.csv(cid_cache_path, stringsAsFactors = FALSE)
+  } else {
+    data.frame(Query = character(), CID = numeric(), stringsAsFactors = FALSE)
+  }
+
+  # --- Annotate each row ---
+  for (i in seq_len(nrow(df))) {
+    compound_name <- trimws(df[[name_col]][i])
+    smiles <- if (!is.null(smiles_col)) df[[smiles_col]][i] else NA
+
+    if (is.na(compound_name) || grepl("candidate", compound_name, ignore.case = TRUE)) {
+      next
+    }
+
+    message("Processing: ", compound_name)
+
+    cached_row <- cache %>% filter(Query == compound_name)
+    if (nrow(cached_row) > 0) {
+      cid <- cached_row$CID[1]
+      message("  [CACHE HIT] CID ", cid, " retrieved from cache.")
+    } else {
+      message("  [CACHE MISS] Querying CID for: ", compound_name)
+      cid <- tryCatch({
+        query <- paste0("SELECT CID FROM cid_lookup WHERE LookupName = ", dbQuoteString(db_con, compound_name))
+        result <- dbGetQuery(db_con, query)
+        if (nrow(result) > 0) result$CID[1] else -1
       }, error = function(e) {
-        message("[CACHE INIT] Error loading cache: ", e$message)
-        empty_cache_template
+        warning("  [DB ERROR] Failed to query CID for ", compound_name, ": ", e$message)
+        -1
       })
 
-      for (col in names(empty_cache_template)) {
-        if (!(col %in% names(cid_cache_df_loaded))) {
-          cid_cache_df_loaded[[col]] <- NA
-        }
-      }
+      cache <- bind_rows(cache, data.frame(Query = compound_name, CID = cid, stringsAsFactors = FALSE))
+    }
 
-      cid_cache_df <<- cid_cache_df_loaded[, names(empty_cache_template), drop = FALSE]
+    df$CID[i] <- cid
+
+    # --- Only do get_pubchem() if CID is valid ---
+    if (!is.na(cid) && cid > 0) {
+      pubchem_data <- tryCatch({
+        get_pubchem(cid = cid, type = "cid", property = "properties", db_con = db_con)
+      }, error = function(e) {
+        warning("  [PUBCHEM ERROR] Failed for CID ", cid, ": ", e$message)
+        NULL
+      })
+
+      if (!is.null(pubchem_data)) {
+        df$SMILES[i] <- pubchem_data$smiles
+        df$Title[i]  <- pubchem_data$title
+      }
     } else {
-      message("[CACHE INIT] No cache file found. Initializing empty cache.")
-      cid_cache_df <<- empty_cache_template
+      message("  [SKIP] CID = -1, skipping PubChem query.")
     }
-  } else {
-    current_cid_cache_df <- get("cid_cache_df", envir = .GlobalEnv)
-    cid_cache_df <<- dplyr::bind_rows(current_cid_cache_df, empty_cache_template[0, , drop = FALSE])
-    cid_cache_df <<- cid_cache_df[, names(empty_cache_template), drop = FALSE]
   }
 
-  # --- Validate Data ---
-  if (nrow(data) == 0) return(data)
-  if (!(name_col %in% names(data))) stop("Missing column: ", name_col)
-  if (!(smiles_col %in% names(data))) stop("Missing column: ", smiles_col)
-
-  data[[name_col]] <- as.character(data[[name_col]])
-  data[[smiles_col]] <- as.character(data[[smiles_col]])
-  data <- data[!grepl("candidate", data[[name_col]], ignore.case = TRUE), ]
-  if (nrow(data) == 0) return(data)
-
-  # --- DB Connection (Step 2) ---
-  db_con <- NULL
-  if (!is.null(cid_database_path) && file.exists(cid_database_path)) {
-    message("[DB CONNECT] Connecting to CID SQLite DB...")
-    db_con <- dbConnect(SQLite(), cid_database_path)
-  } else {
-    message("[DB CONNECT] Database not found or path is NULL.")
+  # --- Save updated cache ---
+  if (!is.null(cid_cache_path)) {
+    write.csv(cache, cid_cache_path, row.names = FALSE)
+    message("[CACHE] Written to: ", cid_cache_path)
   }
 
-  pb <- txtProgressBar(min = 0, max = nrow(data), style = 3)
-  data$CID <- NA_real_
-
-  for (i in seq_len(nrow(data))) {
-    name <- data[[name_col]][i]
-    smiles <- data[[smiles_col]][i]
-    if (is.na(name) || !nzchar(name)) next
-
-    resolved_cid <- NA_real_
-    resolved_name <- NA_character_
-    resolved_smiles <- NA_character_
-
-    message(paste0("Processing: ", name))
-
-    # --- Check cache by LookupName ---
-    cached <- cid_cache_df %>%
-      filter(LookupName == name & !is.na(ResolvedName) & !is.na(SMILES))
-
-    if (nrow(cached) > 0 && !is.na(cached$CID[1])) {
-      resolved_cid <- cached$CID[1]
-      resolved_name <- cached$ResolvedName[1]
-      resolved_smiles <- cached$SMILES[1]
-      message(paste("  [CACHE HIT] CID:", resolved_cid))
-    }
-
-    # --- If CID not found yet, try DB by name ---
-    if (is.na(resolved_cid) && !is.null(db_con)) {
-      query <- sprintf("SELECT CID, Title, SMILES FROM cid_data WHERE Title = '%s' COLLATE NOCASE", gsub("'", "''", name))
-      db_result <- tryCatch(dbGetQuery(db_con, query), error = function(e) NULL)
-      if (!is.null(db_result) && nrow(db_result) > 0) {
-        resolved_cid <- db_result$CID[1]
-        resolved_name <- db_result$Title[1]
-        resolved_smiles <- db_result$SMILES[1]
-        message(paste("  [DB LOOKUP] Found CID in DB:", resolved_cid))
-      }
-    }
-
-    # --- If still no CID, call PubChem API unless CID = -1 ---
-    if (is.na(resolved_cid)) {
-      info <- get_cid_with_fallbacks(name, smiles)
-      if (!is.null(info) && !is.na(info$CID) && info$CID != -1) {
-        resolved_cid <- info$CID
-        resolved_name <- info$ResolvedName
-        resolved_smiles <- info$SMILES
-        message(paste("  [PUBCHEM] Found CID:", resolved_cid))
-      } else {
-        resolved_cid <- -1
-        message("  [PUBCHEM] No CID found.")
-      }
-    }
-
-    # --- Final DB fallback if we have CID but missing name/smiles ---
-    if (!is.null(db_con) && !is.na(resolved_cid) && resolved_cid != -1 &&
-        (is.na(resolved_name) || is.na(resolved_smiles))) {
-      query <- sprintf("SELECT Title, SMILES FROM cid_data WHERE CID = %d", resolved_cid)
-      db_fallback <- dbGetQuery(db_con, query)
-      if (nrow(db_fallback) > 0) {
-        resolved_name <- ifelse(is.na(resolved_name), db_fallback$Title[1], resolved_name)
-        resolved_smiles <- ifelse(is.na(resolved_smiles), db_fallback$SMILES[1], resolved_smiles)
-        message("  [DB FILL] Filled missing info from DB.")
-      }
-    }
-
-    # --- Update main data frame ---
-    data$CID[i] <- resolved_cid
-    if (!is.na(resolved_name)) data[[name_col]][i] <- resolved_name
-    if (!is.na(resolved_smiles)) data[[smiles_col]][i] <- resolved_smiles
-
-    # --- Update Cache ---
-    existing <- which(cid_cache_df$LookupName == name)
-    if (length(existing) == 0) {
-      cid_cache_df <<- bind_rows(cid_cache_df, data.frame(
-        LookupName = name,
-        ResolvedName = resolved_name,
-        SMILES = resolved_smiles,
-        CID = resolved_cid,
-        stringsAsFactors = FALSE
-      ))
-      message(paste("  [CACHE ADD] ", name))
-    }
-
-    setTxtProgressBar(pb, i)
-  }
-
-  if (!is.null(db_con)) dbDisconnect(db_con)
-  close(pb)
-
-  # --- Save Cache ---
-  tryCatch({
-    write.csv(cid_cache_df, cid_cache_path, row.names = FALSE)
-    message("[CACHE WRITE] Saved cache to: ", cid_cache_path)
-  }, error = function(e) {
-    warning("Failed to save cache: ", e$message)
-  })
-
-  return(data)
+  return(df)
 }
