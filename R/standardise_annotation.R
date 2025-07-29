@@ -34,132 +34,141 @@ standardise_annotation <- function(data,
                                    smiles_col = "smiles",
                                    cid_cache_df = NULL,
                                    cid_database_path = NULL) {
+
   library(dplyr)
   library(DBI)
   library(RSQLite)
 
-  if (is.null(cid_cache_df)) {
-    stop("cid_cache_df must be provided")
-  }
+  # --- Checks ---
+  if (is.null(cid_cache_df)) stop("cid_cache_df must be provided.")
+  if (!(name_col %in% names(data))) stop("Missing column: ", name_col)
+  if (!(smiles_col %in% names(data))) stop("Missing column: ", smiles_col)
+  if (nrow(data) == 0) return(list(data = data, cache = cid_cache_df))
 
-  # Helper function for fallback PubChem lookup (simplified placeholder)
-  get_cid_with_fallbacks <- function(name, smiles) {
-    # Example placeholder function:
-    # Ideally, here you query PubChem API to get CID, ResolvedName, SMILES
-    # Return a list with CID, ResolvedName, SMILES or NULL if not found
-    # For now, simulate failure to find CID:
-    return(NULL)
-  }
+  # --- Filter out "candidate" names ---
+  data <- data %>%
+    filter(!grepl("candidate", .data[[name_col]], ignore.case = TRUE))
 
-  # Connect to SQLite DB if path provided
+  if (nrow(data) == 0) return(list(data = data, cache = cid_cache_df))
+
+  data[[name_col]] <- as.character(data[[name_col]])
+  data[[smiles_col]] <- as.character(data[[smiles_col]])
+  data$CID <- NA_real_
+
+  # --- Optional DB Connection ---
   db_con <- NULL
   if (!is.null(cid_database_path) && file.exists(cid_database_path)) {
     message("[DB CONNECT] Connecting to CID SQLite DB...")
     db_con <- dbConnect(SQLite(), cid_database_path)
+    on.exit(if (!is.null(db_con)) dbDisconnect(db_con), add = TRUE)
   } else {
     message("[DB CONNECT] Database not found or path is NULL.")
   }
 
-  # Return early if no rows
-  if (nrow(data) == 0) return(list(data = data, cache = cid_cache_df))
+  # --- Internal function: safely query PubChem ---
+  safe_get_pubchem <- function(name, smiles) {
+    out <- tryCatch({
+      get_cid_with_fallbacks(name, smiles)  # your own function
+    }, error = function(e) {
+      message("  [PUBCHEM ERROR] ", e$message)
+      NULL
+    })
+    if (is.null(out)) {
+      list(CID = -1, ResolvedName = NA_character_, SMILES = NA_character_)
+    } else {
+      out
+    }
+  }
 
-  # Check required columns
-  if (!(name_col %in% names(data))) stop("Missing column: ", name_col)
-  if (!(smiles_col %in% names(data))) stop("Missing column: ", smiles_col)
-
-  # Coerce to character
-  data[[name_col]] <- as.character(data[[name_col]])
-  data[[smiles_col]] <- as.character(data[[smiles_col]])
-
-  # Filter out 'candidate' rows
-  data <- data[!grepl("candidate", data[[name_col]], ignore.case = TRUE), ]
-  if (nrow(data) == 0) return(list(data = data, cache = cid_cache_df))
-
-  # Initialize CID column
-  data$CID <- NA_real_
-
+  # --- Main Loop ---
   pb <- txtProgressBar(min = 0, max = nrow(data), style = 3)
 
   for (i in seq_len(nrow(data))) {
     name <- data[[name_col]][i]
     smiles <- data[[smiles_col]][i]
+
     if (is.na(name) || !nzchar(name)) {
       setTxtProgressBar(pb, i)
       next
     }
 
-    resolved_cid <- NA_real_
-    resolved_name <- NA_character_
-    resolved_smiles <- NA_character_
+    resolved <- list(CID = NA_real_, ResolvedName = NA_character_, SMILES = NA_character_)
 
-    # 1. Try cache first
+    # --- 1. Check Cache ---
     cached <- cid_cache_df %>% filter(LookupName == name & !is.na(ResolvedName) & !is.na(SMILES))
     if (nrow(cached) > 0 && !is.na(cached$CID[1])) {
-      resolved_cid <- cached$CID[1]
-      resolved_name <- cached$ResolvedName[1]
-      resolved_smiles <- cached$SMILES[1]
-      message(paste("  [CACHE HIT] CID:", resolved_cid))
+      resolved <- list(
+        CID = cached$CID[1],
+        ResolvedName = cached$ResolvedName[1],
+        SMILES = cached$SMILES[1]
+      )
+      message("  [CACHE HIT] CID: ", resolved$CID)
     }
 
-    # 2. Try local DB lookup if not in cache
-    if (is.na(resolved_cid) && !is.null(db_con)) {
-      query <- sprintf("SELECT CID, Title, SMILES FROM cid_data WHERE Title = '%s' COLLATE NOCASE", gsub("'", "''", name))
+    # --- 2. Check SQLite DB ---
+    if (is.na(resolved$CID) && !is.null(db_con)) {
+      query <- sprintf("SELECT CID, Title, SMILES FROM cid_data WHERE Title = '%s' COLLATE NOCASE",
+                       gsub("'", "''", name))
       db_result <- tryCatch(dbGetQuery(db_con, query), error = function(e) NULL)
+
       if (!is.null(db_result) && nrow(db_result) > 0) {
-        resolved_cid <- db_result$CID[1]
-        resolved_name <- db_result$Title[1]
-        resolved_smiles <- db_result$SMILES[1]
-        message(paste("  [DB LOOKUP] Found CID in DB:", resolved_cid))
+        resolved <- list(
+          CID = db_result$CID[1],
+          ResolvedName = db_result$Title[1],
+          SMILES = db_result$SMILES[1]
+        )
+        message("  [DB LOOKUP] Found CID: ", resolved$CID)
       }
     }
 
-    # 3. Fallback to PubChem (or any other external lookup)
-    if (is.na(resolved_cid)) {
-      info <- get_cid_with_fallbacks(name, smiles)
-      if (!is.null(info) && !is.na(info$CID) && info$CID != -1) {
-        resolved_cid <- info$CID
-        resolved_name <- info$ResolvedName
-        resolved_smiles <- info$SMILES
-        message(paste("  [PUBCHEM] Found CID:", resolved_cid))
+    # --- 3. Try PubChem ---
+    if (is.na(resolved$CID)) {
+      resolved <- safe_get_pubchem(name, smiles)
+
+      if (!is.na(resolved$CID) && resolved$CID != -1) {
+        message("  [PUBCHEM] Found CID: ", resolved$CID)
       } else {
-        resolved_cid <- -1
         message("  [PUBCHEM] No CID found.")
       }
     }
 
-    # 4. If CID found but missing name or smiles, try to fill from DB by CID
-    if (!is.null(db_con) && !is.na(resolved_cid) && resolved_cid != -1 && (is.na(resolved_name) || is.na(resolved_smiles))) {
-      query <- sprintf("SELECT Title, SMILES FROM cid_data WHERE CID = %d", resolved_cid)
-      db_fallback <- dbGetQuery(db_con, query)
-      if (nrow(db_fallback) > 0) {
-        resolved_name <- ifelse(is.na(resolved_name), db_fallback$Title[1], resolved_name)
-        resolved_smiles <- ifelse(is.na(resolved_smiles), db_fallback$SMILES[1], resolved_smiles)
+    # --- 4. Fallback: fill missing from DB via CID ---
+    if (!is.null(db_con) && !is.na(resolved$CID) && resolved$CID != -1 &&
+        (is.na(resolved$ResolvedName) || is.na(resolved$SMILES))) {
+      fallback_query <- sprintf("SELECT Title, SMILES FROM cid_data WHERE CID = %d", resolved$CID)
+      fallback_result <- dbGetQuery(db_con, fallback_query)
+      if (nrow(fallback_result) > 0) {
+        if (is.na(resolved$ResolvedName)) resolved$ResolvedName <- fallback_result$Title[1]
+        if (is.na(resolved$SMILES)) resolved$SMILES <- fallback_result$SMILES[1]
         message("  [DB FILL] Filled missing info from DB.")
       }
     }
 
-    # Update the row
-    data$CID[i] <- resolved_cid
-    if (!is.na(resolved_name)) data[[name_col]][i] <- resolved_name
-    if (!is.na(resolved_smiles)) data[[smiles_col]][i] <- resolved_smiles
+    # --- Update Data ---
+    data$CID[i] <- resolved$CID
+    if (!is.na(resolved$ResolvedName)) data[[name_col]][i] <- resolved$ResolvedName
+    if (!is.na(resolved$SMILES)) data[[smiles_col]][i] <- resolved$SMILES
 
-    # Update cache if new entry
-    existing <- which(cid_cache_df$LookupName == name)
-    if (length(existing) == 0) {
-      cid_cache_df <- bind_rows(cid_cache_df,
-                                data.frame(LookupName = name,
-                                           ResolvedName = resolved_name,
-                                           SMILES = resolved_smiles,
-                                           CID = resolved_cid,
-                                           stringsAsFactors = FALSE))
-      message(paste("  [CACHE ADD]", name))
+    # --- Update Cache ---
+    if (!name %in% cid_cache_df$LookupName) {
+      cid_cache_df <- bind_rows(
+        cid_cache_df,
+        data.frame(
+          LookupName = name,
+          ResolvedName = resolved$ResolvedName,
+          SMILES = resolved$SMILES,
+          CID = resolved$CID,
+          stringsAsFactors = FALSE
+        )
+      )
+      message("  [CACHE ADD] ", name)
     }
 
     setTxtProgressBar(pb, i)
   }
 
-  if (!is.null(db_con)) dbDisconnect(db_con)
   close(pb)
 
+  # --- Return ---
   return(list(data = data, cache = cid_cache_df))
 }
