@@ -5,7 +5,7 @@
 #' to retrieve CIDs, compound titles, or molecular properties.
 #'
 #' @param query The input string to search for (compound name, SMILES, or CID).
-#' @param type A character string: one of \code{"name"}, \code{"smiles"}, \code{\ "synonym"}, or \code{"cid"}.
+#' @param type A character string: one of \code{"name"}, \code{"smiles"}, \code{"synonym"}, or \code{"cid"}.
 #' @param property A character string specifying what to retrieve. Options:
 #'   \itemize{
 #'     \item \code{"cids"}: to retrieve the compound ID(s)
@@ -32,7 +32,7 @@
 #' # get_pubchem("5793", type = "cid", property = "title")
 #' # get_pubchem("5793", type = "cid", property = "properties", db_con = my_db_connection)
 #' }
-get_pubchem <- function(query, type, property = NULL, db_con = NULL) { # Add db_con parameter
+get_pubchem <- function(query, type, property = NULL, db_con = NULL) {
   base_url <- "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
 
   # Helper function to safely extract text, returning NA if node not found or empty
@@ -109,11 +109,20 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) { # Add db_
     } else return(NA_character_) # Return character NA on page fetch failure
 
   } else if (type == "cid" && property == "properties") {
-    # --- MODIFICATION START ---
+    message(paste("  [get_pubchem DEBUG] Inside 'cid' && 'properties' block for CID:", query))
+    message(paste("  [get_pubchem DEBUG] Is db_con NULL?", is.null(db_con)))
+    if (!is.null(db_con)) {
+      message(paste("  [get_pubchem DEBUG] Is db_con valid?", DBI::dbIsValid(db_con)))
+    } else {
+      message("  [get_pubchem DEBUG] db_con is NULL, so not checking dbIsValid.")
+    }
+
+
     # Use the local database to retrieve SMILES
     if (!is.null(db_con) && DBI::dbIsValid(db_con)) {
       tryCatch({
         query_db <- sprintf("SELECT SMILES FROM cid_data WHERE CID = %s", sQuote(query))
+        message(paste("  [get_pubchem DEBUG] Executing DB query:", query_db))
         db_result <- DBI::dbGetQuery(db_con, query_db)
 
         if (nrow(db_result) > 0 && !is.na(db_result$SMILES[1])) {
@@ -158,6 +167,7 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) { # Add db_
         }
       })
     } else {
+      # This is the path taken if (!is.null(db_con) && DBI::dbIsValid(db_con)) is FALSE
       message(paste("  [get_pubchem INFO] No valid database connection for properties lookup. Querying PubChem API for CID", query))
       # Original PubChem API call if no database connection is provided or valid
       url <- paste0(base_url, "/compound/cid/", query, "/property/IsomericSMILES/XML")
@@ -179,7 +189,6 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) { # Add db_
       })
       return(response)
     }
-    # --- MODIFICATION END ---
   } else {
     message("Invalid query type or property.")
     return(NA)
