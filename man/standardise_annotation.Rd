@@ -5,24 +5,23 @@
 \title{Standardise Compound Annotations Using PubChem}
 \usage{
 standardise_annotation(
-  df,
+  data,
   name_col = "compound_name",
   smiles_col = "smiles",
-  cid_cache_path = NULL,
-  db_con = NULL,
+  cid_cache_df = NULL,
   cid_database_path = NULL
 )
 }
 \arguments{
+\item{data}{A data frame containing compound annotations.}
+
 \item{name_col}{Name of the column in \code{data} containing compound names (as a string).}
 
 \item{smiles_col}{Name of the column in \code{data} containing SMILES strings (as a string).}
 
-\item{cid_cache_path}{Path to the "cid_cache.csv" file for loading/saving the cache.}
-
 \item{cid_database_path}{Path to the "SQLite database" file.}
 
-\item{data}{A data frame containing compound annotations.}
+\item{cid_cache_path}{Path to the "cid_cache.csv" file for loading/saving the cache.}
 }
 \value{
 A data frame with standardised annotations and an additional PubChem info column:

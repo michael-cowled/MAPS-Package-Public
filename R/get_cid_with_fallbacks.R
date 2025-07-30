@@ -47,6 +47,12 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
     }
   }
 
+  # NEW: If a cached entry is found and its CID is -1, return it immediately as unresolvable.
+  if (!is.null(cached_entry) && !is.na(cached_entry$CID[1]) && cached_entry$CID[1] == -1) {
+    message(paste("  [CACHE HIT] Unresolvable CID (-1) found for:", name, ". Skipping PubChem lookup."))
+    return(as.list(cached_entry[1, c("CID", "ResolvedName", "SMILES")]))
+  }
+
   # If a cached entry is found and it has a CID and all properties (excluding removed ones), return it.
   # This prevents unnecessary API calls for fully resolved entries.
   if (!is.null(cached_entry) &&
@@ -62,7 +68,7 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
   # resolved_title will be determined more carefully below
   resolved_props <- list(SMILES = NA_character_) # Initialize with NAs
 
-  # Start with cached CID if available, even if incomplete
+  # Start with cached CID if available, even if incomplete (but not -1)
   if (!is.null(cached_entry) && !is.na(cached_entry$CID[1])) {
     resolved_cid <- cached_entry$CID[1]
     message(paste("  [CACHE INCOMPLETE] Re-attempting PubChem for CID:", resolved_cid))
@@ -86,7 +92,8 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
   }
 
   # --- Retrieve Properties and Title based on the best CID found ---
-  if (!is.na(resolved_cid)) {
+  # Only proceed if a valid CID (not NA and not -1) was found
+  if (!is.na(resolved_cid) && resolved_cid != -1) {
     # Attempt to get properties (now only SMILES)
     temp_props <- get_pubchem(resolved_cid, "cid", "properties")
 
@@ -160,5 +167,6 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
   }
 
   message(paste("  Could not resolve CID for:", name))
+  # If no valid CID was found or properties couldn't be retrieved, return NULL
   return(NULL)
 }
