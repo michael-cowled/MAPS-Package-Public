@@ -47,8 +47,8 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
     }
   }
 
-  # NEW: If a cached entry is found and its CID is -1, return it immediately as unresolvable.
-  if (!is.null(cached_entry) && !is.na(cached_entry$CID[1]) && cached_entry$CID[1] == -1) {
+  # If a cached entry is found and its CID is 0 or -1, return it immediately as unresolvable.
+  if (!is.null(cached_entry) && !is.na(cached_entry$CID[1]) && cached_entry$CID[1] == -1 | cached_entry$CID[1] == 0) {
     message(paste("  [CACHE HIT] Unresolvable CID (-1) found for:", name, ". Skipping PubChem lookup."))
     return(as.list(cached_entry[1, c("CID", "ResolvedName", "SMILES")]))
   }
