@@ -19,7 +19,7 @@
 #' get_cid_with_fallbacks("glucose")
 #' get_cid_with_fallbacks("some compound", smiles = "CCO")
 #' }
-get_cid_with_fallbacks <- function(name, smiles = NA) {
+get_cid_with_fallbacks <- function(name, smiles = NA, db_con = NULL) {
 
   # --- Cache Lookup and Prioritization ---
   cached_entry <- NULL
@@ -76,26 +76,26 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
 
   # 1. Try name
   if (is.na(resolved_cid)) {
-    resolved_cid <- get_pubchem(name, "name", "cids")
+    resolved_cid <- get_pubchem(name, "name", "cids", db_con = NULL)
   }
 
   # 2. Try SMILES
   if (is.na(resolved_cid) && !is.na(smiles) && smiles != "") {
     message(paste("  Name lookup failed. Trying SMILES:", smiles))
-    resolved_cid <- get_pubchem(smiles, "smiles", "cids")
+    resolved_cid <- get_pubchem(smiles, "smiles", "cids", db_con = NULL)
   }
 
   # 3. Try synonym
   if (is.na(resolved_cid)) {
     message(paste("  Name and SMILES failed. Trying synonym search for:", name))
-    resolved_cid <- get_pubchem(name, "synonym", "cids")
+    resolved_cid <- get_pubchem(name, "synonym", "cids", db_con = NULL)
   }
 
   # --- Retrieve Properties and Title based on the best CID found ---
   # Only proceed if a valid CID (not NA and not -1) was found
   if (!is.na(resolved_cid) && resolved_cid != -1) {
     # Attempt to get properties (now only SMILES)
-    temp_props <- get_pubchem(resolved_cid, "cid", "properties")
+    temp_props <- get_pubchem(resolved_cid, "cid", "properties", db_con = NULL)
 
     # Ensure temp_props is a list before accessing elements, and initialize missing with NA
     if (is.list(temp_props)) {
@@ -106,7 +106,7 @@ get_cid_with_fallbacks <- function(name, smiles = NA) {
     }
 
     # Attempt to get title from PubChem
-    temp_title <- get_pubchem(resolved_cid, "cid", "title")
+    temp_title <- get_pubchem(resolved_cid, "cid", "title", db_con = NULL)
     new_pubchem_title <- if (is.character(temp_title) && !is.na(temp_title)) temp_title else NA_character_
 
     # Determine the best ResolvedName (cleaned to remove any "| ..." suffix)
