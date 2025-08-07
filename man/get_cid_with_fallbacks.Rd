@@ -4,7 +4,7 @@
 \alias{get_cid_with_fallbacks}
 \title{Get CID from PubChem with Fallbacks and Caching}
 \usage{
-get_cid_with_fallbacks(name, smiles = NA)
+get_cid_with_fallbacks(name, smiles = NA, db_con = NULL)
 }
 \arguments{
 \item{name}{A character string representing the compound name.}

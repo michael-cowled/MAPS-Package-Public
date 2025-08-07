@@ -36,7 +36,6 @@ standardise_annotation <- function(data,
                                    cid_database_path = NULL) {
 
   library(dplyr)
-  library(DBI)
   library(RSQLite)
 
   # --- Checks ---
@@ -66,9 +65,9 @@ standardise_annotation <- function(data,
   }
 
   # --- Internal function: safely query PubChem ---
-  safe_get_pubchem <- function(name, smiles) {
+  safe_get_pubchem <- function(name, smiles, db_con, cid_cache_df) {
     out <- tryCatch({
-      get_cid_with_fallbacks(name, smiles)  # your own function
+      get_cid_with_fallbacks(name, smiles, db_con = db_con, cid_cache_df = cid_cache_df)
     }, error = function(e) {
       message("  [PUBCHEM ERROR] ", e$message)
       NULL
