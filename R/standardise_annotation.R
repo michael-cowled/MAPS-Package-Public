@@ -13,6 +13,7 @@
 #'
 #' @return A list with two elements: `data` (the updated data frame) and `cache` (the updated CID cache).
 #' @export
+#'
 standardise_annotation <- function(data,
                                    name_col = "compound_name",
                                    smiles_col = "smiles",
@@ -80,12 +81,8 @@ standardise_annotation <- function(data,
   if (length(cids_to_lookup) > 0) {
     cid_str <- paste(cids_to_lookup, collapse = ", ")
 
-    query <- sprintf("
-      SELECT CID, Title, SMILES, Formula AS Formula_db,
-             IUPAC AS IUPAC_db, `Monoisotopic.Mass` AS Monoisotopic_Mass_db
-      FROM pubchem_data
-      WHERE CID IN (%s)
-      GROUP BY CID", cid_str)
+    # Corrected SQL query string
+    query <- sprintf("SELECT CID, Title, SMILES, Formula AS Formula_db, IUPAC AS IUPAC_db, `Monoisotopic.Mass` AS Monoisotopic_Mass_db FROM pubchem_data WHERE CID IN (%s) GROUP BY CID", cid_str)
 
     message("[SQL QUERY]")
     message(query)
@@ -120,7 +117,7 @@ standardise_annotation <- function(data,
     } else {
       message("[DB LOOKUP] No rows returned.")
     }
-
+  }
 
   return(list(data = data, cache = cid_cache_df))
 }
