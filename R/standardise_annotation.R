@@ -1,18 +1,3 @@
-#' Standardise Compound Annotations Using PubChem (Rewritten)
-#'
-#' For each row in a data frame, attempts to resolve compound CIDs using PubChem.
-#' Then, uses the resolved CIDs to retrieve and update compound name (with PubChem Title),
-#' SMILES, Formula, IUPAC, and Monoisotopic.Mass from a local SQLite database.
-#' Rows containing "candidate" (case-insensitive) in the name column are excluded.
-#'
-#' @param data A data frame containing compound annotations.
-#' @param name_col Name of the column in `data` containing compound names (as a string).
-#' @param smiles_col Name of the column in `data` containing SMILES strings (as a string).
-#' @param cid_cache_df A data frame to use as a cache for PubChem CID lookups.
-#' @param cid_database_path Path to the "SQLite database" file.
-#'
-#' @return A list with two elements: `data` (the updated data frame) and `cache` (the updated CID cache).
-#' @export
 standardise_annotation <- function(data,
                                    name_col = "compound_name",
                                    smiles_col = "smiles",
@@ -44,7 +29,12 @@ standardise_annotation <- function(data,
   # --- DB Connection ---
   message("[DB CONNECT] Connecting to CID SQLite DB...")
   db_con <- dbConnect(SQLite(), cid_database_path)
-  on.exit(dbDisconnect(db_con), add = TRUE)
+  on.exit({
+    if (DBI::dbIsValid(db_con)) {
+      dbDisconnect(db_con)
+      message("[DB DISCONNECT] Closed DB connection.")
+    }
+  }, add = TRUE)
 
   # --- PASS 1: Resolve CIDs ---
   message("--- PASS 1: Resolving CIDs from PubChem ---")
@@ -70,54 +60,49 @@ standardise_annotation <- function(data,
   # --- PASS 2: Retrieve Properties from Local DB ---
   message("\n--- PASS 2: Retrieving Properties from Local DB ---")
 
-  # Filter valid CIDs
   cids_to_lookup <- unique(data$CID[!is.na(data$CID) & data$CID > 0])
-  print("Unique CIDs to look up:")
-  print(cids_to_lookup)
-
-  # Pre-initialise columns
-  data$IUPAC <- NA_character_
-  data$Formula <- NA_character_
-  data$Monoisotopic.Mass <- NA_real_
 
   if (length(cids_to_lookup) > 0) {
-    query_cids <- paste(sQuote(cids_to_lookup), collapse = ",")
-    query <- sprintf(
-      "SELECT CID, Title, SMILES, Formula AS Formula.db, IUPAC AS IUPAC.db, `Monoisotopic.Mass` AS `Monoisotopic.Mass.db`
-       FROM pubchem_data
-       WHERE CID IN (%s)", query_cids
-    )
+    cid_str <- paste(cids_to_lookup, collapse = ", ")
 
-    print("SQL query to be executed:")
-    print(query)
+    query <- sprintf("
+      SELECT CID, Title, SMILES, Formula AS Formula_db,
+             IUPAC AS IUPAC_db, `Monoisotopic.Mass` AS Monoisotopic_Mass_db
+      FROM pubchem_data
+      WHERE CID IN (%s)
+      GROUP BY CID", cid_str)
+
+    message("[SQL QUERY]")
+    message(query)
 
     db_props <- tryCatch(
       dbGetQuery(db_con, query),
       error = function(e) {
-        message("  [DB ERROR] Bulk property lookup failed: ", e$message)
+        message("[DB ERROR] ", e$message)
         return(NULL)
       }
     )
 
-    print("Number of rows returned from the database:")
-    print(if (is.null(db_props)) 0 else nrow(db_props))
-
     if (!is.null(db_props) && nrow(db_props) > 0) {
+      message("[DB LOOKUP] Retrieved ", nrow(db_props), " rows")
+
+      # Merge properties into original data
       data <- data %>%
         left_join(db_props, by = "CID") %>%
         mutate(
-          !!sym(name_col) := coalesce(Title, IUPAC.db, !!sym(name_col)),
+          !!sym(name_col) := coalesce(Title, IUPAC_db, !!sym(name_col)),
           !!sym(smiles_col) := coalesce(SMILES, !!sym(smiles_col)),
-          Formula = coalesce(Formula.db, Formula),
-          IUPAC = coalesce(IUPAC.db, IUPAC),
-          Monoisotopic.Mass = coalesce(`Monoisotopic.Mass.db`, Monoisotopic.Mass)
+          Formula = coalesce(Formula_db, Formula),
+          IUPAC = coalesce(IUPAC_db, IUPAC),
+          Monoisotopic.Mass = coalesce(Monoisotopic_Mass_db, Monoisotopic.Mass)
         ) %>%
-        select(-Title, -SMILES, -Formula.db, -IUPAC.db, -`Monoisotopic.Mass.db`)
-
-      message("  [DB LOOKUP] Updated ", nrow(db_props), " rows with properties.")
+        select(-Title, -SMILES, -Formula_db, -IUPAC_db, -Monoisotopic_Mass_db)
+    } else {
+      message("[DB LOOKUP] No rows returned.")
     }
+  } else {
+    message("[DB LOOKUP] No valid CIDs found.")
   }
 
-  # --- Return ---
   return(list(data = data, cache = cid_cache_df))
 }
