@@ -99,9 +99,14 @@ standardise_annotation <- function(data,
     )
 
     if (!is.null(db_props) && nrow(db_props) > 0) {
+      # Convert CID to numeric for safe join
+      if ("CID" %in% colnames(db_props)) {
+        db_props$CID <- as.numeric(db_props$CID)
+      }
+
       message("[DB LOOKUP] Retrieved ", nrow(db_props), " rows")
 
-      # Merge properties into original data
+      # Then the left join as before
       data <- data %>%
         left_join(db_props, by = "CID") %>%
         mutate(
@@ -115,9 +120,7 @@ standardise_annotation <- function(data,
     } else {
       message("[DB LOOKUP] No rows returned.")
     }
-  } else {
-    message("[DB LOOKUP] No valid CIDs found.")
-  }
+
 
   return(list(data = data, cache = cid_cache_df))
 }
