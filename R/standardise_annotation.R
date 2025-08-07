@@ -1,3 +1,18 @@
+#' Standardise Compound Annotations Using PubChem (Rewritten)
+#'
+#' For each row in a data frame, attempts to resolve compound CIDs using PubChem.
+#' Then, uses the resolved CIDs to retrieve and update compound name (with PubChem Title),
+#' SMILES, Formula, IUPAC, and Monoisotopic.Mass from a local SQLite database.
+#' Rows containing "candidate" (case-insensitive) in the name column are excluded.
+#'
+#' @param data A data frame containing compound annotations.
+#' @param name_col Name of the column in `data` containing compound names (as a string).
+#' @param smiles_col Name of the column in `data` containing SMILES strings (as a string).
+#' @param cid_cache_df A data frame to use as a cache for PubChem CID lookups.
+#' @param cid_database_path Path to the "SQLite database" file.
+#'
+#' @return A list with two elements: `data` (the updated data frame) and `cache` (the updated CID cache).
+#' @export
 standardise_annotation <- function(data,
                                    name_col = "compound_name",
                                    smiles_col = "smiles",

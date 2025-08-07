@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_cid_with_fallbacks.R
 \name{get_cid_only_with_fallbacks}
 \alias{get_cid_only_with_fallbacks}
-\title{Get CID from PubChem with Fallbacks and Simplified Caching}
+\title{Get CID from PubChem with Fallbacks and Simplified Caching (Corrected)}
 \usage{
 get_cid_only_with_fallbacks(name, smiles = NA, cid_cache_df)
 }
