@@ -37,19 +37,16 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) {
 
   # Helper function to safely extract text, returning NA if node not found or empty
   safe_xml_text <- function(xml_obj, xpath) {
-    # Check if xml_obj is valid before trying to find nodes
     if (is.null(xml_obj) || !inherits(xml_obj, "xml_document")) {
       return(NA_character_)
     }
 
     node <- xml2::xml_find_first(xml_obj, xpath)
-    # Check if node exists (length > 0)
     if (length(node) == 0) {
       return(NA_character_)
     }
 
     text <- xml2::xml_text(node)
-    # Check for empty string result, which can happen if node exists but has no text
     if (length(text) == 0 || nchar(text) == 0) {
       return(NA_character_)
     }
@@ -65,7 +62,7 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) {
     if (!is.null(response$IdentifierList$CID)) {
       Sys.sleep(0.2)
       return(response$IdentifierList$CID[1])
-    } else return(NA_real_) # Return numeric NA for CID
+    } else return(NA_real_)
 
   } else if (type == "smiles" && property == "cids") {
     url <- paste0(base_url, "/compound/smiles/", URLencode(query), "/cids/JSON")
@@ -76,7 +73,7 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) {
     if (!is.null(response$IdentifierList$CID)) {
       Sys.sleep(0.2)
       return(response$IdentifierList$CID[1])
-    } else return(NA_real_) # Return numeric NA for CID
+    } else return(NA_real_)
 
   } else if (type == "synonym" && property == "cids") {
     url <- paste0(base_url, "/compound/name/", URLencode(query), "/synonyms/JSON")
@@ -89,7 +86,7 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) {
       return(response$InformationList$Information[[1]]$CID)
     } else {
       message("    Synonym search returned no CID.")
-      return(NA_real_) # Return numeric NA for CID
+      return(NA_real_)
     }
 
   } else if (type == "cid" && property == "title") {
@@ -104,21 +101,12 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) {
         title <- rvest::html_text(title_node)
         return(gsub(" - PubChem", "", title, fixed = TRUE))
       } else {
-        return(NA_character_) # Return character NA if title node not found
+        return(NA_character_)
       }
-    } else return(NA_character_) # Return character NA on page fetch failure
+    } else return(NA_character_)
 
   } else if (type == "cid" && property == "properties") {
-    message(paste("  [get_pubchem DEBUG] Inside 'cid' && 'properties' block for CID:", query))
-    message(paste("  [get_pubchem DEBUG] Is db_con NULL?", is.null(db_con)))
-    if (!is.null(db_con)) {
-      message(paste("  [get_pubchem DEBUG] Is db_con valid?", DBI::dbIsValid(db_con)))
-    } else {
-      message("  [get_pubchem DEBUG] db_con is NULL, so not checking dbIsValid.")
-    }
-
-
-    # Use the local database to retrieve SMILES
+    # Check if a database connection is provided and valid
     if (!is.null(db_con) && DBI::dbIsValid(db_con)) {
       tryCatch({
         query_db <- sprintf("SELECT SMILES FROM cid_data WHERE CID = %s", sQuote(query))
@@ -130,65 +118,35 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) {
           return(list(SMILES = db_result$SMILES[1]))
         } else {
           message(paste("  [get_pubchem INFO] SMILES not found in local DB for CID", query, ". Falling back to PubChem API."))
-          # Fallback to PubChem API if not found in local DB
-          url <- paste0(base_url, "/compound/cid/", query, "/property/IsomericSMILES/XML")
-          xml_response <- tryCatch({
-            xml2::read_xml(url)
-          }, error = function(e) {
-            message(paste("  [get_pubchem ERROR] Failed to retrieve properties from PubChem API for CID", query, ":", e$message))
-            return(NULL)
-          })
-
-          if (!is.null(xml_response) && !inherits(xml_response, "try-error")) {
-            smiles_from_pubchem <- safe_xml_text(xml_response, ".//IsomericSMILES")
-            Sys.sleep(0.2)
-            return(list(SMILES = smiles_from_pubchem))
-          } else {
-            return(NULL) # Indicate failure if both local DB and PubChem API fail
-          }
         }
       }, error = function(e) {
         message(paste("  [get_pubchem ERROR] Database lookup failed for CID", query, ":", e$message))
-        # Fallback to PubChem API on database error
-        url <- paste0(base_url, "/compound/cid/", query, "/property/IsomericSMILES/XML")
-        xml_response <- tryCatch({
-          xml2::read_xml(url)
-        }, error = function(e) {
-          message(paste("  [get_pubchem ERROR] Failed to retrieve properties from PubChem API (after DB error) for CID", query, ":", e$message))
-          return(NULL)
-        })
-
-        if (!is.null(xml_response) && !inherits(xml_response, "try-error")) {
-          smiles_from_pubchem <- safe_xml_text(xml_response, ".//IsomericSMILES")
-          Sys.sleep(0.2)
-          return(list(SMILES = smiles_from_pubchem))
-        } else {
-          return(NULL)
-        }
       })
     } else {
-      # This is the path taken if (!is.null(db_con) && DBI::dbIsValid(db_con)) is FALSE
       message(paste("  [get_pubchem INFO] No valid database connection for properties lookup. Querying PubChem API for CID", query))
-      # Original PubChem API call if no database connection is provided or valid
+    }
+
+    # Fallback to PubChem API if no database, DB query failed, or DB didn't contain the info
+    # Ensure query is not an invalid CID like 0 or -1 before proceeding
+    if (!is.na(as.numeric(query)) && as.numeric(query) > 0) {
       url <- paste0(base_url, "/compound/cid/", query, "/property/IsomericSMILES/XML")
-      response <- tryCatch({
-        xml <- xml2::read_xml(url)
-
-        if (is.null(xml) || inherits(xml, "try-error")) {
-          stop("XML object is NULL or an error after read_xml, forcing NULL return.")
-        }
-
-        result <- list(
-          SMILES = safe_xml_text(xml, ".//IsomericSMILES")
-        )
-        Sys.sleep(0.2)
-        return(result)
+      xml_response <- tryCatch({
+        xml2::read_xml(url)
       }, error = function(e) {
-        message(paste("  [get_pubchem ERROR] Failed to retrieve properties for CID", query, ":", e$message))
+        message(paste("  [get_pubchem ERROR] Failed to retrieve properties from PubChem API for CID", query, ":", e$message))
         return(NULL)
       })
-      return(response)
+
+      if (!is.null(xml_response) && !inherits(xml_response, "try-error")) {
+        smiles_from_pubchem <- safe_xml_text(xml_response, ".//IsomericSMILES")
+        Sys.sleep(0.2)
+        return(list(SMILES = smiles_from_pubchem))
+      }
+    } else {
+      message("  [get_pubchem INFO] Invalid CID for properties lookup. Skipping API call.")
     }
+
+    return(NULL)
   } else {
     message("Invalid query type or property.")
     return(NA)
