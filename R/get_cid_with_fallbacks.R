@@ -1,4 +1,4 @@
-#' Get CID from PubChem with Fallbacks and Simplified Caching
+#' Get CID from PubChem with Fallbacks and Simplified Caching (Corrected)
 #'
 #' Attempts to resolve a PubChem CID using compound name and SMILES.
 #' Updates a provided cache which only stores the CID, not other properties.
@@ -16,37 +16,38 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df) {
     filter(!is.na(LookupName) & LookupName == name) %>%
     slice(1)
 
-  # Return cached CID if available
+  # --- 1. If a cached CID is found, return it immediately ---
   if (nrow(cached_entry) > 0 && !is.na(cached_entry$CID[1])) {
     message(paste("  [CACHE HIT] CID found for:", name, " (CID:", cached_entry$CID[1], ")"))
     return(list(CID = cached_entry$CID[1], cache = cid_cache_df))
   }
 
-  # --- PubChem Lookup with Fallbacks ---
+  # --- 2. If not in cache, perform PubChem lookup with fallbacks ---
   resolved_cid <- NA_real_
 
-  # 1. Try name lookup
+  # Try name lookup
   resolved_cid <- get_pubchem_lite(name, "name", "cids")
 
-  # 2. Try SMILES lookup
+  # Try SMILES lookup
   if (is.na(resolved_cid) && !is.na(smiles) && smiles != "") {
     message(paste("  Name lookup failed. Trying SMILES:", smiles))
     resolved_cid <- get_pubchem_lite(smiles, "smiles", "cids")
   }
 
-  # 3. Try synonym lookup
+  # Try synonym lookup
   if (is.na(resolved_cid)) {
     message(paste("  Name and SMILES failed. Trying synonym search for:", name))
     resolved_cid <- get_pubchem_lite(name, "synonym", "cids")
   }
 
-  # --- Update Cache ---
-  if (is.na(resolved_cid)) {
-    message(paste("  [PUBCHEM] No CID found for:", name))
-    # Create a failed entry to add to cache
-    new_entry <- data.frame(LookupName = name, CID = -1, stringsAsFactors = FALSE)
-  } else {
+  # --- 3. Update Cache based on lookup result ---
+  if (!is.na(resolved_cid)) {
+    message(paste("  [PUBCHEM] Found CID: ", resolved_cid))
     new_entry <- data.frame(LookupName = name, CID = resolved_cid, stringsAsFactors = FALSE)
+  } else {
+    message(paste("  [PUBCHEM] No CID found for:", name))
+    # Add a failed entry to cache
+    new_entry <- data.frame(LookupName = name, CID = -1, stringsAsFactors = FALSE)
   }
 
   # Add the new entry to the cache
