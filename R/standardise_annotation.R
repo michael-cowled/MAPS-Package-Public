@@ -14,10 +14,10 @@
 #' @return A list with two elements: `data` (the updated data frame) and `cache` (the updated CID cache).
 #' @export
 standardise_annotation <- function(data,
-                                       name_col = "compound_name",
-                                       smiles_col = "smiles",
-                                       cid_cache_df = NULL,
-                                       cid_database_path = NULL) {
+                                   name_col = "compound_name",
+                                   smiles_col = "smiles",
+                                   cid_cache_df = NULL,
+                                   cid_database_path = NULL) {
 
   # --- Library and Checks ---
   library(dplyr)
@@ -65,10 +65,6 @@ standardise_annotation <- function(data,
     data$CID[i] <- pubchem_result$CID
     cid_cache_df <- pubchem_result$cache
 
-    if (!is.na(data$CID[i]) && data$CID[i] != -1) {
-      message("  [PUBCHEM] Found CID: ", data$CID[i])
-    }
-
     setTxtProgressBar(pb, i)
   }
   close(pb)
@@ -101,7 +97,7 @@ standardise_annotation <- function(data,
           !!sym(smiles_col) := coalesce(SMILES, !!sym(smiles_col)),
           Formula = Formula,
           IUPAC = IUPAC,
-          Monoisotopic.Mass = `Monoisotopic.Mass` # Change this line to use backticks or brackets
+          Monoisotopic.Mass = `Monoisotopic.Mass`
         ) %>%
         select(-Title, -SMILES, -IUPAC.db, -`Monoisotopic.Mass`)
       message("  [DB LOOKUP] Updated ", nrow(db_props), " rows with properties.")
