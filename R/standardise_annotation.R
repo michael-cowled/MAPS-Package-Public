@@ -71,6 +71,10 @@ standardise_annotation <- function(data,
 
   # --- PASS 2: Retrieving Properties from Local DB ---
   message("\n--- PASS 2: Retrieving Properties from Local DB ---")
+  # --- ADDED TEST ---
+  print("Unique CIDs to look up:")
+  print(unique(data$CID[!is.na(data$CID) & data$CID != -1]))
+  # --- END ADDED TEST ---
 
   # Initialize new columns
   data$IUPAC <- NA_character_
@@ -84,10 +88,20 @@ standardise_annotation <- function(data,
     query_cids <- paste(sQuote(cids_to_lookup), collapse = ",")
     query <- sprintf("SELECT CID, Title, SMILES, Formula, IUPAC, \"Monoisotopic.Mass\" FROM pubchem_data WHERE CID IN (%s)", query_cids)
 
+    # --- ADDED TEST ---
+    print("SQL query to be executed:")
+    print(query)
+    # --- END ADDED TEST ---
+
     db_props <- tryCatch(dbGetQuery(db_con, query), error = function(e) {
       message("  [DB ERROR] Bulk property lookup failed: ", e$message)
       return(NULL)
     })
+
+    # --- ADDED TEST ---
+    print("Number of rows returned from the database:")
+    print(if (is.null(db_props)) 0 else nrow(db_props))
+    # --- END ADDED TEST ---
 
     if (!is.null(db_props) && nrow(db_props) > 0) {
       data <- data %>%
