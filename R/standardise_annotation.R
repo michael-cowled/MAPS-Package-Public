@@ -13,7 +13,7 @@
 #'
 #' @return A list with two elements: `data` (the updated data frame) and `cache` (the updated CID cache).
 #' @export
-standardise_annotation_new <- function(data,
+standardise_annotation <- function(data,
                                        name_col = "compound_name",
                                        smiles_col = "smiles",
                                        cid_cache_df = NULL,
@@ -86,7 +86,7 @@ standardise_annotation_new <- function(data,
   if (length(cids_to_lookup) > 0) {
     # Perform a single bulk query for all unique CIDs
     query_cids <- paste(sQuote(cids_to_lookup), collapse = ",")
-    query <- sprintf("SELECT CID, Title, SMILES, Formula, IUPAC, MonoisotopicMass FROM pubchem_data WHERE CID IN (%s)", query_cids)
+    query <- sprintf("SELECT CID, Title, SMILES, Formula, IUPAC, \"Monoisotopic.Mass\" FROM pubchem_data WHERE CID IN (%s)", query_cids)
 
     db_props <- tryCatch(dbGetQuery(db_con, query), error = function(e) {
       message("  [DB ERROR] Bulk property lookup failed: ", e$message)
@@ -94,20 +94,16 @@ standardise_annotation_new <- function(data,
     })
 
     if (!is.null(db_props) && nrow(db_props) > 0) {
-      # Use a join to update the main data frame with the retrieved properties
       data <- data %>%
         left_join(db_props, by = "CID", suffix = c("", ".db")) %>%
         mutate(
-          # Overwrite compound.name with Title from DB, prioritizing non-NA values
           !!sym(name_col) := coalesce(Title, IUPAC, !!sym(name_col)),
-          # Overwrite smiles with SMILES from DB
           !!sym(smiles_col) := coalesce(SMILES, !!sym(smiles_col)),
-          # Fill in the new columns
           Formula = Formula,
           IUPAC = IUPAC,
-          Monoisotopic.Mass = MonoisotopicMass
+          Monoisotopic.Mass = `Monoisotopic.Mass` # Change this line to use backticks or brackets
         ) %>%
-        select(-Title, -SMILES, -IUPAC.db, -MonoisotopicMass)
+        select(-Title, -SMILES, -IUPAC.db, -`Monoisotopic.Mass`)
       message("  [DB LOOKUP] Updated ", nrow(db_props), " rows with properties.")
     }
   }
