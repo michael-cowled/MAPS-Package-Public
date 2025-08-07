@@ -42,6 +42,11 @@ standardise_annotation <- function(data,
   data[[smiles_col]] <- as.character(data[[smiles_col]])
   data$CID <- NA_real_
 
+  # Initialize the new columns
+  data$Formula <- NA_character_
+  data$IUPAC <- NA_character_
+  data$Monoisotopic.Mass <- NA_real_
+
   # --- DB Connection ---
   message("[DB CONNECT] Connecting to CID SQLite DB...")
   db_con <- dbConnect(SQLite(), cid_database_path)
@@ -81,7 +86,6 @@ standardise_annotation <- function(data,
   if (length(cids_to_lookup) > 0) {
     cid_str <- paste(cids_to_lookup, collapse = ", ")
 
-    # Corrected SQL query string
     query <- sprintf("SELECT CID, Title, SMILES, Formula AS Formula_db, IUPAC AS IUPAC_db, `Monoisotopic.Mass` AS Monoisotopic_Mass_db FROM pubchem_data WHERE CID IN (%s) GROUP BY CID", cid_str)
 
     message("[SQL QUERY]")
@@ -96,14 +100,12 @@ standardise_annotation <- function(data,
     )
 
     if (!is.null(db_props) && nrow(db_props) > 0) {
-      # Convert CID to numeric for safe join
       if ("CID" %in% colnames(db_props)) {
         db_props$CID <- as.numeric(db_props$CID)
       }
 
       message("[DB LOOKUP] Retrieved ", nrow(db_props), " rows")
 
-      # Then the left join as before
       data <- data %>%
         left_join(db_props, by = "CID") %>%
         mutate(
