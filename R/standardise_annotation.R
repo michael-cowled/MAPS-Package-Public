@@ -7,28 +7,11 @@
 #' @param data A data frame containing compound annotations.
 #' @param name_col Name of the column in `data` containing compound names (as a string).
 #' @param smiles_col Name of the column in `data` containing SMILES strings (as a string).
-#' @param cid_database_path Path to the "SQLite database" file.
-#' @param cid_cache_path Path to the "cid_cache.csv" file for loading/saving the cache.
+#' @param cid_cache_df A data frame to use as a cache for PubChem lookups.
+#' @param cid_database_path Path to the "SQLite database" file, or NULL.
 #'
-#' @return A data frame with standardised annotations and an additional PubChem info column:
-#'   \itemize{
-#'     \item \code{CID}
-#'   }
+#' @return A list with two elements: `data` (the updated data frame) and `cache` (the updated cache).
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' # Example data
-#' # data_to_process <- data.frame(
-#' #   compound.name = c("glucose", "aspirin", "unknown compound", "caffeine", "candidate drug"),
-#' #   smiles = c("C(C1C(C(C(C(O1)CO)O)O)O)O", "CC(=O)Oc1ccccc1C(=O)O", NA, "CN1C=NC2=C1C(=O)N(C(=O)N2C)C", NA),
-#' #   stringsAsFactors = FALSE
-#' # )
-#'
-#' # df <- standardise_annotation(data_to_process, "compound.name", "smiles",
-#' #                              "path/to/SQLite database",
-#' #                              "path/to/cid_cache.csv")
-#' }
 standardise_annotation <- function(data,
                                    name_col = "compound_name",
                                    smiles_col = "smiles",
@@ -36,6 +19,7 @@ standardise_annotation <- function(data,
                                    cid_database_path = NULL) {
 
   library(dplyr)
+  library(DBI)
   library(RSQLite)
 
   # --- Checks ---
@@ -67,13 +51,15 @@ standardise_annotation <- function(data,
   # --- Internal function: safely query PubChem ---
   safe_get_pubchem <- function(name, smiles, db_con, cid_cache_df) {
     out <- tryCatch({
-      get_cid_with_fallbacks(name, smiles, db_con = db_con, cid_cache_df = cid_cache_df)
+      # Pass the cache and db_con to the lookup function
+      get_cid_with_fallbacks(name, smiles, db_con, cid_cache_df)
     }, error = function(e) {
       message("  [PUBCHEM ERROR] ", e$message)
       NULL
     })
+    # The return value from get_cid_with_fallbacks is a list containing the result and the updated cache
     if (is.null(out)) {
-      list(CID = -1, ResolvedName = NA_character_, SMILES = NA_character_)
+      list(CID = -1, ResolvedName = NA_character_, SMILES = NA_character_, cache = cid_cache_df)
     } else {
       out
     }
@@ -94,18 +80,10 @@ standardise_annotation <- function(data,
     resolved <- list(CID = NA_real_, ResolvedName = NA_character_, SMILES = NA_character_)
 
     # --- 1. Check Cache ---
-    cached <- cid_cache_df %>% filter(LookupName == name & !is.na(ResolvedName) & !is.na(SMILES))
-    if (nrow(cached) > 0 && !is.na(cached$CID[1])) {
-      resolved <- list(
-        CID = cached$CID[1],
-        ResolvedName = cached$ResolvedName[1],
-        SMILES = cached$SMILES[1]
-      )
-      message("  [CACHE HIT] CID: ", resolved$CID)
-    }
+    # The cache lookup logic is now handled inside get_cid_with_fallbacks for consistency.
 
     # --- 2. Check SQLite DB ---
-    if (is.na(resolved$CID) && !is.null(db_con)) {
+    if (!is.null(db_con)) {
       query <- sprintf("SELECT CID, Title, SMILES FROM cid_data WHERE Title = '%s' COLLATE NOCASE",
                        gsub("'", "''", name))
       db_result <- tryCatch(dbGetQuery(db_con, query), error = function(e) NULL)
@@ -120,9 +98,16 @@ standardise_annotation <- function(data,
       }
     }
 
-    # --- 3. Try PubChem ---
+    # --- 3. Try PubChem (or get from cache/DB via get_cid_with_fallbacks) ---
     if (is.na(resolved$CID)) {
-      resolved <- safe_get_pubchem(name, smiles)
+      # The `safe_get_pubchem` function now handles all fallbacks and cache checks
+      pubchem_result <- safe_get_pubchem(name, smiles, db_con, cid_cache_df)
+      resolved <- list(
+        CID = pubchem_result$CID,
+        ResolvedName = pubchem_result$ResolvedName,
+        SMILES = pubchem_result$SMILES
+      )
+      cid_cache_df <- pubchem_result$cache
 
       if (!is.na(resolved$CID) && resolved$CID != -1) {
         message("  [PUBCHEM] Found CID: ", resolved$CID)
@@ -147,21 +132,6 @@ standardise_annotation <- function(data,
     data$CID[i] <- resolved$CID
     if (!is.na(resolved$ResolvedName)) data[[name_col]][i] <- resolved$ResolvedName
     if (!is.na(resolved$SMILES)) data[[smiles_col]][i] <- resolved$SMILES
-
-    # --- Update Cache ---
-    if (!name %in% cid_cache_df$LookupName) {
-      cid_cache_df <- bind_rows(
-        cid_cache_df,
-        data.frame(
-          LookupName = name,
-          ResolvedName = resolved$ResolvedName,
-          SMILES = resolved$SMILES,
-          CID = resolved$CID,
-          stringsAsFactors = FALSE
-        )
-      )
-      message("  [CACHE ADD] ", name)
-    }
 
     setTxtProgressBar(pb, i)
   }
