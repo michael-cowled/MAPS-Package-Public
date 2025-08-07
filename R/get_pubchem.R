@@ -35,6 +35,12 @@
 get_pubchem <- function(query, type, property = NULL, db_con = NULL) {
   base_url <- "https://pubchem.ncbi.nlm.nih.gov/rest/pug"
 
+  # Early return for invalid CID input
+  if (type == "cid" && (!suppressWarnings(!is.na(as.numeric(query))) || as.numeric(query) <= 0)) {
+    message(paste("[get_pubchem SKIP] Non-positive or invalid CID:", query, "- skipping lookup."))
+    return(NULL)
+  }
+
   # Helper function to safely extract text, returning NA if node not found or empty
   safe_xml_text <- function(xml_obj, xpath) {
     if (is.null(xml_obj) || !inherits(xml_obj, "xml_document")) {
