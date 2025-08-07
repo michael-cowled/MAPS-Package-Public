@@ -84,7 +84,7 @@ standardise_annotation <- function(data,
 
     # --- 2. Check SQLite DB ---
     if (!is.null(db_con)) {
-      query <- sprintf("SELECT CID, Title, SMILES FROM cid_data WHERE Title = '%s' COLLATE NOCASE",
+      query <- sprintf("SELECT CID, Title, SMILES FROM pubchem_data WHERE Title = '%s' COLLATE NOCASE",
                        gsub("'", "''", name))
       db_result <- tryCatch(dbGetQuery(db_con, query), error = function(e) NULL)
 
@@ -119,7 +119,7 @@ standardise_annotation <- function(data,
     # --- 4. Fallback: fill missing from DB via CID ---
     if (!is.null(db_con) && !is.na(resolved$CID) && resolved$CID != -1 &&
         (is.na(resolved$ResolvedName) || is.na(resolved$SMILES))) {
-      fallback_query <- sprintf("SELECT Title, SMILES FROM cid_data WHERE CID = %d", resolved$CID)
+      fallback_query <- sprintf("SELECT Title, SMILES FROM pubchem_data WHERE CID = %d", resolved$CID)
       fallback_result <- dbGetQuery(db_con, fallback_query)
       if (nrow(fallback_result) > 0) {
         if (is.na(resolved$ResolvedName)) resolved$ResolvedName <- fallback_result$Title[1]

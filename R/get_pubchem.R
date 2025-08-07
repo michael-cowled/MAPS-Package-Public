@@ -115,7 +115,7 @@ get_pubchem <- function(query, type, property = NULL, db_con = NULL) {
     # Check if a database connection is provided and valid
     if (!is.null(db_con) && DBI::dbIsValid(db_con)) {
       tryCatch({
-        query_db <- sprintf("SELECT SMILES FROM cid_data WHERE CID = %s", sQuote(query))
+        query_db <- sprintf("SELECT SMILES FROM pubchem_data WHERE CID = %s", sQuote(query))
         message(paste("  [get_pubchem DEBUG] Executing DB query:", query_db))
         db_result <- DBI::dbGetQuery(db_con, query_db)
 
