@@ -29,7 +29,7 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df) {
   resolved_cid <- get_pubchem_lite(name, "name", "cids")
 
   # Try SMILES lookup
-  if (is.na(resolved_cid) && !is.na(smiles) && smiles != "") {
+  if (is.na(resolved_cid) && !is.na(smiles) && smiles != "" && smiles != "N/A" && smiles != "NA") {
     message(paste("  Name lookup failed for '", name, "'. Trying SMILES:", smiles))
     resolved_cid <- get_pubchem_lite(smiles, "smiles", "cids")
   }
