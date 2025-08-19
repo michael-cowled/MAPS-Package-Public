@@ -21,27 +21,24 @@
 #' filtered <- process_iin_group(group_df, c("annotation", "smiles"))
 #' }
 process_iin_group <- function(group_data, feature_columns) {
-  rows_to_retain <- logical(nrow(group_data))
-
-  for (col in feature_columns) {
-    if (any(!is.na(group_data[[col]]))) {
-      values <- group_data$feature.ID[!is.na(group_data[[col]])]
-      if (length(values) > 1) {
-        # Retain all but the highest feature.ID
-        highest_value <- max(values, na.rm = TRUE)
-        rows_to_retain <- group_data$feature.ID %in% values & group_data$feature.ID != highest_value
-      } else {
-        # Only one match, retain it
-        rows_to_retain <- group_data$feature.ID == values
-      }
-      break  # Stop at the first matching column
-    }
+  # Step 1: try by lowest confidence.level
+  if ("confidence.level" %in% names(group_data) && any(!is.na(group_data$confidence.level))) {
+    min_level <- min(group_data$confidence.level, na.rm = TRUE)
+    level_candidates <- group_data[group_data$confidence.level == min_level, ]
+  } else {
+    level_candidates <- group_data
   }
 
-  if (all(!rows_to_retain)) {
-    # Fallback: retain row with smallest feature.ID
-    rows_to_retain <- group_data$feature.ID == min(group_data$feature.ID, na.rm = TRUE)
+  # Step 2: within candidates, try by highest confidence.score
+  if ("confidence.score" %in% names(level_candidates) && any(!is.na(level_candidates$confidence.score))) {
+    max_score <- max(level_candidates$confidence.score, na.rm = TRUE)
+    score_candidates <- level_candidates[level_candidates$confidence.score == max_score, ]
+  } else {
+    score_candidates <- level_candidates
   }
 
-  return(group_data[rows_to_retain, ])
+  # Step 3: if still multiple rows, keep lowest feature.ID
+  chosen <- score_candidates[which.min(score_candidates$feature.ID), , drop = FALSE]
+
+  return(chosen)
 }
