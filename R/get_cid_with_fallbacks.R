@@ -23,8 +23,21 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
     return(list(CID = cached_entry$CID[1], cache = cid_cache_df))
   }
 
-  # --- 1b. Check lipids.file before moving on to PubChem ---
-  lipid_match <- lipids.file %>%
+  # --- 1b. Clean lipids.file to ensure unique CIDs ---
+  lipids.file.clean <- lipids.file %>%
+    group_by(CID) %>%
+    summarise(
+      Name = first(na.omit(Name)),
+      Systematic.Name = first(na.omit(Systematic.Name)),
+      Abbreviation = first(na.omit(Abbreviation)),
+      HMDB.ID = first(na.omit(HMDB.ID)),
+      Synonyms = paste(unique(na.omit(Synonyms)), collapse = "; "),
+      smiles = first(na.omit(smiles)),
+      .groups = "drop"
+    )
+
+  # --- 1c. Check lipids.file before moving on to PubChem ---
+  lipid_match <- lipids.file.clean %>%
     rowwise() %>%
     filter(
       tolower(Name) == tolower(name) |
@@ -37,10 +50,10 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
 
   # If multiple matches, warn and pick the first
   if (nrow(lipid_match) > 1) {
-    message(paste("  [LIPID DB WARNING] Multiple matches found for '", name, "'. Using first match (CID:", lipid_match$CID[1], ")"))
+    message(paste("  [LIPID DB WARNING] Multiple matches found for '", name,
+                  "'. Using first match (CID:", lipid_match$CID[1], ")"))
     lipid_match <- lipid_match %>% slice(1)
   }
-
 
   if (nrow(lipid_match) > 0 && !is.na(lipid_match$CID[1])) {
     message(paste("  [LIPID DB] Found CID for '", name, "' in lipids.file (CID:", lipid_match$CID[1], ")"))
