@@ -9,6 +9,7 @@
 #' @param name_col Name of the column in `data` containing compound names (as a string).
 #' @param smiles_col Name of the column in `data` containing SMILES strings (as a string).
 #' @param cid_cache_df A data frame to use as a cache for PubChem CID lookups.
+#' @param lipids.file A data frame to use to lookup lipid names for PubChem CID lookups.
 #' @param cid_database_path Path to the "SQLite database" file.
 #'
 #' @return A list with two elements: `data` (the updated data frame) and `cache` (the updated CID cache).
@@ -18,6 +19,7 @@ standardise_annotation <- function(data,
                                    name_col = "compound_name",
                                    smiles_col = "smiles",
                                    cid_cache_df = NULL,
+                                   lipids.file = NULL,
                                    cid_database_path = NULL) {
 
   # --- Libraries ---
@@ -70,7 +72,7 @@ standardise_annotation <- function(data,
       next
     }
 
-    pubchem_result <- get_cid_only_with_fallbacks(name, smiles, cid_cache_df)
+    pubchem_result <- get_cid_only_with_fallbacks(name, smiles, cid_cache_df, lipids.file)
     data$CID[i] <- pubchem_result$CID
     cid_cache_df <- pubchem_result$cache
 

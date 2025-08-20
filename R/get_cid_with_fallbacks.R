@@ -6,10 +6,11 @@
 #' @param name A character string representing the compound name.
 #' @param smiles A character string representing the compound SMILES (optional).
 #' @param cid_cache_df The data frame to be used as a cache, with columns LookupName and CID.
+#' @param lipids.file A data frame to use to lookup lipid names for PubChem CID lookups.
 #'
 #' @return A named list with keys: \code{CID} and the updated \code{cid_cache_df}.
 #' @export
-get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df) {
+get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.file) {
 
   # Check cache for a pre-existing CID
   cached_entry <- cid_cache_df %>%
@@ -22,7 +23,20 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df) {
     return(list(CID = cached_entry$CID[1], cache = cid_cache_df))
   }
 
-  # --- 2. If not in cache, perform PubChem lookup with fallbacks ---
+  # --- 1b. Check lipids.file before moving on to PubChem ---
+  lipid_match <- lipids.file %>%
+    filter(Name == name | Systematic.Name == name | Abbreviation == name) %>%
+    slice(1)
+
+  if (nrow(lipid_match) > 0 && !is.na(lipid_match$CID[1])) {
+    message(paste("  [LIPID DB] Found CID for '", name, "' in lipids.file (CID:", lipid_match$CID[1], ")"))
+    # Add to cache
+    new_entry <- data.frame(LookupName = name, CID = lipid_match$CID[1], stringsAsFactors = FALSE)
+    cid_cache_df <- bind_rows(cid_cache_df, new_entry)
+    return(list(CID = lipid_match$CID[1], cache = cid_cache_df))
+  }
+
+  # --- 2. If not in cache or lipids.file, perform PubChem lookup with fallbacks ---
   resolved_cid <- NA_real_
 
   # Try name lookup
@@ -46,11 +60,9 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df) {
     new_entry <- data.frame(LookupName = name, CID = resolved_cid, stringsAsFactors = FALSE)
   } else {
     message(paste("  [PUBCHEM] No CID found for '", name, "'."))
-    # Add a failed entry to cache
     new_entry <- data.frame(LookupName = name, CID = -1, stringsAsFactors = FALSE)
   }
 
-  # Add the new entry to the cache
   cid_cache_df <- bind_rows(cid_cache_df, new_entry)
 
   return(list(CID = new_entry$CID[1], cache = cid_cache_df))
