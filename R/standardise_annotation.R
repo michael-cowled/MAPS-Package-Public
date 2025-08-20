@@ -60,7 +60,7 @@ standardise_annotation <- function(data,
   }, add = TRUE)
 
   # --- PASS 1: Resolve CIDs ---
-  message("--- PASS 1: Resolving CIDs from PubChem ---")
+  message("--- PASS 1: Resolving CIDs from PubChem & LipidMaps ---")
   pb <- txtProgressBar(min = 0, max = nrow(data), style = 3)
 
   for (i in seq_len(nrow(data))) {
