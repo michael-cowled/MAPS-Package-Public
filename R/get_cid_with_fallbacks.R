@@ -30,7 +30,7 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
         tolower(Systematic.Name) == tolower(name) |
         tolower(Abbreviation) == tolower(name) |
         sapply(str_split(Synonyms, ";\\s*"), function(x) tolower(name) %in% tolower(trimws(x))) |
-        (!is.na(smiles) & !is.na(SMILES) & SMILES == smiles)
+        (!is.na(smiles) & !is.na(smiles) & smiles == smiles)
     )
 
   # If multiple matches, warn and pick the first
