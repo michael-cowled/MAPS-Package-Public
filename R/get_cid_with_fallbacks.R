@@ -14,7 +14,7 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
 
   # Check cache for a pre-existing CID
   cached_entry <- cid_cache_df %>%
-    filter(!is.na(LookupName) & LookupName == name) %>%
+    filter(!is.na(LookupName) & LookupName == name | SMILES = smiles) %>%
     slice(1)
 
   # --- 1. If a cached CID is found, return it immediately ---
@@ -25,7 +25,13 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
 
   # --- 1b. Check lipids.file before moving on to PubChem ---
   lipid_match <- lipids.file %>%
-    filter(Name == name | Systematic.Name == name | Abbreviation == name) %>%
+    filter(
+      Name == name |
+        Systematic.Name == name |
+        Abbreviation == name |
+        sapply(str_split(Synonyms, ";\\s*"), function(x) tolower(name) %in% tolower(trimws(x))) |
+        smiles = smiles
+    ) %>%
     slice(1)
 
   if (nrow(lipid_match) > 0 && !is.na(lipid_match$CID[1])) {

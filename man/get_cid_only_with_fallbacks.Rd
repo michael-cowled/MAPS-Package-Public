@@ -4,7 +4,7 @@
 \alias{get_cid_only_with_fallbacks}
 \title{Get CID from PubChem with Fallbacks and Simplified Caching (Corrected)}
 \usage{
-get_cid_only_with_fallbacks(name, smiles = NA, cid_cache_df)
+get_cid_only_with_fallbacks(name, smiles = NA, cid_cache_df, lipids.file)
 }
 \arguments{
 \item{name}{A character string representing the compound name.}
@@ -12,6 +12,8 @@ get_cid_only_with_fallbacks(name, smiles = NA, cid_cache_df)
 \item{smiles}{A character string representing the compound SMILES (optional).}
 
 \item{cid_cache_df}{The data frame to be used as a cache, with columns LookupName and CID.}
+
+\item{lipids.file}{A data frame to use to lookup lipid names for PubChem CID lookups.}
 }
 \value{
 A named list with keys: \code{CID} and the updated \code{cid_cache_df}.

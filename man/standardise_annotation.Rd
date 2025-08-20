@@ -9,6 +9,7 @@ standardise_annotation(
   name_col = "compound_name",
   smiles_col = "smiles",
   cid_cache_df = NULL,
+  lipids.file = NULL,
   cid_database_path = NULL
 )
 }
@@ -20,6 +21,8 @@ standardise_annotation(
 \item{smiles_col}{Name of the column in \code{data} containing SMILES strings (as a string).}
 
 \item{cid_cache_df}{A data frame to use as a cache for PubChem CID lookups.}
+
+\item{lipids.file}{A data frame to use to lookup lipid names for PubChem CID lookups.}
 
 \item{cid_database_path}{Path to the "SQLite database" file.}
 }
