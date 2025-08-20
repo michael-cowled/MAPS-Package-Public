@@ -26,13 +26,19 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
   # --- 1b. Check lipids.file before moving on to PubChem ---
   lipid_match <- lipids.file %>%
     filter(
-      Name == name |
-        Systematic.Name == name |
-        Abbreviation == name |
+      tolower(Name) == tolower(name) |
+        tolower(Systematic.Name) == tolower(name) |
+        tolower(Abbreviation) == tolower(name) |
         sapply(str_split(Synonyms, ";\\s*"), function(x) tolower(name) %in% tolower(trimws(x))) |
-        !is.na(smiles) & smiles == smiles
-    ) %>%
-    slice(1)
+        (!is.na(smiles) & !is.na(SMILES) & SMILES == smiles)
+    )
+
+  # If multiple matches, warn and pick the first
+  if (nrow(lipid_match) > 1) {
+    message(paste("  [LIPID DB WARNING] Multiple matches found for '", name, "'. Using first match (CID:", lipid_match$CID[1], ")"))
+    lipid_match <- lipid_match %>% slice(1)
+  }
+
 
   if (nrow(lipid_match) > 0 && !is.na(lipid_match$CID[1])) {
     message(paste("  [LIPID DB] Found CID for '", name, "' in lipids.file (CID:", lipid_match$CID[1], ")"))
