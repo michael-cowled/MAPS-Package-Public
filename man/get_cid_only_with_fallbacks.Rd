@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_cid_with_fallbacks.R
 \name{get_cid_only_with_fallbacks}
 \alias{get_cid_only_with_fallbacks}
-\title{Get CID from PubChem with Fallbacks and Simplified Caching (Corrected)}
+\title{Get CID from PubChem with Fallbacks and LipidMaps Lookup}
 \usage{
 get_cid_only_with_fallbacks(name, smiles = NA, cid_cache_df, lipids.file)
 }
@@ -19,6 +19,6 @@ get_cid_only_with_fallbacks(name, smiles = NA, cid_cache_df, lipids.file)
 A named list with keys: \code{CID} and the updated \code{cid_cache_df}.
 }
 \description{
-Attempts to resolve a PubChem CID using compound name and SMILES.
-Updates a provided cache which only stores the CID, not other properties.
+Attempts to resolve a PubChem CID using compound name and SMILES, checking LipidMaps first,
+and updates a provided cache which only stores the CID.
 }

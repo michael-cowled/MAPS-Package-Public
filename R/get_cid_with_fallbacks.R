@@ -18,7 +18,8 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
 
   # --- 1. Check cache first ---
   cached_entry <- cid_cache_df %>%
-    filter(!is.na(LookupName) & LookupName == name) %>%
+    filter(!is.na(LookupName) & LookupName == name |
+             !is.na(SMILES) & SMILES == smiles) %>%
     slice(1)
 
   if (nrow(cached_entry) > 0 && !is.na(cached_entry$CID[1])) {
