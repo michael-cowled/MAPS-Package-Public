@@ -1,7 +1,7 @@
-#' Get CID from PubChem with Fallbacks and Simplified Caching (Corrected)
+#' Get CID from PubChem with Fallbacks and LipidMaps Lookup
 #'
-#' Attempts to resolve a PubChem CID using compound name and SMILES.
-#' Updates a provided cache which only stores the CID, not other properties.
+#' Attempts to resolve a PubChem CID using compound name and SMILES, checking LipidMaps first,
+#' and updates a provided cache which only stores the CID.
 #'
 #' @param name A character string representing the compound name.
 #' @param smiles A character string representing the compound SMILES (optional).
@@ -12,24 +12,25 @@
 #' @export
 get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.file) {
 
-  # Check cache for a pre-existing CID
+  # --- 0. Clean input for comparison ---
+  name_clean <- trimws(tolower(name))
+  smiles_clean <- if(!is.na(smiles)) trimws(tolower(smiles)) else NA
+
+  # --- 1. Check cache first ---
   cached_entry <- cid_cache_df %>%
-    filter(!is.na(LookupName) & LookupName == name | !is.na(smiles) & SMILES == smiles) %>%
+    filter(!is.na(LookupName) & LookupName == name) %>%
     slice(1)
 
-  # --- 1. If a cached CID is found, return it immediately ---
   if (nrow(cached_entry) > 0 && !is.na(cached_entry$CID[1])) {
-    message(paste("  [CACHE HIT] CID found for '", name, "' (CID:", cached_entry$CID[1], ")"))
+    message(paste0("  [CACHE HIT] CID found for '", name, "' (CID: ", cached_entry$CID[1], ")"))
     return(list(CID = cached_entry$CID[1], cache = cid_cache_df))
   }
 
-  # --- 1b. Clean lipids.file to ensure unique CIDs ---
-  lipids.file <- lipids.file %>%
-    mutate(CID = suppressWarnings(as.numeric(as.character(CID)))) %>%
-    filter(!is.na(CID))
-
+  # --- 1b. Clean LipidMaps file ---
   lipids.file.clean <- lipids.file %>%
-    group_by(CID) %>%
+    mutate(CID_numeric = suppressWarnings(as.numeric(CID))) %>%
+    filter(!is.na(CID_numeric) & CID_numeric > 0) %>%
+    group_by(CID_numeric) %>%
     summarise(
       Name = first(na.omit(Name)),
       Systematic.Name = first(na.omit(Systematic.Name)),
@@ -40,64 +41,55 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
       .groups = "drop"
     )
 
-  str(lipids.file.clean$CID)
-  summary(lipids.file.clean$CID)
-
-  # --- 1c. Check lipids.file before moving on to PubChem ---
+  # --- 1c. Check LipidMaps ---
   lipid_match <- lipids.file.clean %>%
     rowwise() %>%
     filter(
-      tolower(Name) == tolower(name) |
-        tolower(Systematic.Name) == tolower(name) |
-        tolower(Abbreviation) == tolower(name) |
-        (!is.na(Synonyms) && tolower(name) %in% tolower(trimws(str_split(Synonyms, ";\\s*")[[1]]))) |
-        (!is.na(smiles) && !is.na(.data$smiles) && .data$smiles == smiles)
+      tolower(trimws(Name)) == name_clean |
+        tolower(trimws(Systematic.Name)) == name_clean |
+        tolower(trimws(Abbreviation)) == name_clean |
+        (!is.na(Synonyms) && name_clean %in% tolower(trimws(str_split(Synonyms, ";\\s*")[[1]]))) |
+        (!is.na(smiles) && !is.na(.data$smiles) && tolower(trimws(.data$smiles)) == smiles_clean)
     ) %>%
     ungroup()
 
-  # If multiple matches, warn and pick the first
   if (nrow(lipid_match) > 1) {
-    message(paste("  [LIPID DB WARNING] Multiple matches found for '", name,
-                  "'. Using first match (CID:", lipid_match$CID[1], ")"))
+    message(paste0("  [LIPID DB WARNING] Multiple matches found for '", name,
+                   "'. Using first match (CID: ", lipid_match$CID_numeric[1], ")"))
     lipid_match <- lipid_match %>% slice(1)
   }
 
-  if (nrow(lipid_match) > 0 && !is.na(lipid_match$CID[1])) {
-    message(paste("  [LIPID DB] Found CID for '", name, "' in lipids.file (CID:", lipid_match$CID[1], ")"))
-    # Add to cache
-    new_entry <- data.frame(LookupName = name, CID = lipid_match$CID[1], stringsAsFactors = FALSE)
+  if (nrow(lipid_match) > 0 && !is.na(lipid_match$CID_numeric[1])) {
+    message(paste0("  [LIPID DB] Found CID for '", name, "' in lipids.file (CID: ", lipid_match$CID_numeric[1], ")"))
+    new_entry <- data.frame(LookupName = name, CID = lipid_match$CID_numeric[1], stringsAsFactors = FALSE)
     cid_cache_df <- bind_rows(cid_cache_df, new_entry)
-    return(list(CID = lipid_match$CID[1], cache = cid_cache_df))
+    return(list(CID = lipid_match$CID_numeric[1], cache = cid_cache_df))
   }
 
-  # --- 2. If not in cache or lipids.file, perform PubChem lookup with fallbacks ---
+  # --- 2. PubChem lookup ---
   resolved_cid <- NA_real_
 
-  # Try name lookup
   resolved_cid <- get_pubchem_lite(name, "name", "cids")
 
-  # Try SMILES lookup
-  if (is.na(resolved_cid) && !is.na(smiles) && smiles != "" && smiles != "N/A" && smiles != "NA") {
-    message(paste("  Name lookup failed for '", name, "'. Trying SMILES:", smiles))
+  if (is.na(resolved_cid) && !is.na(smiles_clean) && smiles_clean != "" && smiles_clean != "N/A") {
+    message(paste0("  Name lookup failed for '", name, "'. Trying SMILES: ", smiles))
     resolved_cid <- get_pubchem_lite(smiles, "smiles", "cids")
   }
 
-  # Try synonym lookup
   if (is.na(resolved_cid)) {
-    message(paste("  Name and SMILES failed for '", name, "'. Trying synonym search..."))
+    message(paste0("  Name and SMILES failed for '", name, "'. Trying synonym search..."))
     resolved_cid <- get_pubchem_lite(name, "synonym", "cids")
   }
 
-  # --- 3. Update Cache based on lookup result ---
+  # --- 3. Update cache ---
   if (!is.na(resolved_cid)) {
-    message(paste("  [PUBCHEM] Found CID for '", name, "': ", resolved_cid))
+    message(paste0("  [PUBCHEM] Found CID for '", name, "': ", resolved_cid))
     new_entry <- data.frame(LookupName = name, CID = resolved_cid, stringsAsFactors = FALSE)
   } else {
-    message(paste("  [PUBCHEM] No CID found for '", name, "'."))
+    message(paste0("  [PUBCHEM] No CID found for '", name, "'."))
     new_entry <- data.frame(LookupName = name, CID = -1, stringsAsFactors = FALSE)
   }
 
   cid_cache_df <- bind_rows(cid_cache_df, new_entry)
-
   return(list(CID = new_entry$CID[1], cache = cid_cache_df))
 }
