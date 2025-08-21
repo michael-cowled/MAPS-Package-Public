@@ -72,6 +72,7 @@ standardise_annotation <- function(data,
       next
     }
 
+    # The caller now correctly omits the `property` argument
     pubchem_result <- get_cid_only_with_fallbacks(name, smiles, cid_cache_df, lipids.file)
     data$CID[i] <- pubchem_result$CID
     cid_cache_df <- pubchem_result$cache

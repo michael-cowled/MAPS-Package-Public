@@ -70,16 +70,19 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
   # --- 2. PubChem lookup ---
   resolved_cid <- NA_real_
 
-  resolved_cid <- get_pubchem_lite(name, "name", "cids")
+  # Call `get_pubchem_lite` without the "cids" argument
+  resolved_cid <- get_pubchem_lite(name, "name")
 
   if (is.na(resolved_cid) && !is.na(smiles_clean) && smiles_clean != "" && smiles_clean != "N/A") {
     message(paste0("  Name lookup failed for '", name, "'. Trying SMILES: ", smiles))
-    resolved_cid <- get_pubchem_lite(smiles, "smiles", "cids")
+    # Call `get_pubchem_lite` without the "cids" argument
+    resolved_cid <- get_pubchem_lite(smiles, "smiles")
   }
 
   if (is.na(resolved_cid)) {
     message(paste0("  Name and SMILES failed for '", name, "'. Trying synonym search..."))
-    resolved_cid <- get_pubchem_lite(name, "synonym", "cids")
+    # Call `get_pubchem_lite` without the "cids" argument
+    resolved_cid <- get_pubchem_lite(name, "synonym")
   }
 
   # --- 3. Update cache ---
