@@ -24,6 +24,9 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
   }
 
   # --- 1b. Clean lipids.file to ensure unique CIDs ---
+  lipids.file <- lipids.file %>%
+    mutate(CID = as.numeric(as.character(CID)))
+
   lipids.file.clean <- lipids.file %>%
     group_by(CID) %>%
     summarise(
