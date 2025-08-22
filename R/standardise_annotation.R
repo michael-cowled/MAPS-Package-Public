@@ -26,6 +26,7 @@ standardise_annotation <- function(data,
   library(dplyr)
   library(DBI)
   library(RSQLite)
+  library(httr)
 
   # --- Checks ---
   if (is.null(cid_cache_df)) stop("cid_cache_df must be provided.")
