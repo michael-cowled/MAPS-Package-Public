@@ -48,20 +48,21 @@ get_pubchem_lite <- function(query, type) {
     # Use a GET request for synonym searches as per API design
     url <- paste0(base_url, "/compound/name/", URLencode(query, reserved = TRUE), "/synonyms/JSON")
 
-    response <- tryCatch({
-      httr::GET(url)
-    }, error = function(e) {
-      message(paste("  [get_pubchem ERROR] GET failed for synonym '", query, "':", e$message))
-      return(NULL)
-    })
-
     # Check for errors and parse the response
     if (is.null(response) || httr::http_error(response)) {
       return(NA_real_)
     }
+
     response_json <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
 
-    if (!is.null(response_json$InformationList$Information[[1]]$CID)) {
+    # The fix: Check if the response is a list and contains the expected structure
+    if (is.list(response_json) &&
+        !is.null(response_json$InformationList) &&
+        is.list(response_json$InformationList) &&
+        length(response_json$InformationList$Information) > 0 &&
+        is.list(response_json$InformationList$Information[[1]]) &&
+        !is.null(response_json$InformationList$Information[[1]]$CID)) {
+
       Sys.sleep(0.2)
       return(response_json$InformationList$Information[[1]]$CID[1])
     }
