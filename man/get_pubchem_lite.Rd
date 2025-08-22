@@ -4,17 +4,20 @@
 \alias{get_pubchem_lite}
 \title{Query PubChem for CIDs}
 \usage{
-get_pubchem_lite(query, type)
+get_pubchem_lite(query, type, property = "cids")
 }
 \arguments{
 \item{query}{The input string to search for (compound name, SMILES, or synonym).}
 
 \item{type}{A character string: one of \code{"name"}, \code{"smiles"}, or \code{"synonym"}.}
+
+\item{property}{Always "cids" in this simplified version.}
 }
 \value{
 A numeric CID or \code{NA_real_} on failure or no result.
 }
 \description{
 Queries the PubChem REST API using a compound name, SMILES, or synonym
-to retrieve a single compound CID.
+to retrieve a single compound CID. This is a simplified version of the
+original function, designed to only perform CID lookups.
 }
