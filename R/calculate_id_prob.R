@@ -11,8 +11,6 @@
 #' @param prob_threshold A numeric value representing the probability cutoff.
 #'
 #' @return The input data frame with a new 'id.prob' column.
-#' @importFrom dplyr group_by mutate ungroup select
-#' @importFrom rlang `[[`
 #' @export
 #'
 #' @examples

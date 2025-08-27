@@ -19,8 +19,6 @@
 #'
 #' @return A list containing the updated master data frame ('master_df') and the
 #'   updated CID cache data frame ('cache').
-#' @importFrom dplyr bind_rows
-#' @importFrom rlang `[[`
 #' @export
 process_and_append_annotations <- function(
     df,

@@ -9,8 +9,6 @@
 #' @param score_col A bare column name or string specifying the numeric score column to filter by.
 #'
 #' @return A data frame with deduplicated rows based on the highest score.
-#' @importFrom dplyr group_by filter slice ungroup
-#' @importFrom rlang `[[`
 #' @export
 #'
 #' @examples
