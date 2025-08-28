@@ -34,14 +34,16 @@
 #'   #   db_path = "path/to/db"
 #'   # )
 #' }
-process_annotations <- function(raw_df, score_col, threshold, name_col, smiles_col,
-                                cid_cache_df, lipids.file, db_path) {
+process_annotations <- function(df, name_col, smiles_col, score_col, threshold,
+                                cid_cache_df, lipids.file, db_path,
+                                confidence.level=NULL, annotation.type=NULL) {
+  # existing standardisation/deduplication/ID prob code...
+  result <- standardise_with_cache(df, name_col, smiles_col, cid_cache_df, lipids.file, db_path)$data
+  result <- deduplicate_data(result, name_col, score_col)
+  result <- compute_id_prob(result, score_col, threshold)
 
-  raw_df <- deduplicate_data(raw_df, !!rlang::sym(name_col), !!rlang::sym(score_col))
-  res <- standardise_with_cache(raw_df, name_col, smiles_col, cid_cache_df, lipids.file, db_path)
-  df <- res$data
-  cid_cache_df <- res$cache
-  df <- deduplicate_data(df, !!rlang::sym(name_col), !!rlang::sym(score_col))
-  df <- compute_id_prob(df, score_col, threshold)
-  list(data = df, cache = cid_cache_df)
+  if(!is.null(confidence.level)) result$confidence.level <- confidence.level
+  if(!is.null(annotation.type)) result$annotation.type <- annotation.type
+
+  return(result)
 }
