@@ -1,32 +1,37 @@
-#' Calculate Identification Probability
+#' Compute Identification Probability and Deduplicate
 #'
-#' Calculates a new 'id.prob' column. For each ID, it checks how many
-#' annotations are above a specified probability threshold and assigns an
-#' identification probability as the inverse of that count. Rows below the
-#' threshold get an ID probability of 0.
+#' Calculates identification probability for annotations based on a score
+#' threshold and then deduplicates the data frame, keeping only the best
+#' scoring annotation per feature.
 #'
-#' @param df A data frame containing annotation data.
-#' @param id_col A bare column name or string specifying the ID column to group by.
-#' @param score_col A bare column name or string specifying the numeric score column.
-#' @param prob_threshold A numeric value representing the probability cutoff.
+#' @param df A data frame with annotation data.
+#' @param score_col A string specifying the name of the score column.
+#' @param threshold A numeric value for the confidence score threshold.
 #'
-#' @return The input data frame with a new 'id.prob' column.
+#' @return A data frame with a new 'id.prob' column and one row per 'feature.ID'.
 #' @export
+#' @importFrom rlang .data sym
+#' @importFrom dplyr group_by mutate ungroup select arrange slice desc
+#' @importFrom magrittr %>%
 #'
 #' @examples
-#' my_df <- data.frame(
-#'   feature_id = c(1, 1, 2, 2),
-#'   score = c(0.8, 0.6, 0.7, 0.9)
-#' )
-#' df_with_prob <- calculate_id_prob(my_df, id_col = feature_id, score_col = score, prob_threshold = 0.7)
-#' print(df_with_prob)
-calculate_id_prob <- function(df, id_col, score_col, prob_threshold) {
+#' my_data <- data.frame(feature.ID = c(1, 1, 2, 2, 2),
+#'                      confidence.score = c(0.8, 0.9, 0.7, 0.6, 0.9),
+#'                      name = c("A", "B", "C", "D", "E"))
+#' result <- compute_id_prob(my_data, "confidence.score", 0.7)
+#' print(result)
+compute_id_prob <- function(df, score_col, threshold) {
+  score_col_sym <- rlang::sym(score_col)
   df %>%
-    group_by(across({{ id_col }})) %>%
-    mutate(
-      n_above_thresh = sum(get(as.character(substitute(score_col))) >= prob_threshold),
-      id.prob = ifelse(get(as.character(substitute(score_col))) >= prob_threshold & n_above_thresh > 0, 1 / n_above_thresh, 0)
+    dplyr::group_by(.data$feature.ID) %>%
+    dplyr::mutate(
+      n_above_thresh = sum(.data[[score_col]] >= threshold, na.rm = TRUE),
+      id.prob = ifelse(.data[[score_col]] >= threshold & n_above_thresh > 0, 1 / n_above_thresh, 0)
     ) %>%
-    ungroup() %>%
-    select(-n_above_thresh)
+    dplyr::ungroup() %>%
+    dplyr::select(-.data$n_above_thresh) %>%
+    dplyr::group_by(.data$feature.ID) %>%
+    dplyr::arrange(dplyr::desc(.data[[score_col]])) %>%
+    dplyr::slice(1) %>%
+    dplyr::ungroup()
 }

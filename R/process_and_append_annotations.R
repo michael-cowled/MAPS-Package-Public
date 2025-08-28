@@ -1,67 +1,47 @@
-#' Process and Append Annotations to a Master Data Frame
+#' Process Raw Annotations
 #'
-#' A comprehensive function to handle the workflow of processing a new
-#' annotation data source and appending it to a master annotation table.
-#' It performs deduplication, standardization, probability calculation, and column
-#' alignment before merging.
+#' A comprehensive function to process a raw annotation data frame. It performs
+#' pre-standardization deduplication, calls the standardization function,
+#' performs post-standardization deduplication, and computes the identification
+#' probability.
 #'
-#' @param df The data frame with new annotations to be processed.
-#' @param master_df The master data frame to which the new annotations will be appended.
-#' @param name_col A string specifying the column with compound names.
-#' @param smiles_col A string specifying the column with SMILES strings.
-#' @param score_col A string specifying the column with confidence scores.
-#' @param prob_threshold A numeric value for the identification probability cutoff.
-#' @param annotation_type A string describing the annotation source (e.g., "gnps", "csi").
-#' @param confidence_level A string or number for the confidence level (e.g., "2", "3").
-#' @param cid_cache_df A data frame used as a cache for CID lookups.
-#' @param lipids.file A data frame containing LipidMaps data for standardization.
-#' @param cid_database_path A string specifying the path to the PubChem SQLite database.
+#' @param raw_df The raw data frame of annotations.
+#' @param score_col A string for the score column name.
+#' @param threshold A numeric value for the confidence threshold.
+#' @param name_col A string for the compound name column.
+#' @param smiles_col A string for the SMILES column.
+#' @param cid_cache_df A data frame used for CID caching.
+#' @param lipids.file A data frame with lipid data for standardization.
+#' @param db_path A string for the path to the PubChem database.
 #'
-#' @return A list containing the updated master data frame ('master_df') and the
-#'   updated CID cache data frame ('cache').
+#' @return A list with the processed data frame (`data`) and the updated
+#'   CID cache (`cache`).
 #' @export
-process_and_append_annotations <- function(
-    df,
-    master_df,
-    name_col,
-    smiles_col,
-    score_col,
-    prob_threshold,
-    annotation_type,
-    confidence_level,
-    cid_cache_df,
-    lipids.file,
-    cid_database_path) {
+#' @importFrom rlang sym !!
+#' @importFrom magrittr %>%
+#'
+#' @examples
+#' \dontrun{
+#'   # Example usage assuming a dataset and all required files exist
+#'   # processed_data <- process_annotations(
+#'   #   raw_df = my_raw_data,
+#'   #   score_col = "confidence.score",
+#'   #   threshold = 0.7,
+#'   #   name_col = "compound.name",
+#'   #   smiles_col = "smiles",
+#'   #   cid_cache_df = my_cache,
+#'   #   lipids.file = my_lipids,
+#'   #   db_path = "path/to/db"
+#'   # )
+#' }
+process_annotations <- function(raw_df, score_col, threshold, name_col, smiles_col,
+                                cid_cache_df, lipids.file, db_path) {
 
-  # Standardize and deduplicate pre- and post-standardization
-  df <- deduplicate_by_score(df, id_col = feature.ID, score_col = score_col)
-
-  result <- standardise_annotation(
-    df,
-    name_col = name_col,
-    smiles_col = smiles_col,
-    cid_cache_df = cid_cache_df,
-    lipids.file = lipids.file,
-    cid_database_path = cid_database_path
-  )
-  df <- result$data
-  cid_cache_df <- result$cache
-
-  df <- deduplicate_by_score(df, id_col = feature.ID, score_col = score_col)
-
-  # Calculate ID probability
-  df <- calculate_id_prob(df, id_col = feature.ID, score_col = score_col, prob_threshold = prob_threshold)
-
-  # Add annotation metadata
-  df$annotation.type <- annotation_type
-  df$confidence.level <- confidence_level
-
-  # Check and add missing columns before binding
-  missing_cols <- setdiff(names(master_df), names(df))
-  df[missing_cols] <- NA
-
-  # Append to master dataframe
-  master_df <- bind_rows(master_df, df)
-
-  return(list(master_df = master_df, cache = cid_cache_df))
+  raw_df <- deduplicate_data(raw_df, !!rlang::sym(name_col), !!rlang::sym(score_col))
+  res <- standardise_with_cache(raw_df, name_col, smiles_col, cid_cache_df, lipids.file, db_path)
+  df <- res$data
+  cid_cache_df <- res$cache
+  df <- deduplicate_data(df, !!rlang::sym(name_col), !!rlang::sym(score_col))
+  df <- compute_id_prob(df, score_col, threshold)
+  list(data = df, cache = cid_cache_df)
 }
