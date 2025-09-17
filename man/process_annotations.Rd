@@ -5,32 +5,34 @@
 \title{Process Raw Annotations}
 \usage{
 process_annotations(
-  raw_df,
-  score_col,
-  threshold,
+  df,
   name_col,
   smiles_col,
+  score_col,
+  threshold,
   cid_cache_df,
   lipids.file,
-  db_path
+  db_path,
+  confidence.level = NULL,
+  annotation.type = NULL
 )
 }
 \arguments{
-\item{raw_df}{The raw data frame of annotations.}
+\item{name_col}{A string for the compound name column.}
+
+\item{smiles_col}{A string for the SMILES column.}
 
 \item{score_col}{A string for the score column name.}
 
 \item{threshold}{A numeric value for the confidence threshold.}
-
-\item{name_col}{A string for the compound name column.}
-
-\item{smiles_col}{A string for the SMILES column.}
 
 \item{cid_cache_df}{A data frame used for CID caching.}
 
 \item{lipids.file}{A data frame with lipid data for standardization.}
 
 \item{db_path}{A string for the path to the PubChem database.}
+
+\item{raw_df}{The raw data frame of annotations.}
 }
 \value{
 A list with the processed data frame (\code{data}) and the updated
