@@ -96,6 +96,7 @@ process_gnps_data <- function(gnps.task.id, gnps.prob, mzmine.annotations.final)
     lv2.high.conf.data = gnps.data.lv2.high.conf,
     lv2.low.conf.data = gnps.data.lv2.low.conf,
     lv3.data = gnps.data.lv3,
-    gnps.cluster.data = gnps.cluster.data
+    gnps.cluster.data = gnps.cluster.data,
+    gnps.cluster.pairs = gnps.cluster.pairs
   ))
 }

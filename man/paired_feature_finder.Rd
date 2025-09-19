@@ -4,10 +4,13 @@
 \alias{paired_feature_finder}
 \title{Find Paired Features in GNPS Cluster}
 \usage{
-paired_feature_finder(ID)
+paired_feature_finder(ID, gnps.cluster.pairs)
 }
 \arguments{
 \item{ID}{A numeric or character GNPS cluster ID to look up.}
+
+\item{gnps.cluster.pairs}{A data frame containing GNPS cluster pairs, with
+columns \code{CLUSTERID1}, \code{CLUSTERID2}, and \code{Cosine}.}
 }
 \value{
 A vector of paired GNPS cluster IDs connected to the input \code{ID}.
@@ -16,12 +19,9 @@ A vector of paired GNPS cluster IDs connected to the input \code{ID}.
 Given a GNPS cluster ID, returns a vector of paired feature IDs (i.e., directly connected nodes)
 sorted by cosine similarity (descending).
 }
-\details{
-This function uses a global object \code{gnps.cluster.pairs} and assumes it contains
-the columns \code{CLUSTERID1}, \code{CLUSTERID2}, and \code{Cosine}.
-}
 \examples{
 \dontrun{
-paired <- paired_feature_finder(332)
+# Assuming gnps.cluster.pairs is a data frame in your environment
+paired <- paired_feature_finder(332, gnps.cluster.pairs)
 }
 }
