@@ -1,3 +1,19 @@
+#' Process GNPS annotation and cluster data
+#'
+#' Loads, tidies, and standardizes GNPS2 annotation data, and splits into
+#' Level 2 high-confidence, Level 2 low-confidence, and Level 3 annotation tables.
+#'
+#' @param gnps.task.id GNPS task ID (character)
+#' @param gnps.prob Minimum confidence score (numeric)
+#' @param mzmine.annotations.final Data frame of MZmine annotations
+#'
+#' @return A list with three data frames:
+#' \describe{
+#'   \item{lv2.high.conf.data}{Level 2 high-confidence GNPS annotations}
+#'   \item{lv2.low.conf.data}{Level 2 low-confidence GNPS annotations}
+#'   \item{lv3.data}{Level 3 GNPS annotations}
+#' }
+#' @export
 process_gnps_data <- function(gnps.task.id, gnps.prob, mzmine.annotations.final) {
 
   # 1. Load, tidy, and standardize GNPS2 annotation data
