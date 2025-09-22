@@ -7,7 +7,6 @@
 #' @param cid.cache.path Path to the CID cache CSV file. Defaults to `~/cid_cache.csv`.
 #' @param lipids.file.path Path to the lipids TSV file. Defaults to a specific network path.
 #' @param cid.database.path Path to the PubChem CID SQLite database. Defaults to a specific network path.
-#' @param mzmine.db.path Path to the MZMINE SQLite database. Defaults to a specific network path.
 #'
 #' @return A list containing four data frames: `processed.data`, `lipids.data`, `annotations.data`, and `initial.mzmine.data`.
 #'
@@ -23,10 +22,9 @@
 #' @export
 #'
 process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
-                                cid.cache.path = "~/cid_cache.csv",
-                                lipids.file.path = "Y:/MA_BPA_Microbiome/Databases/LipidMaps/lipids_expanded.tsv",
-                                cid.database.path = "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite",
-                                mzmine.db.path = "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite") {
+                                cid.cache.path = "~/MAPS/cid_cache.csv",
+                                lipids.file.path = "~/MAPS/lipids_expanded.tsv",
+                                cid.database.path = "~/MAPS/PubChem_Indexed.sqlite") {
 
   # The code from your original function, with explicit package calls
   mzmine.annotations <- read_checked_csv(mzmine.annotations)
@@ -51,7 +49,12 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
     dplyr::ungroup()
 
   # 3. Load database connections and cache
-  cid_db_con <- DBI::dbConnect(RSQLite::SQLite(), mzmine.db.path, flags = RSQLite::SQLITE_RO)
+  # Added backup path check for the CID database
+  if (!file.exists(cid.database.path)) {
+    warning("CID database not found at local path. Using network path as a fallback.")
+    cid.database.path <- "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite"
+  }
+  cid_db_con <- DBI::dbConnect(RSQLite::SQLite(), cid.database.path, flags = RSQLite::SQLITE_RO)
 
   cid_cache_df <- tryCatch({
     read_checked_csv(cid.cache.path)
@@ -59,6 +62,12 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
     message("[CACHE INIT] No cache file found. Initializing empty cache.")
     data.frame(LookupName = character(), SMILES = character(), CID = numeric(), stringsAsFactors = FALSE)
   })
+
+  # Implement the file existence check here
+  if (!file.exists(lipids.file.path)) {
+    warning("Lipids file not found at local path. Using network path as a fallback.")
+    lipids.file.path <- "Y:/MA_BPA_Microbiome/Databases/LipidMaps/lipids_expanded.tsv"
+  }
 
   lipids.file <- read_checked_tsv(lipids.file.path)
   lipids.file <- lipids.file %>%
