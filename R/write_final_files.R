@@ -47,13 +47,7 @@ write_final_files <- function(
   write_large_csv(samples.df, output_file)
 
   # Step 3: Extract and write the top 10 features per sample
-  final.annotation.df3 <- final.annotation.df2 %>%
-    dplyr::select(feature.ID, mz, compound.name, smiles, confidence.level, Formula, IUPAC, Monoisotopic.Mass)
-
-  samples.df.with.annotations <- samples.df %>%
-    dplyr::full_join(final.annotation.df3, by = "feature.ID")
-
-  top_10_features <- samples.df.with.annotations %>%
+  top_10_features <- samples.df %>%
     dplyr::group_by(samples) %>%
     dplyr::top_n(10, area) %>%
     dplyr::ungroup()

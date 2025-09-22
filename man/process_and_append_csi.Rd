@@ -11,9 +11,9 @@ process_and_append_csi(
   cid_cache_df,
   lipids.file,
   cid_database_path,
-  compute_id_prob_func,
-  deduplicate_data_func,
-  standardize_annotation_func
+  compute_id_prob,
+  deduplicate_data,
+  standardize_annotation
 )
 }
 \arguments{
@@ -29,11 +29,11 @@ process_and_append_csi(
 
 \item{cid_database_path}{Path to the PubChem CID database.}
 
-\item{compute_id_prob_func}{A function to compute identification probability (e.g., MAPS.Package::compute_id_prob).}
+\item{compute_id_prob}{A function to compute identification probability (e.g., MAPS.Package::compute_id_prob).}
 
-\item{deduplicate_data_func}{A function to remove duplicate annotations (e.g., MAPS.Package::deduplicate_data).}
+\item{deduplicate_data}{A function to remove duplicate annotations (e.g., MAPS.Package::deduplicate_data).}
 
-\item{standardize_annotation_func}{A function to standardize annotations (e.g., MAPS.Package::standardize_annotation).}
+\item{standardize_annotation}{A function to standardize annotations (e.g., MAPS.Package::standardize_annotation).}
 }
 \value{
 A list containing the updated annotations data frame and the updated CID cache.
