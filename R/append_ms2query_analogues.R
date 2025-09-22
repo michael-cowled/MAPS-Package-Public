@@ -5,7 +5,14 @@
 #' @param existing_annotations A data frame of existing annotations (lv1, lv2, lv3).
 #'
 #' @return The updated annotations data frame with MS2Query data appended.
+#' @importFrom dplyr %>% filter select bind_rows
+#' @export
 append_ms2query_analogues <- function(ms2query_data, existing_annotations) {
+  # Convert the mz.diff.ppm column in existing_annotations to numeric
+  if ("mz.diff.ppm" %in% names(existing_annotations) && is.character(existing_annotations$mz.diff.ppm)) {
+    existing_annotations$mz.diff.ppm <- as.numeric(existing_annotations$mz.diff.ppm)
+  }
+
   # Modify compound names to indicate they are analogues
   ms2query_data$compound.name <- paste0("Analogue of ", ms2query_data$compound.name)
 

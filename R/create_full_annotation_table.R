@@ -9,6 +9,7 @@
 #' @param gnps_task_id The GNPS task ID for creating USIs.
 #'
 #' @return A single data frame with all annotation sources joined.
+#' @export
 create_full_annotation_table <- function(mzmine_data, lv_annotations, canopus_data, zodiac_data, gnps_data, gnps_task_id) {
   # Convert feature.ID to numeric for all data frames before joining
   lv_annotations$feature.ID <- as.numeric(lv_annotations$feature.ID)
