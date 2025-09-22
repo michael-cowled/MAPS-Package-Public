@@ -2,30 +2,36 @@
 % Please edit documentation in R/append_annotations.R
 \name{append_annotations}
 \alias{append_annotations}
-\title{Append annotation data frames with automatic column alignment}
+\title{Append Level 4 and 5 Annotations}
 \usage{
-append_annotations(data.to.append, existing.annotations)
+append_annotations(
+  data,
+  mask_condition,
+  compound_name,
+  confidence_level,
+  npc_pathway,
+  npc_superclass,
+  annotation_type
+)
 }
 \arguments{
-\item{data.to.append}{A data frame of new annotations to be appended.}
+\item{data}{The data frame to be annotated.}
 
-\item{existing.annotations}{A data frame of existing annotations.}
+\item{mask_condition}{A logical vector (or an expression that evaluates to one) indicating which rows to update.}
+
+\item{compound_name}{The new compound name to be assigned.}
+
+\item{confidence_level}{The confidence level to be assigned.}
+
+\item{npc_pathway}{The NPC pathway to be assigned.}
+
+\item{npc_superclass}{The NPC superclass to be assigned.}
+
+\item{annotation_type}{The annotation type to be assigned.}
 }
 \value{
-A combined data frame containing both the new and existing
-annotations with aligned columns.
+The data frame with the new annotations appended.
 }
 \description{
-This function appends a new annotation data frame to an existing
-annotation table. If the new data contains columns that are not
-present in the existing annotations, those columns are added to
-the existing annotations and filled with \code{NA}.
-}
-\examples{
-\dontrun{
-new <- data.frame(feature.ID = 1:2, compound.name = c("A", "B"))
-old <- data.frame(feature.ID = 3, compound.name = "C", confidence.score = 0.95)
-combined <- append_annotations(new, old)
-}
-
+Appends annotations based on a provided mask and updates relevant columns.
 }
