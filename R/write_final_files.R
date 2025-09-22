@@ -61,13 +61,14 @@ write_final_files <- function(
   write_large_csv(top_10_features, paste0(dataset.id, "-top-10-features.csv"))
 
   # Step 4: Close connections and save cache
-  closeAllConnections()
   tryCatch({
-    readr::write_csv(cid_cache_df, "~/cid_cache.csv")
-    message("[CACHE WRITE] Saved cache to: ", "~/cid_cache.csv")
+    readr::write_csv(cid_cache_df, "~/MAPS/cid_cache.csv")
+    message("[CACHE WRITE] Saved cache to: ", "~/MAPS/cid_cache.csv")
   }, error = function(e) {
     warning("Failed to save cache: ", e$message)
   })
+
+  closeAllConnections()
 
   # Step 5: Perform data verification check
   if (nrow(final.annotation.df) > nrow(mzmine.data)) {
