@@ -78,8 +78,10 @@ process_and_append_csi <- function(
   csi.data$annotation.type <- "CSI:FingerID"
   csi.data$confidence.level <- "3"
 
-  existing_annotations$feature.ID <- as.character(existing_annotations$feature.ID)
-  csi.data$feature.ID <- as.character(csi.data$feature.ID)
+  existing_annotations$feature.ID <- as.numeric(existing_annotations$feature.ID)
+  csi.data$feature.ID <- as.numeric(csi.data$feature.ID)
+  existing_annotations$confidence.score <- as.numeric(existing_annotations$confidence.score)
+  csi.data$confidence.score <- as.numeric(csi.data$confidence.score)
 
   # Append the filtered and processed data to the existing annotations
   updated_annotations <- existing_annotations %>%
