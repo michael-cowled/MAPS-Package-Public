@@ -31,12 +31,12 @@ write_final_files <- function(
     dplyr::select(feature.ID, rt, mz, compound.name, smiles, annotation.type,
       confidence.level, confidence.score, id.prob, CID, Formula, IUPAC,
       Monoisotopic.Mass, mz.diff.ppm, feature.usi, gnps.library.usi,
+      gnps.cluster.ID, gnps.in.silico.bile.acid.info,
       canopus.NPC.pathway, canopus.NPC.pathway.probability,
       canopus.NPC.superclass, canopus.NPC.superclass.probability,
       zodiac.formula, zodiac.confidence.score,
       Propagated.Feature.ID, Propagated.Annotation.Type,
-      Propagated.Annotation.Class, gnps.cluster.ID,
-      Samples, gnps.in.silico.bile.acid.info
+      Propagated.Annotation.Class, Samples
     )
 
   write_large_csv(final.annotation.df2, paste0(folder, "/final-annotation-df.csv"))
