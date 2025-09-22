@@ -7,9 +7,9 @@
 #' @param cid_cache_df A data frame used for caching CID lookups.
 #' @param lipids.file Path to a lipids file for standardization.
 #' @param cid_database_path Path to the PubChem CID database.
-#' @param compute_id_prob_func A function to compute identification probability (e.g., MAPS.Package::compute_id_prob).
-#' @param deduplicate_data_func A function to remove duplicate annotations (e.g., MAPS.Package::deduplicate_data).
-#' @param standardize_annotation_func A function to standardize annotations (e.g., MAPS.Package::standardize_annotation).
+#' @param compute_id_prob A function to compute identification probability (e.g., MAPS.Package::compute_id_prob).
+#' @param deduplicate_data A function to remove duplicate annotations (e.g., MAPS.Package::deduplicate_data).
+#' @param standardize_annotation A function to standardize annotations (e.g., MAPS.Package::standardize_annotation).
 #'
 #' @return A list containing the updated annotations data frame and the updated CID cache.
 #' @export
@@ -20,9 +20,9 @@ process_and_append_csi <- function(
     cid_cache_df,
     lipids.file,
     cid_database_path,
-    compute_id_prob_func,
-    deduplicate_data_func,
-    standardize_annotation_func
+    compute_id_prob,
+    deduplicate_data,
+    standardize_annotation
 ) {
   # Data Cleaning and Initial Processing
   csi.data <- read_checked_tsv(csi.data)
@@ -49,11 +49,11 @@ process_and_append_csi <- function(
   }
 
   # Compute ID probability
-  csi.data <- compute_id_prob_func(csi.data, "confidence.score", csi.prob)
+  csi.data <- compute_id_prob(csi.data, "confidence.score", csi.prob)
 
   # Deduplicate and standardize
-  csi.data <- deduplicate_data_func(csi.data, compound.name, confidence.score)
-  result <- standardize_annotation_func(
+  csi.data <- deduplicate_data(csi.data, compound.name, confidence.score)
+  result <- standardize_annotation(
     csi.data,
     name_col = "compound.name",
     smiles_col = "smiles",
