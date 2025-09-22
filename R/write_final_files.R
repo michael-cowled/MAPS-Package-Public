@@ -27,8 +27,17 @@ write_final_files <- function(
 
   final.annotation.df2 <- dataset %>%
     dplyr::filter(!redundant) %>%
-    dplyr::select(-redundant) %>%
-    dplyr::bind_rows(other_data)
+    dplyr::bind_rows(other_data) %>%
+    dplyr::select(feature.ID, rt, mz, compound.name, smiles, annotation.type,
+      confidence.level, confidence.score, id.prob, CID, Formula, IUPAC,
+      Monoisotopic.Mass, mz.diff.ppm, feature.usi, gnps.library.usi,
+      canopus.NPC.pathway, canopus.NPC.pathway.probability,
+      canopus.NPC.superclass, canopus.NPC.superclass.probability,
+      zodiac.formula, zodiac.confidence.score,
+      Propagated.Feature.ID, Propagated.Annotation.Type,
+      Propagated.Annotation.Class, gnps.cluster.ID,
+      Samples, gnps.in.silico.bile.acid.info
+    )
 
   write_large_csv(final.annotation.df2, paste0(folder, "/final-annotation-df.csv"))
   write_large_csv(final.annotation.df2, paste0("Y:/MA_BPA_Microbiome/Dataset-Annotations/", dataset.id, ".csv"))
