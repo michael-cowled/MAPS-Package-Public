@@ -8,10 +8,9 @@ process_mzmine_data(
   mzmine.annotations,
   mzmine.data,
   gnps.prob,
-  cid.cache.path = "~/cid_cache.csv",
-  lipids.file.path = "Y:/MA_BPA_Microbiome/Databases/LipidMaps/lipids_expanded.tsv",
-  cid.database.path = "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite",
-  mzmine.db.path = "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite"
+  cid.cache.path = "~/MAPS/cid_cache.csv",
+  lipids.file.path = "~/MAPS/lipids_expanded.tsv",
+  cid.database.path = "~/MAPS/PubChem_Indexed.sqlite"
 )
 }
 \arguments{
@@ -26,8 +25,6 @@ process_mzmine_data(
 \item{lipids.file.path}{Path to the lipids TSV file. Defaults to a specific network path.}
 
 \item{cid.database.path}{Path to the PubChem CID SQLite database. Defaults to a specific network path.}
-
-\item{mzmine.db.path}{Path to the MZMINE SQLite database. Defaults to a specific network path.}
 }
 \value{
 A list containing four data frames: \code{processed.data}, \code{lipids.data}, \code{annotations.data}, and \code{initial.mzmine.data}.
