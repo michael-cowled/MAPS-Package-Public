@@ -24,20 +24,29 @@ process_and_append_csi <- function(
     deduplicate_data_func,
     standardize_annotation_func
 ) {
+  # Data Cleaning and Initial Processing
+  csi.data <- read_checked_tsv(csi.data)
+  csi.data <- csi.data[, c(3, 14, 15, 25)]
+  names(csi.data) <- c("confidence.score", "compound.name", "smiles", 'feature.ID')
+  csi.data <- csi.data[!(csi.data$feature.ID %in% existing_annotations$feature.ID), ]
+  csi.data <- csi.data[, c(2, 1, 3:ncol(csi.data))] #Swap cols 1 and 2
+
+  csi.data$confidence.score[csi.data$confidence.score == -Inf] <- 0
+  csi.data$confidence.score <- as.numeric(csi.data$confidence.score)
+
+  # Filter based on confidence probability and compound name
+  csi.data <- filter(csi.data, confidence.score >= csi.prob) %>%
+    filter(!grepl("PUBCHEM", compound.name, ignore.case = TRUE))
+
+  # Fix troublesome compound names
+  csi.data$compound.name[grepl("Solaparnaine", csi.data$compound.name, ignore.case = TRUE)] <- "Solaparnaine"
+  csi.data$compound.name[grepl("Spectalinine", csi.data$compound.name, ignore.case = TRUE)] <- "(-)-Spectalinine"
+
   # Add missing columns before processing to prevent errors
   missing_cols <- colnames(existing_annotations)[!colnames(existing_annotations) %in% colnames(csi.data)]
   for (col in missing_cols) {
     csi.data[[col]] <- NA
   }
-
-  # --- Data Cleaning and Standardization ---
-  csi.data$confidence.score[csi.data$confidence.score == -Inf] <- 0
-  csi.data$confidence.score <- as.numeric(csi.data$confidence.score)
-
-  # Filter based on confidence probability
-  csi.data <- csi.data %>%
-    dplyr::filter(confidence.score >= csi.prob) %>%
-    dplyr::filter(!grepl("PUBCHEM", compound.name, ignore.case = TRUE))
 
   # Compute ID probability
   csi.data <- compute_id_prob_func(csi.data, "confidence.score", csi.prob)
