@@ -39,20 +39,23 @@ write_final_files <- function(
       Propagated.Annotation.Class, Samples
     )
 
-  write_large_csv(final.annotation.df2, paste0(folder, "/final-annotation-df.csv"))
-  write_large_csv(final.annotation.df2, paste0("Y:/MA_BPA_Microbiome/Dataset-Annotations/", dataset.id, ".csv"))
-
-  # Step 2: Write the samples data frame
-  output_file <- paste0(dataset.id, "-samples-df.csv")
-  write_large_csv(samples.df, output_file)
-
-  # Step 3: Extract and write the top 10 features per sample
+  # Step 2: Extract and write the top 10 features per sample
   top_10_features <- samples.df %>%
     dplyr::group_by(samples) %>%
     dplyr::top_n(10, area) %>%
     dplyr::ungroup()
 
-  write_large_csv(top_10_features, paste0(dataset.id, "-top-10-features.csv"))
+  # Step 3: Writing all files
+  if (Sys.getenv("USER_DOMAIN") == "unimelb") {
+    write_large_csv(final.annotation.df2, paste0(folder, "/final-annotation-df.csv"))
+    write_large_csv(final.annotation.df2, paste0("Y:/MA_BPA_Microbiome/Dataset-Annotations/", dataset.id, ".csv"))
+    write_large_csv(samples.df, paste0("Y:/MA_BPA_Microbiome/Dataset-Abundances/", dataset.id, "-samples-df.csv"))
+    write_large_csv(top_10_features, paste0("Y:/MA_BPA_Microbiome/Dataset-Abundances/", dataset.id, "-top-10-features.csv"))
+  } else {
+    write_large_csv(final.annotation.df2, paste0(folder, dataset.id, ".csv"))
+    write_large_csv(samples.df, paste0(folder, dataset.id, "-samples-df.csv"))
+    write_large_csv(top_10_features, paste0(folder, dataset.id, "-top-10-features.csv"))
+  }
 
   # Step 4: Close connections and save cache
   tryCatch({
