@@ -30,10 +30,7 @@ MAPS <- function(
   # NOTE: All required libraries (dplyr, MAPS.Package, etc.) are assumed to be loaded.
 
   #-----------------------------------------------------------------------------------------------------------------------#
-
-
-  #-----------------------------------------------------------------------------------------------------------------------#
-  ## 2b. Data Check (MAPS.Package::validate_and_get_paths must be available)
+  ## 1. Data Check (MAPS.Package::validate_and_get_paths must be available)
 
   if (folder == "") {
     stop("Processed Data Folder 'folder' cannot be empty. Please specify a path or ensure metadata extraction is successful.")
