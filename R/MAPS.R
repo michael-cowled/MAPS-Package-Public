@@ -24,13 +24,10 @@ MAPS <- function(
     csi.prob = 0.64,
     ms2query.prob = 0.7,
     rt.tol = 0.1, # Min for C18
-    cid_database_path = "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite"
+    cid_database_path = NULL
 ) {
 
   # NOTE: All required libraries (dplyr, MAPS.Package, etc.) are assumed to be loaded.
-
-  # Set up working directory (Adjust this line as needed for your environment)
-  setwd(file.path("~/"))
 
   #-----------------------------------------------------------------------------------------------------------------------#
 
