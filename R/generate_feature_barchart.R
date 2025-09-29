@@ -8,7 +8,8 @@
 #' @param metadata.path Optional path to the metadata CSV file (e.g., "HGM/A - Analysis.csv"). Defaults to NULL.
 #'
 #' @return The final merged data frame used for plotting (invisibly).
-#' @importFrom dplyr select mutate separate_rows group_by summarise full_join filter coalesce
+#' @importFrom dplyr select mutate group_by summarise full_join filter coalesce
+#' @importFrom tidyr separate_rows
 #' @importFrom readr write_csv
 #' @importFrom ggplot2 ggplot geom_col aes xlab ylab scale_fill_manual theme element_text ylim ggsave
 generate_feature_barchart <- function(final.annotation.df, folder, metadata.path = NULL) {
