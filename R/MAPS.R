@@ -51,7 +51,7 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 3. Process MZMine Data (MAPS.Package::process_mzmine_data must be available)
-
+  paste("Processing MZMINE data")
   processed_data <- MAPS.Package::process_mzmine_data(mzmine.annotations, mzmine.data, gnps.prob)
 
   mzmine.data <- processed_data$processed.data
@@ -62,7 +62,7 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 4. Process GNPS Data
-
+  paste("Processing GNPS data:")
   if (gnps.task.id == "") {
     warning("GNPS Task ID is empty. Skipping GNPS processing.")
   } else {
@@ -99,7 +99,7 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 5. Process ms2query Data
-
+  paste("Processing ms2query data:")
   ms2query_results <- MAPS.Package::process_ms2query_data(
     ms2query.data = paths$ms2query_data,
     lv1.and.lv2.annotations = lv1.and.lv2.annotations,
@@ -152,7 +152,7 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 7. Process SIRIUS data
-
+  paste("Processing SIRIUS data:")
   canopus.data <- MAPS.Package::process_canopus_data(canopus.data)
   zodiac.data <- MAPS.Package::process_zodiac_data(zodiac.data)
 
@@ -188,7 +188,7 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 9. Propagation of annotations
-
+  paste("Propagating annotations:")
   propagated_df <- MAPS.Package::propagate_annotations(
     full.annotation.data,
     gnps.cluster.pairs = if (exists("gnps.cluster.pairs")) gnps.cluster.pairs else data.frame(),
@@ -233,7 +233,7 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 12. Writing Final Files
-
+  paste("Writing files to disk:")
   MAPS.Package::write_final_files(
     final.annotation.df, samples.df, folder, dataset.id, mzmine.data, cid_cache_df,
     write_large_csv = MAPS.Package::write_large_csv
