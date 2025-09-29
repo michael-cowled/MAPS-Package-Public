@@ -13,7 +13,7 @@ MAPS(
   csi.prob = 0.64,
   ms2query.prob = 0.7,
   rt.tol = 0.1,
-  cid_database_path = "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite"
+  cid_database_path = NULL
 )
 }
 \arguments{

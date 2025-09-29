@@ -2,7 +2,7 @@
 % Please edit documentation in R/standardise_annotation.R
 \name{standardise_annotation}
 \alias{standardise_annotation}
-\title{Standardise Compound Annotations Using PubChem (Rewritten)}
+\title{Standardise Compound Annotations Using PubChem}
 \usage{
 standardise_annotation(
   data,
@@ -34,4 +34,6 @@ For each row in a data frame, attempts to resolve compound CIDs using PubChem.
 Then, uses the resolved CIDs to retrieve and update compound name (with PubChem Title),
 SMILES, Formula, IUPAC, and Monoisotopic.Mass from a local SQLite database.
 Rows containing "candidate" (case-insensitive) in the name column are excluded.
+NOTE: The function is modified to proceed even if the local SQLite database is missing,
+by skipping the property retrieval step (Pass 2).
 }
