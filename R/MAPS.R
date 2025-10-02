@@ -227,7 +227,7 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 12. Writing Final Files
-  message("Writing files to disk:")
+  message("Writing files to disk: PLEASE WAIT...")
   MAPS.Package::write_final_files(
     final.annotation.df, samples.df, folder, dataset.id, mzmine.data, cid_cache_df,
     write_large_csv = MAPS.Package::write_large_csv
