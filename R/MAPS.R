@@ -31,7 +31,6 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 1. Data Check (MAPS.Package::validate_and_get_paths must be available)
-
   if (folder == "") {
     stop("Processed Data Folder 'folder' cannot be empty. Please specify a path or ensure metadata extraction is successful.")
   }
@@ -47,8 +46,8 @@ MAPS <- function(
   cytoscape <- paths$cytoscape
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 3. Process MZMine Data (MAPS.Package::process_mzmine_data must be available)
-  paste("Processing MZMINE data")
+  ## 3. Process MZMine Data
+  message("Processing MZMINE data")
   processed_data <- MAPS.Package::process_mzmine_data(mzmine.annotations, mzmine.data, gnps.prob)
 
   mzmine.data <- processed_data$processed.data
@@ -57,9 +56,10 @@ MAPS <- function(
   cid_cache_df <- processed_data$cid.cache
   lipids.file <- processed_data$lipids.file
 
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 4. Process GNPS Data
-  paste("Processing GNPS data:")
+  message("Processing GNPS data:")
   if (gnps.task.id == "") {
     warning("GNPS Task ID is empty. Skipping GNPS processing.")
   } else {
@@ -96,7 +96,7 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 5. Process ms2query Data
-  paste("Processing ms2query data:")
+  message("Processing ms2query data:")
   ms2query_results <- MAPS.Package::process_ms2query_data(
     ms2query.data = paths$ms2query_data,
     lv1.and.lv2.annotations = lv1.and.lv2.annotations,
@@ -127,7 +127,6 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 6. Process lv3 in silico matches from GNPS
-
   if (exists("gnps.data.lv3") && nrow(gnps.data.lv3) > 0) {
     unique_in_lv3 <- setdiff(gnps.data.lv3$feature.ID, lv1.and.lv2.annotations$feature.ID)
     gnps.data.lv3 <- dplyr::filter(gnps.data.lv3, feature.ID %in% unique_in_lv3)
@@ -149,7 +148,7 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 7. Process SIRIUS data
-  paste("Processing SIRIUS data:")
+  message("Processing SIRIUS data:")
   canopus.data <- MAPS.Package::process_canopus_data(canopus.data)
   zodiac.data <- MAPS.Package::process_zodiac_data(zodiac.data)
 
@@ -168,7 +167,6 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Appending all other features and annotations
-
   lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
     ms2query_data = ms2query.data.lv3,
     existing_annotations = lv1.lv2.lv3.annotations
@@ -185,7 +183,6 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 9. Propagation of annotations
-  paste("Propagating annotations:")
   propagated_df <- MAPS.Package::propagate_annotations(
     full.annotation.data,
     gnps.cluster.pairs = if (exists("gnps.cluster.pairs")) gnps.cluster.pairs else data.frame(),
@@ -199,7 +196,6 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 10. Append level 4 and 5 annotations
-
   propagated.annotation.data <- MAPS.Package::append_annotations(
     data = propagated.annotation.data,
     mask_condition = is.na(compound.name) & !is.na(canopus.NPC.pathway) & canopus.NPC.pathway.probability >= canopus.prob,
@@ -213,7 +209,6 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 11. Append Sample List Data and Collapse Ion Identity Networking
-
   processed_results <- MAPS.Package::process_and_append_sample_data(sample.data, propagated.annotation.data)
   propagated.annotation.data.with.samples <- processed_results$combined_data
   sample.data2 <- processed_results$sample.data2
@@ -227,6 +222,8 @@ MAPS <- function(
   )
   final.annotation.df <- processed_results$final_annotation_df
   samples.df <- processed_results$samples_df
+
+  final.annotation.df <- get_hmdb_from_cid(final.annotation.df, cid_database_path)
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 12. Writing Final Files

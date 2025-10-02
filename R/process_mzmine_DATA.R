@@ -87,14 +87,6 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
   mzmine.annotations <- result$data
   cid_cache_df <- result$cache
 
-  # Add new columns if they don't exist
-  new_cols <- c("Formula", "IUPAC", "Monoisotopic.Mass")
-  for (col in new_cols) {
-    if (!col %in% names(mzmine.annotations)) {
-      mzmine.annotations[[col]] <- NA
-    }
-  }
-
   # 5. Save cache
   tryCatch({
     readr::write_csv(cid_cache_df, cid.cache.path)
@@ -111,7 +103,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
   mzmine.annotations <- mzmine.annotations %>%
     dplyr::rename(feature.ID = id)
 
-  mzmine.annotations.final <- compute_id_prob(mzmine.annotations, "score", gnps.prob) %>%
+  mzmine.annotations <- compute_id_prob(mzmine.annotations, "score", gnps.prob) %>%
     dplyr::select(feature.ID, compound_name, score, smiles, id.prob, CID, Formula, IUPAC, Monoisotopic.Mass)
 
   names(mzmine.annotations.final) <- c('feature.ID', "compound.name", "confidence.score",
@@ -144,7 +136,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
   return(list(
     processed.data = mzmine.data,
     lipids.data = lipids,
-    annotations.data = mzmine.annotations.final,
+    annotations.data = mzmine.annotations,
     initial.mzmine.data = initial.mzmine.data,
     cid.cache = cid_cache_df,
     lipids.file = lipids.file

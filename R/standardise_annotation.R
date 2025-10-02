@@ -105,7 +105,10 @@ standardise_annotation <- function(data,
       cid_str <- paste(cids_to_lookup, collapse = ", ")
 
       # Query the local database for properties
-      query <- sprintf("SELECT CID, Title, SMILES, Formula AS Formula_db, IUPAC AS IUPAC_db, `Monoisotopic.Mass` AS Monoisotopic_Mass_db FROM pubchem_data WHERE CID IN (%s) GROUP BY CID", cid_str)
+      # but we rename it to 'HMDB_db' for easy, non-conflicting use in R.
+      query <- sprintf("SELECT CID, Title, SMILES,
+                       Formula AS Formula_db, IUPAC AS IUPAC_db,
+                       `Monoisotopic.Mass` AS Monoisotopic_Mass_db FROM pubchem_data WHERE CID IN (%s) GROUP BY CID", cid_str)
 
       message("[SQL QUERY]")
       message(query)
@@ -133,13 +136,12 @@ standardise_annotation <- function(data,
             !!rlang::sym(name_col) := dplyr::coalesce(Title, IUPAC_db, !!rlang::sym(name_col)),
             # Use SMILES from DB, fallback to original smiles
             !!rlang::sym(smiles_col) := dplyr::coalesce(SMILES, !!rlang::sym(smiles_col)),
-            # Update Formula/IUPAC/Mass columns
             Formula = dplyr::coalesce(Formula_db, Formula),
             IUPAC = dplyr::coalesce(IUPAC_db, IUPAC),
             Monoisotopic.Mass = dplyr::coalesce(Monoisotopic_Mass_db, Monoisotopic.Mass)
           ) %>%
           # Clean up columns used for joining/coalescing
-          dplyr::select(-Title, -SMILES, -Formula_db, -IUPAC_db, -Monoisotopic_Mass_db)
+          dplyr::select(-Title, -SMILES, -Formula_db, -IUPAC_db, -Monoisotopic_Mass_db) # <--- CORRECTED LINE
       } else {
         message("[DB LOOKUP] No rows returned.")
       }

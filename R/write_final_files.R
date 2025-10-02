@@ -29,7 +29,7 @@ write_final_files <- function(
     dplyr::filter(!redundant) %>%
     dplyr::bind_rows(other_data) %>%
     dplyr::select(feature.ID, rt, mz, compound.name, smiles, annotation.type,
-      confidence.level, confidence.score, id.prob, CID, Formula, IUPAC,
+      confidence.level, confidence.score, id.prob, CID, HMDB.ID, Formula, IUPAC,
       Monoisotopic.Mass, mz.diff.ppm, feature.usi, gnps.library.usi,
       gnps.cluster.ID, gnps.in.silico.bile.acid.info,
       canopus.NPC.pathway, canopus.NPC.pathway.probability,
