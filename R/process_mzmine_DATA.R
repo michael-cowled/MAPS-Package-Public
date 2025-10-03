@@ -49,11 +49,18 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
     dplyr::ungroup()
 
   # 3. Load database connections and cache
-  # Added backup path check for the CID database
-  if (!file.exists(cid.database.path)) {
-    warning("CID database not found at local path. Using network path as a fallback.")
-    cid.database.path <- "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite"
+  # Internal paths:
+  if (Sys.getenv("USER_DOMAIN") == "unimelb") {
+      if (!file.exists(cid.database.path)) {
+        warning("CID database not found at local path. Using network path as a fallback.")
+        cid.database.path <- "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite"
+      }
+      if (!file.exists(lipids.file.path)) {
+        warning("Lipids file not found at local path. Using network path as a fallback.")
+        lipids.file.path <- "Y:/MA_BPA_Microbiome/Databases/LipidMaps/lipids_expanded.tsv"
+      }
   }
+
   cid_db_con <- DBI::dbConnect(RSQLite::SQLite(), cid.database.path, flags = RSQLite::SQLITE_RO)
 
   cid_cache_df <- tryCatch({
@@ -62,12 +69,6 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
     message("[CACHE INIT] No cache file found. Initializing empty cache.")
     data.frame(LookupName = character(), SMILES = character(), CID = numeric(), stringsAsFactors = FALSE)
   })
-
-  # Implement the file existence check here
-  if (!file.exists(lipids.file.path)) {
-    warning("Lipids file not found at local path. Using network path as a fallback.")
-    lipids.file.path <- "Y:/MA_BPA_Microbiome/Databases/LipidMaps/lipids_expanded.tsv"
-  }
 
   lipids.file <- read_checked_tsv(lipids.file.path)
   lipids.file <- lipids.file %>%
