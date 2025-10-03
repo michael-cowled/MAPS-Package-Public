@@ -55,7 +55,7 @@ update_compound_names <- function(data, name_col, cid_col = "CID") {
 
     # Use the internal helper function defined above.
     # Note: Using 'sapply' is convenient but queries can be slow.
-    fetched_titles <- sapply(cids_to_query, .fetch_pubchem_title, USE.NAMES = FALSE)
+    fetched_titles <- sapply(cids_to_query, fetch_pubchem_title, USE.NAMES = FALSE)
 
     # 4. Overwrite the name_col in the original data frame
     data[[name_col]][valid_indices] <- fetched_titles
