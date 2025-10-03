@@ -33,6 +33,7 @@ fetch_pubchem_title <- function(cid) {
     # Use XPath to find the first occurrence of the <Title> tag
     # This directly targets the required element, avoiding mixed data structures.
     title_node <- xml2::xml_find_first(xml_doc, "//Title")
+    print(title_node)
 
     # Extract the text content from the node
     retrieved_title <- xml2::xml_text(title_node)
