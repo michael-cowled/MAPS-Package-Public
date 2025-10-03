@@ -24,7 +24,7 @@
 process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
                                 cid.cache.path = "~/MAPS/cid_cache.csv",
                                 lipids.file.path = "~/MAPS/lipids_expanded.tsv",
-                                cid.database.path = "~/MAPS/PubChem_Indexed.sqlite") {
+                                cid.database.path = NULL) {
 
   # The code from your original function, with explicit package calls
   mzmine.annotations <- read_checked_csv(mzmine.annotations)
@@ -61,7 +61,11 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
       }
   }
 
+  if (!is.na(cid.database.path)) {
   cid_db_con <- DBI::dbConnect(RSQLite::SQLite(), cid.database.path, flags = RSQLite::SQLITE_RO)
+  } else {
+    message("Skipping DB connection")
+  }
 
   cid_cache_df <- tryCatch({
     read_checked_csv(cid.cache.path)
