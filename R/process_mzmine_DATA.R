@@ -103,7 +103,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
   mzmine.annotations <- mzmine.annotations %>%
     dplyr::rename(feature.ID = id)
 
-  mzmine.annotations <- compute_id_prob(mzmine.annotations, "score", gnps.prob) %>%
+  mzmine.annotations.final <- compute_id_prob(mzmine.annotations, "score", gnps.prob) %>%
     dplyr::select(feature.ID, compound_name, score, smiles, id.prob, CID, Formula, IUPAC, Monoisotopic.Mass)
 
   names(mzmine.annotations.final) <- c('feature.ID', "compound.name", "confidence.score",
