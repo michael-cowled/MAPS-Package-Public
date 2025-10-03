@@ -33,7 +33,7 @@ update_compound_names <- function(data, name_col, cid_col = "CID") {
     for (i in seq_along(cids_to_query)) {
 
       # Fetch the title using the internal helper function
-      fetched_titles[i] <- .fetch_pubchem_title(cids_to_query[i])
+      fetched_titles[i] <- fetch_pubchem_title(cids_to_query[i])
 
       # Update progress bar after each query
       utils::setTxtProgressBar(pb, i)
