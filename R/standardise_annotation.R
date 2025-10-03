@@ -159,7 +159,7 @@ standardise_annotation <- function(data,
 
   # Check if the PubChem lookup feature is enabled
   if (pubchem_lookup_enabled) {
-
+    message("Starting Pass 3: Pubchem Lookup for Standardisation:")
     # Check if the required 'jsonlite' package is installed and load it
     if (!requireNamespace("jsonlite", quietly = TRUE)) {
       warning("PubChem lookup is enabled, but the 'jsonlite' package is not installed. Skipping lookup.")
