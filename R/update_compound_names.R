@@ -1,3 +1,35 @@
+#' @title Update Compound Names from PubChem
+#' @description Queries the PubChem PUG-REST API using CIDs from a specified column
+#'   and overwrites the values in a target column with the official PubChem compound title.
+#'
+#' @param data A data frame or tibble containing compound data.
+#' @param name_col A character string specifying the name of the column to be
+#'   overwritten with the fetched PubChem title. If the column does not exist, it will be created.
+#' @param cid_col A character string specifying the name of the column containing
+#'   the PubChem Compound IDs (CIDs). Defaults to "CID".
+#'
+#' @return The modified data frame with the \code{name_col} updated.
+#' @export
+#' @importFrom utils txtProgressBar setTxtProgressBar
+#' @examples
+#' \dontrun{
+#' # Dummy data frame for demonstration
+#' compounds_df <- data.frame(
+#'   ID = 1:4,
+#'   My_CID_Col = c(2244, 440955, 0, NA), # Aspirin, Caffeine, Invalid, NA
+#'   Custom_Name = c("Aspirin_Old", "Caffeine_Old", "Zero_CID", "NA_Comp"),
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' # Run the function
+#' updated_df <- update_compound_names(
+#'   data = compounds_df,
+#'   name_col = "Custom_Name",
+#'   cid_col = "My_CID_Col"
+#' )
+#' print(updated_df)
+#' # Note: The row with CID = 0 and CID = NA will keep their original Custom_Name values.
+#' }
 update_compound_names <- function(data, name_col, cid_col = "CID") {
 
   # 1. Input Checks

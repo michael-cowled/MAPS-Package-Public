@@ -1,3 +1,13 @@
+#' @title Fetch PubChem Title
+#' @description Internal helper function to query the PubChem PUG-REST API
+#'   for a compound's official title based on its CID, using XML parsing.
+#'
+#' @param cid An integer representing the PubChem Compound ID (CID).
+#' @return A character string containing the compound title, or \code{NA_character_}
+#'   if the lookup fails, the CID is invalid (\code{< 1}), or the title is not found.
+#' @keywords internal
+#' @importFrom xml2 read_xml xml_find_first xml_text
+#' @export
 fetch_pubchem_title <- function(cid) {
 
   # 1. Input Validation: Skip if NA, NULL, or not a positive integer
@@ -8,32 +18,38 @@ fetch_pubchem_title <- function(cid) {
   # Ensure CID is converted to character for URL construction
   cid <- as.character(cid)
 
-  # 2. Construct the PUG-REST URL
+  # 2. Construct the PUG-REST URL, requesting XML format
   url <- paste0("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/",
-                cid, "/description/JSON")
+                cid, "/description/XML")
 
   # 3. Fetch and Parse with Error Handling
   tryCatch({
 
-    # **MESSAGE FOR LOOKUP**
     message(paste("Querying PubChem for CID:", cid))
 
-    # Use jsonlite::fromJSON (imported via roxygen tag)
-    data <- jsonlite::fromJSON(url)
+    # Use xml2::read_xml (imported via roxygen tag) to fetch the XML document
+    xml_doc <- xml2::read_xml(url)
 
-    # Navigate the nested JSON structure to get the Title
-    title <- data$InformationList$Information$Title
+    # Use XPath to find the first occurrence of the <Title> tag
+    # This directly targets the required element, avoiding mixed data structures.
+    title_node <- xml2::xml_find_first(xml_doc, "//Title")
+
+    # Extract the text content from the node
+    retrieved_title <- xml2::xml_text(title_node)
 
     # 4. Implement a 0.2 second delay to respect PubChem API usage policy
     Sys.sleep(0.2)
 
-    # Return the title if valid
-    if (length(title) > 0 && !is.null(title) && !is.na(title)) {
-      return(title[1])
+    # Check if a valid title was retrieved (not empty or NA)
+    if (length(retrieved_title) == 1 && retrieved_title != "") {
+      message(paste("Successfully retrieved title for CID", cid, ":", retrieved_title))
+      return(retrieved_title)
     } else {
       # Handle case where CID is queried but no title is returned
+      message(paste("No title found for CID:", cid))
       return(NA_character_)
     }
+
   }, error = function(e) {
     # Implement a delay even on error to avoid rapid retries
     Sys.sleep(0.2)
