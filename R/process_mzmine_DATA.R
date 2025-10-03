@@ -136,7 +136,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
   return(list(
     processed.data = mzmine.data,
     lipids.data = lipids,
-    annotations.data = mzmine.annotations,
+    annotations.data = mzmine.annotations.final,
     initial.mzmine.data = initial.mzmine.data,
     cid.cache = cid_cache_df,
     lipids.file = lipids.file
