@@ -10,7 +10,7 @@ process_mzmine_data(
   gnps.prob,
   cid.cache.path = "~/MAPS/cid_cache.csv",
   lipids.file.path = "~/MAPS/lipids_expanded.tsv",
-  cid.database.path = "~/MAPS/PubChem_Indexed.sqlite"
+  cid.database.path = NULL
 )
 }
 \arguments{

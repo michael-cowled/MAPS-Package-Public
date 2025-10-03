@@ -30,7 +30,7 @@ write_final_files(
 \item{write_large_csv}{A function to write large CSV files.}
 }
 \value{
-A message indicating success or an error.
+A message indicating success or an error with processing time.
 }
 \description{
 This function takes the final processed data frames and writes them to disk in specified locations. It also performs a final data verification check.

@@ -43,6 +43,7 @@ standardise_annotation <- function(data,
   if (is.null(cid_database_path) || !file.exists(cid_database_path)) {
     warning("Local PubChem database is missing or path is invalid. Properties (Formula, IUPAC, etc.) will NOT be retrieved from the local database (Pass 2 skipped).")
     db_lookup_enabled <- FALSE
+    pubchem_lookup_enabled <- TRUE
   }
 
   # --- Filter and Initialise ---
@@ -151,4 +152,29 @@ standardise_annotation <- function(data,
   }
 
   return(list(data = data, cache = cid_cache_df))
+
+# ======================================================================
+# --- PASS 3: PubChem Lookup Integration ---
+# ======================================================================
+
+  # Check if the PubChem lookup feature is enabled
+  if (pubchem_lookup_enabled) {
+
+    # Check if the required 'jsonlite' package is installed and load it
+    if (!requireNamespace("jsonlite", quietly = TRUE)) {
+      warning("PubChem lookup is enabled, but the 'jsonlite' package is not installed. Skipping lookup.")
+    } else {
+      library(jsonlite)
+      message("Starting PubChem lookup (PASS 3)...")
+
+      # Call the function to update the compound names in the data frame.
+      # Ensure your data frame object is passed in and reassigned back.
+      # Adjust 'name_col' and 'cid_col' if your columns are named differently.
+      data <- update_compound_names(
+        data, name_col, cid_col = "CID"            # Column containing the PubChem CID
+      )
+
+      message("PubChem name enrichment complete.")
+    }
+  }
 }
