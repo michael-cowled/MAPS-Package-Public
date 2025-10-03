@@ -51,14 +51,8 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
   # 3. Load database connections and cache
   # Internal paths:
   if (Sys.getenv("USER_DOMAIN") == "unimelb") {
-      if (!file.exists(cid.database.path)) {
-        warning("CID database not found at local path. Using network path as a fallback.")
-        cid.database.path <- "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite"
-      }
-      if (!file.exists(lipids.file.path)) {
-        warning("Lipids file not found at local path. Using network path as a fallback.")
-        lipids.file.path <- "Y:/MA_BPA_Microbiome/Databases/LipidMaps/lipids_expanded.tsv"
-      }
+    cid.database.path <- "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite"
+    lipids.file.path <- "Y:/MA_BPA_Microbiome/Databases/LipidMaps/lipids_expanded.tsv"
   }
 
   if (!is.null(cid.database.path)) {
