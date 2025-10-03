@@ -147,18 +147,13 @@ standardise_annotation <- function(data,
         message("[DB LOOKUP] No rows returned.")
       }
     }
-  } else {
-    message("[DB LOOKUP SKIPPED] Local database not available.")
-  }
-
-  return(list(data = data, cache = cid_cache_df))
 
 # ======================================================================
 # --- PASS 3: PubChem Lookup Integration ---
 # ======================================================================
 
   # Check if the PubChem lookup feature is enabled
-  if (pubchem_lookup_enabled) {
+  }  else if (pubchem_lookup_enabled) {
     message("Starting Pass 3: Pubchem Lookup for Standardisation:")
     # Check if the required 'jsonlite' package is installed and load it
     if (!requireNamespace("jsonlite", quietly = TRUE)) {
@@ -177,4 +172,8 @@ standardise_annotation <- function(data,
       message("PubChem name enrichment complete.")
     }
   }
+  else {
+    message("[DB AND PUBCHEM LOOKUP SKIPPED] Local database not available.")
+  }
+  return(list(data = data, cache = cid_cache_df))
 }
