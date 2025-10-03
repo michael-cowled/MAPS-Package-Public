@@ -92,7 +92,6 @@ MAPS <- function(
   if (!exists("lv1.and.lv2.annotations")) {
     lv1.and.lv2.annotations <- mzmine.annotations.final
   }
-print(lv1.and.lv2.annotations)
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 5. Process ms2query Data
@@ -124,6 +123,7 @@ print(lv1.and.lv2.annotations)
     new_data = lv2.annotations,
     existing_annotations = lv1.and.lv2.annotations
   )
+  print(lv1.and.lv2.annotations)
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 6. Process lv3 in silico matches from GNPS
