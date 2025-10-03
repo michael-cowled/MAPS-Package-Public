@@ -8,7 +8,7 @@
 #' @param mzmine.data The initial MzMine data frame for verification.
 #' @param cid_cache_df The CID cache data frame to be saved.
 #' @param write_large_csv A function to write large CSV files.
-#' @return A message indicating success or an error.
+#' @return A message indicating success or an error with processing time.
 #' @importFrom dplyr %>% filter select full_join
 #' @importFrom readr write_csv
 #' @export
@@ -21,6 +21,10 @@ write_final_files <- function(
     cid_cache_df,
     write_large_csv
 ) {
+  # Start the timer for progress tracking
+  start_time <- Sys.time()
+  message(paste0("Starting file writing and verification for dataset '", dataset.id, "'..."))
+
   #Step 1: Ensure dataset and other.data are correctly separated and combined
   dataset <- final.annotation.df %>% dplyr::filter(!is.na(smiles) & smiles != "N/A")
   other_data <- final.annotation.df %>% dplyr::filter(is.na(smiles) | smiles == "N/A")
@@ -29,14 +33,14 @@ write_final_files <- function(
     dplyr::filter(!redundant) %>%
     dplyr::bind_rows(other_data) %>%
     dplyr::select(feature.ID, rt, mz, compound.name, smiles, annotation.type,
-      confidence.level, confidence.score, id.prob, CID, HMDB.ID, Formula, IUPAC,
-      Monoisotopic.Mass, mz.diff.ppm, feature.usi, gnps.library.usi,
-      gnps.cluster.ID, gnps.in.silico.bile.acid.info,
-      canopus.NPC.pathway, canopus.NPC.pathway.probability,
-      canopus.NPC.superclass, canopus.NPC.superclass.probability,
-      zodiac.formula, zodiac.confidence.score,
-      Propagated.Feature.ID, Propagated.Annotation.Type,
-      Propagated.Annotation.Class, Samples
+                  confidence.level, confidence.score, id.prob, CID, HMDB.ID, Formula, IUPAC,
+                  Monoisotopic.Mass, mz.diff.ppm, feature.usi, gnps.library.usi,
+                  gnps.cluster.ID, gnps.in.silico.bile.acid.info,
+                  canopus.NPC.pathway, canopus.NPC.pathway.probability,
+                  canopus.NPC.superclass, canopus.NPC.superclass.probability,
+                  zodiac.formula, zodiac.confidence.score,
+                  Propagated.Feature.ID, Propagated.Annotation.Type,
+                  Propagated.Annotation.Class, Samples
     )
 
   # Step 2: Extract and write the top 10 features per sample
@@ -67,19 +71,37 @@ write_final_files <- function(
 
   closeAllConnections()
 
-  # Step 5: Perform data verification check
+  # Calculate elapsed time before returning the final message
+  end_time <- Sys.time()
+  duration <- difftime(end_time, start_time, units = "secs")
+  duration_formatted <- format(duration, units = "auto", digits = 2)
+
+  # Step 5: Perform data verification check and return final message
   if (nrow(final.annotation.df) > nrow(mzmine.data)) {
-    error.message <- paste0("!ATTENTION! Possible data mix-up: Check all data has been processed correctly for dataset ", dataset.id, "!")
+    error.message <- paste0(
+      "!ATTENTION! Possible data mix-up: Check all data has been processed correctly for dataset ",
+      dataset.id,
+      "!",
+      " (Process completed in ", duration_formatted, ")"
+    )
     readr::write_csv(tibble::tibble(message = error.message), paste0("Y:/MA_BPA_Microbiome/Dataset-Annotations/", Sys.Date(), "_DATA_ERROR_", dataset.id, ".csv"))
     return(error.message)
   } else {
-    message <- paste0("Script has finished: No issues detected in processing ", dataset.id, "!")
-    return(message)
-  }
+    final_message <- paste0(
+      "Script has finished: No issues detected in processing ",
+      dataset.id,
+      "!",
+      " (Total time: ", duration_formatted, ")"
+    )
+    message(final_message) # Echo the final message to console
 
-  if (all(!duplicated(final.annotation.df$feature.ID))) {
-    message("All feature.ID are unique ✅")
-  } else {
-    warning("Duplicates found ⚠️")
+    # Duplicate check (was unreachable in original, moved here for successful path)
+    if (all(!duplicated(final.annotation.df$feature.ID))) {
+      message("All feature.ID are unique ✅")
+    } else {
+      warning("Duplicates found ⚠️")
+    }
+
+    return(final_message)
   }
 }
