@@ -61,7 +61,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
       }
   }
 
-  if (is.null(cid.database.path)) {
+  if (!is.null(cid.database.path)) {
   cid_db_con <- DBI::dbConnect(RSQLite::SQLite(), cid.database.path, flags = RSQLite::SQLITE_RO)
   } else {
     message("Skipping DB connection")
