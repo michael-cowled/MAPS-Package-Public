@@ -45,7 +45,9 @@ fetch_pubchem_title <- function(cid) {
     print(xml_doc)
 
     # Use XPath to find the first occurrence of the <Title> tag
-    title_node <- xml2::xml_find_first(xml_doc, "//Title")
+    # FIX: Using the local-name() XPath function to ignore the XML namespace,
+    # which caused the previous parsing failure.
+    title_node <- xml2::xml_find_first(xml_doc, "//*[local-name()='Title']")
     print(title_node)
 
     # Extract the text content from the node
