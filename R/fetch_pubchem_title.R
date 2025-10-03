@@ -7,6 +7,7 @@
 #'   if the lookup fails, the CID is invalid (\code{< 1}), or the title is not found.
 #' @keywords internal
 #' @importFrom xml2 read_xml xml_find_first xml_text
+#' @importFrom httr GET status_code content
 #' @export
 fetch_pubchem_title <- function(cid) {
 
@@ -27,13 +28,23 @@ fetch_pubchem_title <- function(cid) {
 
     message(paste("Querying PubChem for CID:", cid))
 
-    # Use xml2::read_xml (imported via roxygen tag) to fetch the XML document
-    xml_doc <- xml2::read_xml(url)
+    # Use httr::GET to fetch the response reliably
+    response <- httr::GET(url)
+
+    # 3a. Check HTTP status code explicitly
+    if (httr::status_code(response) != 200) {
+      warning(paste("HTTP Error:", httr::status_code(response),
+                    "received for CID", cid, ". Skipping."))
+      Sys.sleep(0.2)
+      return(NA_character_)
+    }
+
+    # 3b. Extract content and parse the XML
+    xml_content <- httr::content(response, as = "text", encoding = "UTF-8")
+    xml_doc <- xml2::read_xml(xml_content)
 
     # Use XPath to find the first occurrence of the <Title> tag
-    # This directly targets the required element, avoiding mixed data structures.
     title_node <- xml2::xml_find_first(xml_doc, "//Title")
-    print(title_node)
 
     # Extract the text content from the node
     retrieved_title <- xml2::xml_text(title_node)
@@ -55,7 +66,7 @@ fetch_pubchem_title <- function(cid) {
     # Implement a delay even on error to avoid rapid retries
     Sys.sleep(0.2)
     # Handle network or parsing errors
-    warning(paste("Error fetching title for CID", cid, ". Skipping. Message:", e$message),
+    warning(paste("Network/Parsing Error fetching title for CID", cid, ". Skipping. Message:", e$message),
             call. = FALSE)
     return(NA_character_)
   })
