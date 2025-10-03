@@ -55,7 +55,6 @@ MAPS <- function(
   sample.data <- processed_data$initial.mzmine.data
   cid_cache_df <- processed_data$cid.cache
   lipids.file <- processed_data$lipids.file
-  print(filter(mzmine.annotations.final, feature.ID == 85))
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 4. Process GNPS Data
@@ -92,7 +91,7 @@ MAPS <- function(
   if (!exists("lv1.and.lv2.annotations")) {
     lv1.and.lv2.annotations <- mzmine.annotations.final
   }
-  print(filter(lv1.and.lv2.annotations, feature.ID == 85))
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 5. Process ms2query Data
   message("Processing ms2query data:")
@@ -123,7 +122,6 @@ MAPS <- function(
     new_data = lv2.annotations,
     existing_annotations = lv1.and.lv2.annotations
   )
-  print(filter(lv1.and.lv2.annotations, feature.ID == 85))
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 6. Process lv3 in silico matches from GNPS
@@ -145,7 +143,7 @@ MAPS <- function(
   } else {
     lv1.lv2.lv3.annotations <- lv1.and.lv2.annotations
   }
-  print(filter(lv1.lv2.lv3.annotations, feature.ID == 85))
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 7. Process SIRIUS data
   message("Processing SIRIUS data:")
@@ -164,7 +162,7 @@ MAPS <- function(
   lv1.lv2.lv3.annotations <- csi_results$annotations
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
   cid_cache_df <- csi_results$cache
-  print(filter(lv1.lv2.lv3.annotations, feature.ID == 85))
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Appending all other features and annotations
   lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
@@ -180,7 +178,7 @@ MAPS <- function(
     gnps_data = if (exists("gnps.cluster.data")) gnps.cluster.data else NULL,
     gnps_task_id = gnps.task.id
   )
-  print(filter(full.annotation.data, feature.ID == 85))
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 9. Propagation of annotations
   propagated_df <- MAPS.Package::propagate_annotations(

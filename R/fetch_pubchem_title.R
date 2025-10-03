@@ -42,17 +42,14 @@ fetch_pubchem_title <- function(cid) {
     # 3b. Extract content and parse the XML
     xml_content <- httr::content(response, as = "text", encoding = "UTF-8")
     xml_doc <- xml2::read_xml(xml_content)
-    print(xml_doc)
 
     # Use XPath to find the first occurrence of the <Title> tag
     # FIX: Using the local-name() XPath function to ignore the XML namespace,
     # which caused the previous parsing failure.
     title_node <- xml2::xml_find_first(xml_doc, "//*[local-name()='Title']")
-    print(title_node)
 
     # Extract the text content from the node
     retrieved_title <- xml2::xml_text(title_node)
-    print(retrieved_title)
 
     # 4. Implement a 0.2 second delay to respect PubChem API usage policy
     Sys.sleep(0.2)
