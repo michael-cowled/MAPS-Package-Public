@@ -92,7 +92,7 @@ MAPS <- function(
   if (!exists("lv1.and.lv2.annotations")) {
     lv1.and.lv2.annotations <- mzmine.annotations.final
   }
-invisible(lv1.and.lv2.annotations)
+print(lv1.and.lv2.annotations)
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 5. Process ms2query Data
