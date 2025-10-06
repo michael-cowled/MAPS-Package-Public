@@ -106,7 +106,6 @@ standardise_annotation <- function(data,
       cid_str <- paste(cids_to_lookup, collapse = ", ")
 
       # Query the local database for properties
-      # but we rename it to 'HMDB_db' for easy, non-conflicting use in R.
       query <- sprintf("SELECT CID, Title, SMILES,
                        Formula AS Formula_db, IUPAC AS IUPAC_db,
                        `Monoisotopic.Mass` AS Monoisotopic_Mass_db FROM pubchem_data WHERE CID IN (%s) GROUP BY CID", cid_str)

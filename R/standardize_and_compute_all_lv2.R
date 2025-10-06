@@ -24,6 +24,10 @@ standardize_and_compute_all_lv2 <- function(
     ms2query.prob) {
 
   lv2.annotations <- rbind(gnps.data.lv2.low.conf, ms2query.data.lv2)
+
+  print(gnps.data.lv2.low.conf) #testing
+  print(ms2query.data.lv2)#testing
+
   lv2.annotations$smiles <- trimws(lv2.annotations$smiles)
 
   lv2.annotations$CID <- NA
