@@ -73,7 +73,7 @@ MAPS <- function(
     gnps_lv2_results <- MAPS.Package::standardise_and_compute_gnps(
       gnps.data.lv2.high.conf, cid_cache_df, lipids.file,
       cid_database_path = cid_database_path,
-      ms2query.prob
+      gnps.prob
     )
 
     gnps.data.lv2.high.conf <- gnps_lv2_results$data
