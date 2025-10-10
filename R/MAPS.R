@@ -80,6 +80,8 @@ MAPS <- function(
     gnps.data.lv2.high.conf$feature.ID <- as.numeric(gnps.data.lv2.high.conf$feature.ID)
     gnps.data.lv2.high.conf$confidence.score <- as.numeric(gnps.data.lv2.high.conf$confidence.score)
     cid_cache_df <- gnps_lv2_results$cache
+    mzmine.annotations.final$compound.name <- as.character(mzmine.annotations.final$compound.name)
+    gnps.data.lv2.high.conf$compound.name <- as.character(gnps.data.lv2.high.conf$compound.name)
 
     lv1.and.lv2.annotations <- MAPS.Package::merge_and_append_data(
       new_data = gnps.data.lv2.high.conf,
