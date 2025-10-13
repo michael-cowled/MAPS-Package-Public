@@ -1,11 +1,11 @@
 #' @title Merge and Append Data Frames
-#' @description Merges a new data frame of annotations with an existing one, handling column discrepancies and ensuring consistent data types.
+#' @description Merges a new data frame of annotations with an existing one, handling column discrepancies, ensuring consistent data types, and specifically standardizing 'mz.diff.ppm' to numeric.
 #'
 #' @param new_data A data frame containing new annotations to be appended.
 #' @param existing_annotations A data frame of existing annotations.
 #'
 #' @return The combined data frame with new annotations appended.
-#' @importFrom dplyr %>% bind_rows
+#' @importFrom dplyr %>% bind_rows mutate
 #' @export
 merge_and_append_data <- function(new_data, existing_annotations) {
 
@@ -47,9 +47,21 @@ merge_and_append_data <- function(new_data, existing_annotations) {
     }
   }
 
-  # 3. Append the new data to the existing annotations
-  # bind_rows is very good at matching columns and handling types, but
-  # the explicit type initialization above guarantees consistency.
+  # --- NEW STEP ---
+  # 3. Explicitly standardize the 'mz.diff.ppm' column to numeric in both data frames
+  # This prevents the <character> and <double> type mismatch error during bind_rows.
+  # Note: If 'mz.diff.ppm' contains non-numeric strings (like "N/A"), they will become NA,
+  # which is the likely source of the warning you saw previously.
+  if ("mz.diff.ppm" %in% colnames(existing_annotations)) {
+    existing_annotations <- existing_annotations %>%
+      dplyr::mutate(mz.diff.ppm = as.numeric(mz.diff.ppm))
+  }
+  if ("mz.diff.ppm" %in% colnames(new_data)) {
+    new_data <- new_data %>%
+      dplyr::mutate(mz.diff.ppm = as.numeric(mz.diff.ppm))
+  }
+
+  # 4. Append the new data to the existing annotations
   combined_annotations <- existing_annotations %>%
     dplyr::bind_rows(new_data)
 
