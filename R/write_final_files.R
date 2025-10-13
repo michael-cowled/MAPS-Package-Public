@@ -1,5 +1,5 @@
 #' @title Write Final Processed Files
-#' @description This function takes the final processed data frames and writes them to disk in specified locations. It also performs a final data verification check.
+#' @description This function takes the final processed data frames and writes them to disk in specified locations. It performs a final data verification check and **deletes existing output files before writing**.
 #'
 #' @param final.annotation.df The main processed annotation data frame.
 #' @param samples.df The processed samples data frame.
@@ -11,6 +11,7 @@
 #' @return A message indicating success or an error with processing time.
 #' @importFrom dplyr %>% filter select full_join
 #' @importFrom readr write_csv
+#' @importFrom fs file_exists file_delete # Added dependency for file operations
 #' @export
 write_final_files <- function(
     final.annotation.df,
@@ -21,11 +22,20 @@ write_final_files <- function(
     cid_cache_df,
     write_large_csv
 ) {
+
+  # Helper function to check for and delete a file
+  delete_if_exists <- function(path) {
+    if (fs::file_exists(path)) {
+      message(paste0("...Deleting existing file: ", basename(path)))
+      fs::file_delete(path)
+    }
+  }
+
   # Start the timer for progress tracking
   start_time <- Sys.time()
   message(paste0("Starting file writing and verification for dataset '", dataset.id, "'..."))
 
-  #Step 1: Ensure dataset and other.data are correctly separated and combined
+  # Step 1: Ensure dataset and other.data are correctly separated and combined
   dataset <- final.annotation.df %>% dplyr::filter(!is.na(smiles) & smiles != "N/A")
   other_data <- final.annotation.df %>% dplyr::filter(is.na(smiles) | smiles == "N/A")
 
@@ -49,7 +59,22 @@ write_final_files <- function(
     dplyr::top_n(10, area) %>%
     dplyr::ungroup()
 
-  # Step 3: Writing all files
+  # --- NEW STEP ---
+  # Step 3: Pre-flight File Deletion
+  message("Checking for and deleting existing output files...")
+  if (Sys.getenv("USER_DOMAIN") == "unimelb") {
+    delete_if_exists(paste0(folder, "/final-annotation-df.csv"))
+    delete_if_exists(paste0("Y:/MA_BPA_Microbiome/Dataset-Annotations/", dataset.id, ".csv"))
+    delete_if_exists(paste0("Y:/MA_BPA_Microbiome/Dataset-Abundances/", dataset.id, "-samples-df.csv"))
+    delete_if_exists(paste0("Y:/MA_BPA_Microbiome/Dataset-Abundances/", dataset.id, "-top-10-features.csv"))
+  } else {
+    delete_if_exists(paste0(folder, "/", dataset.id, ".csv"))
+    delete_if_exists(paste0(folder, "/",dataset.id, "-samples-df.csv"))
+    delete_if_exists(paste0(folder, "/", dataset.id, "-top-10-features.csv"))
+  }
+
+  # Step 4: Writing all files
+  message("Writing new files...")
   if (Sys.getenv("USER_DOMAIN") == "unimelb") {
     write_large_csv(final.annotation.df2, paste0(folder, "/final-annotation-df.csv"))
     write_large_csv(final.annotation.df2, paste0("Y:/MA_BPA_Microbiome/Dataset-Annotations/", dataset.id, ".csv"))
@@ -61,7 +86,7 @@ write_final_files <- function(
     write_large_csv(top_10_features, paste0(folder, "/", dataset.id, "-top-10-features.csv"))
   }
 
-  # Step 4: Close connections and save cache
+  # Step 5: Close connections and save cache
   tryCatch({
     readr::write_csv(cid_cache_df, "~/MAPS/cid_cache.csv")
     message("[CACHE WRITE] Saved cache to: ", "~/MAPS/cid_cache.csv")
@@ -76,7 +101,7 @@ write_final_files <- function(
   duration <- difftime(end_time, start_time, units = "secs")
   duration_formatted <- format(duration, units = "auto", digits = 2)
 
-  # Step 5: Perform data verification check and return final message
+  # Step 6: Perform data verification check and return final message
   if (nrow(final.annotation.df) > nrow(mzmine.data)) {
     error.message <- paste0(
       "!ATTENTION! Possible data mix-up: Check all data has been processed correctly for dataset ",
@@ -95,7 +120,7 @@ write_final_files <- function(
     )
     message(final_message) # Echo the final message to console
 
-    # Duplicate check (was unreachable in original, moved here for successful path)
+    # Duplicate check
     if (all(!duplicated(final.annotation.df$feature.ID))) {
       message("All feature.ID are unique ✅")
     } else {
