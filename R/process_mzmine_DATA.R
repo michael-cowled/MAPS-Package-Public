@@ -96,10 +96,10 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
 
   # 6. Handle Level 1 annotations and compute ID probability
   if (nrow(mzmine.annotations) == 0) {
-    mzmine.annotations$CID <- as.numeric(NA)
-    mzmine.annotations$Formula <- as.character(NA)
-    mzmine.annotations$IUPAC <- as.character(NA)
-    mzmine.annotations$Monoisotopic.Mass <- as.numeric(NA)
+    mzmine.annotations$CID <- as.numeric(0)
+    mzmine.annotations$Formula <- as.character(0)
+    mzmine.annotations$IUPAC <- as.character(0)
+    mzmine.annotations$Monoisotopic.Mass <- as.numeric(0)
   }
 
   mzmine.annotations <- mzmine.annotations %>%
