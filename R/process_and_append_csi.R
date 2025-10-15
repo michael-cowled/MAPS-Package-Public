@@ -82,6 +82,9 @@ process_and_append_csi <- function(
   csi.data$feature.ID <- as.numeric(csi.data$feature.ID)
   existing_annotations$confidence.score <- as.numeric(existing_annotations$confidence.score)
   csi.data$confidence.score <- as.numeric(csi.data$confidence.score)
+  csi.data$Formula <- as.character(csi.data$Formula)
+  csi.data$Monoisotopic.Mass <- as.numeric(csi.data$Monoisotopic.Mass)
+  csi.data$IUPAC <- as.character(csi.data$IUPAC)
 
   # Append the filtered and processed data to the existing annotations
   updated_annotations <- existing_annotations %>%
