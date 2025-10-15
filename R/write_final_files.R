@@ -71,6 +71,7 @@ write_final_files <- function(
     delete_if_exists(paste0(folder, "/", dataset.id, ".csv"))
     delete_if_exists(paste0(folder, "/",dataset.id, "-samples-df.csv"))
     delete_if_exists(paste0(folder, "/", dataset.id, "-top-10-features.csv"))
+    delete_if_exists(paste0(folder, "/", dataset.id, "/cytoscape-v2.csv"))
   }
 
   # Step 4: Writing all files
