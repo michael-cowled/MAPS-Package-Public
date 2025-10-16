@@ -15,5 +15,5 @@ merge_and_append_data(new_data, existing_annotations)
 The combined data frame with new annotations appended.
 }
 \description{
-Merges a new data frame of annotations with an existing one, handling column discrepancies.
+Merges a new data frame of annotations with an existing one, handling column discrepancies, ensuring consistent data types, and specifically standardizing 'mz.diff.ppm' to numeric.
 }

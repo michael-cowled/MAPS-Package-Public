@@ -15,6 +15,6 @@ if the lookup fails, the CID is invalid (\code{< 1}), or the title is not found.
 }
 \description{
 Internal helper function to query the PubChem PUG-REST API
-for a compound's official title based on its CID.
+for a compound's official title based on its CID, using XML parsing.
 }
 \keyword{internal}

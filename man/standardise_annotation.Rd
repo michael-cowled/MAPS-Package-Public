@@ -10,7 +10,8 @@ standardise_annotation(
   smiles_col = "smiles",
   cid_cache_df = NULL,
   lipids.file = NULL,
-  cid_database_path = NULL
+  cid_database_path = NULL,
+  standardise
 )
 }
 \arguments{

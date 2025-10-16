@@ -33,5 +33,5 @@ write_final_files(
 A message indicating success or an error with processing time.
 }
 \description{
-This function takes the final processed data frames and writes them to disk in specified locations. It also performs a final data verification check.
+This function takes the final processed data frames and writes them to disk in specified locations. It performs a final data verification check and \strong{deletes existing output files before writing}.
 }
