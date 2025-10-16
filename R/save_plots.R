@@ -8,7 +8,7 @@
 #' @param plot_list A named list containing the plot objects: 'barchart_plot',
 #'   'histogram_plot', and 'bubblechart_plot'. (Assumes ggplot objects).
 #' @param folder Path to the local main output directory.
-#' @param dataset.id Character string identifying the dataset (used for unimelb paths).
+#' @param dataset.id Character string identifying the dataset (not used for plot names, but kept for function structure).
 #'
 #' @return Invisibly returns NULL. Prints messages on success or failure.
 #' @export
@@ -18,9 +18,8 @@ save_plots <- function(plot_list, folder, dataset.id) {
   message("\nStarting Plot Saving...")
 
   # Determine the base directory for saving the plots
-  # Note: The 'unimelb' logic here is primarily for separating the local output folder,
-  # unlike your data file saving which points to network drives.
   if (Sys.getenv("USER_DOMAIN") == "unimelb") {
+    # Using a distinct subfolder for unimelb context
     plot_dir <- paste0(folder, "/Plots_Unimelb_Data")
   } else {
     plot_dir <- paste0(folder, "/Plots")
@@ -40,10 +39,11 @@ save_plots <- function(plot_list, folder, dataset.id) {
   for (config in plot_configs) {
     file_path <- paste0(plot_dir, "/", config$name)
 
-    # Check and delete existing file to mirror "pre-flight deletion" logic
+    # CHECK AND DELETE EXISTING FILE (Explicit pre-flight deletion)
     if (file.exists(file_path)) {
       message(paste("Checking for and deleting existing plot file:", config$name))
       tryCatch({
+        # NOTE: Using file.remove() here to explicitly delete the old file
         file.remove(file_path)
       }, error = function(e) {
         warning(paste("Could not delete existing file:", file_path, ". Overwriting anyway."))

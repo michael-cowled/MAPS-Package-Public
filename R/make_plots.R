@@ -59,7 +59,7 @@ make_plots <- function(
   # --- 1. BARCHART FUNCTION CALL ---
 
   message("\nStarting Barchart Generation (Feature Counts per Sample)...")
-  # ASSUMPTION: generate_feature_barchart returns a list: $data and $plot
+  # ASSUMPTION: generate_feature_barchart returns a list with $data and $plot
   barchart_results <- generate_feature_barchart(
     final.annotation.df = final.annotation.df,
     folder = folder,
@@ -78,7 +78,7 @@ make_plots <- function(
     dplyr::rename(annotation = compound.name) %>%
     dplyr::mutate(annotation = ifelse(is.na(annotation), 0, 1))
 
-  # ASSUMPTION: generate_cumulative_histogram returns a list: $data and $plot
+  # ASSUMPTION: generate_cumulative_histogram returns a list with $data and $plot
   histogram_results <- generate_cumulative_histogram(
     Annotations.with.samples = Annotations.with.samples_input,
     folder = folder,
@@ -96,7 +96,7 @@ make_plots <- function(
     results$bubblechart_plot <- NULL
     warning("Skipping bubble chart generation because required files were not found.")
   } else {
-    # ASSUMPTION: generate_ms2query_bubblechart returns a list: $data and $plot
+    # ASSUMPTION: generate_ms2query_bubblechart returns a list with $data and $plot
     bubblechart_results <- generate_ms2query_bubblechart(
       ms2query.path = ms2query_file,
       quant.data.path = quant_file,
