@@ -49,7 +49,7 @@ MAPS <- function(
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 3. Process MZMine Data
   message("Processing MZMINE data")
-  processed_data <- MAPS.Package::process_mzmine_data(mzmine.annotations, mzmine.data, gnps.prob, standardisation)
+  processed_data <- MAPS.Package::process_mzmine_data(mzmine.annotations, mzmine.data, gnps.prob, standardisation = standardisation)
 
   mzmine.data <- processed_data$processed.data
   mzmine.annotations.final <- processed_data$annotations.data
