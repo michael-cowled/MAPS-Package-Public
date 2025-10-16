@@ -24,7 +24,8 @@ MAPS <- function(
     csi.prob = 0.64,
     ms2query.prob = 0.7,
     rt.tol = 0.1, # Min for C18
-    cid_database_path = NULL
+    cid_database_path = NULL,
+    standardisation = TRUE
 ) {
 
   # NOTE: All required libraries (dplyr, MAPS.Package, etc.) are assumed to be loaded.

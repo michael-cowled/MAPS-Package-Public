@@ -24,7 +24,8 @@
 process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
                                 cid.cache.path = "~/MAPS/cid_cache.csv",
                                 lipids.file.path = "~/MAPS/lipids_expanded.tsv",
-                                cid.database.path = NULL) {
+                                cid.database.path = NULL,
+                                standardisation = TRUE) {
 
   # The code from your original function, with explicit package calls
   mzmine.annotations <- read_checked_csv(mzmine.annotations)
@@ -48,6 +49,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
     dplyr::slice(1) %>%
     dplyr::ungroup()
 
+  if (standardisation == TRUE) {
   # 3. Load database connections and cache
   # Internal paths:
   if (Sys.getenv("USER_DOMAIN") == "unimelb") {
@@ -74,6 +76,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
 
   # 4. Standardise compound names
   mzmine.annotations$smiles <- trimws(mzmine.annotations$smiles)
+
   result <- standardise_annotation(
     mzmine.annotations,
     name_col = "compound_name",
@@ -93,7 +96,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
   }, error = function(e) {
     warning("Failed to save cache: ", e$message)
   })
-
+}
   # 6. Handle Level 1 annotations and compute ID probability
   if (nrow(mzmine.annotations) == 0) {
     mzmine.annotations$CID <- as.numeric(0)
