@@ -2,9 +2,11 @@
 #'
 #' Executes a sequence of three plotting functions: barchart of total annotations,
 #' cumulative histogram of unique annotations, and a bubble chart of metabolite classes
-#' derived from MS2Query data. Plots are generated but not saved internally.
+#' derived from MS2Query data. Plots are generated but not saved internally; they are
+#' returned for subsequent saving by 'save_plots'.
 #'
 #' @param final.annotation.df A data frame containing processed feature annotations.
+#'    Must include 'feature.ID', 'Samples', and 'compound.name'.
 #' @param folder Path to the main output directory.
 #' @param remove_sample Optional sample name to exclude.
 #' @param ms2query_threshold MS2Query model prediction threshold (default 0.7).
@@ -57,7 +59,7 @@ make_plots <- function(
   # --- 1. BARCHART FUNCTION CALL ---
 
   message("\nStarting Barchart Generation (Feature Counts per Sample)...")
-  # ASSUMPTION: generate_feature_barchart now returns a list: $data and $plot
+  # ASSUMPTION: generate_feature_barchart returns a list: $data and $plot
   barchart_results <- generate_feature_barchart(
     final.annotation.df = final.annotation.df,
     folder = folder,
@@ -76,7 +78,7 @@ make_plots <- function(
     dplyr::rename(annotation = compound.name) %>%
     dplyr::mutate(annotation = ifelse(is.na(annotation), 0, 1))
 
-  # ASSUMPTION: generate_cumulative_histogram now returns a list: $data and $plot
+  # ASSUMPTION: generate_cumulative_histogram returns a list: $data and $plot
   histogram_results <- generate_cumulative_histogram(
     Annotations.with.samples = Annotations.with.samples_input,
     folder = folder,
@@ -94,7 +96,7 @@ make_plots <- function(
     results$bubblechart_plot <- NULL
     warning("Skipping bubble chart generation because required files were not found.")
   } else {
-    # ASSUMPTION: generate_ms2query_bubblechart now returns a list: $data and $plot
+    # ASSUMPTION: generate_ms2query_bubblechart returns a list: $data and $plot
     bubblechart_results <- generate_ms2query_bubblechart(
       ms2query.path = ms2query_file,
       quant.data.path = quant_file,
