@@ -25,7 +25,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
                                 cid.cache.path = "~/MAPS/cid_cache.csv",
                                 lipids.file.path = "~/MAPS/lipids_expanded.tsv",
                                 cid.database.path = NULL,
-                                standardisation = TRUE) {
+                                standardisation) {
 
   # The code from your original function, with explicit package calls
   mzmine.annotations <- read_checked_csv(mzmine.annotations)
