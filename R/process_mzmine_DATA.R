@@ -49,7 +49,6 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
     dplyr::slice(1) %>%
     dplyr::ungroup()
 
-  if (standardisation == TRUE) {
   # 3. Load database connections and cache
   # Internal paths:
   if (Sys.getenv("USER_DOMAIN") == "unimelb") {
@@ -83,7 +82,8 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
     smiles_col = "smiles",
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
-    cid_database_path = cid.database.path
+    cid_database_path = cid.database.path,
+    standardise = standardise
   )
 
   mzmine.annotations <- result$data
@@ -96,7 +96,7 @@ process_mzmine_data <- function(mzmine.annotations, mzmine.data, gnps.prob,
   }, error = function(e) {
     warning("Failed to save cache: ", e$message)
   })
-}
+
   # 6. Handle Level 1 annotations and compute ID probability
   if (nrow(mzmine.annotations) == 0) {
     mzmine.annotations$CID <- as.numeric(0)

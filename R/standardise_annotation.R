@@ -22,7 +22,8 @@ standardise_annotation <- function(data,
                                    smiles_col = "smiles",
                                    cid_cache_df = NULL,
                                    lipids.file = NULL,
-                                   cid_database_path = NULL) {
+                                   cid_database_path = NULL,
+                                   standardise) {
 
   # --- Libraries ---
   # NOTE: In R packages, use @importFrom in documentation instead of library() inside the function.
@@ -74,104 +75,109 @@ standardise_annotation <- function(data,
   }
 
   # --- PASS 1: Resolve CIDs ---
-  message("--- PASS 1: Resolving CIDs from PubChem & LipidMaps ---")
-  # Assuming 'get_cid_only_with_fallbacks' is a separate function available in the package
-  pb <- utils::txtProgressBar(min = 0, max = nrow(data), style = 3)
+  if (standardisation == TRUE) {
+    message("--- PASS 1: Resolving CIDs from PubChem & LipidMaps ---")
+    # Assuming 'get_cid_only_with_fallbacks' is a separate function available in the package
+    pb <- utils::txtProgressBar(min = 0, max = nrow(data), style = 3)
 
-  for (i in seq_len(nrow(data))) {
-    name <- data[[name_col]][i]
-    smiles <- data[[smiles_col]][i]
+    for (i in seq_len(nrow(data))) {
+      name <- data[[name_col]][i]
+      smiles <- data[[smiles_col]][i]
 
-    if (is.na(name) || !nzchar(name)) {
+      if (is.na(name) || !nzchar(name)) {
+        utils::setTxtProgressBar(pb, i)
+        next
+      }
+
+      # This function uses the PubChem PUG-REST API and the local lipid file
+      pubchem_result <- get_cid_only_with_fallbacks(name, smiles, cid_cache_df, lipids.file)
+      data$CID[i] <- pubchem_result$CID
+      cid_cache_df <- pubchem_result$cache
+
       utils::setTxtProgressBar(pb, i)
-      next
     }
+    close(pb)
 
-    # This function uses the PubChem PUG-REST API and the local lipid file
-    pubchem_result <- get_cid_only_with_fallbacks(name, smiles, cid_cache_df, lipids.file)
-    data$CID[i] <- pubchem_result$CID
-    cid_cache_df <- pubchem_result$cache
+    # --- PASS 2: Retrieve Properties from Local DB (Conditional) ---
+    message("\n--- PASS 2: Retrieving Properties from Local DB ---")
 
-    utils::setTxtProgressBar(pb, i)
-  }
-  close(pb)
+    if (db_lookup_enabled) {
+      cids_to_lookup <- unique(data$CID[!is.na(data$CID) & data$CID > 0])
 
-  # --- PASS 2: Retrieve Properties from Local DB (Conditional) ---
-  message("\n--- PASS 2: Retrieving Properties from Local DB ---")
+      if (length(cids_to_lookup) > 0) {
+        cid_str <- paste(cids_to_lookup, collapse = ", ")
 
-  if (db_lookup_enabled) {
-    cids_to_lookup <- unique(data$CID[!is.na(data$CID) & data$CID > 0])
+        # Query the local database for properties
+        query <- sprintf("SELECT CID, Title, SMILES,
+                         Formula AS Formula_db, IUPAC AS IUPAC_db,
+                         `Monoisotopic.Mass` AS Monoisotopic_Mass_db FROM pubchem_data WHERE CID IN (%s) GROUP BY CID", cid_str)
 
-    if (length(cids_to_lookup) > 0) {
-      cid_str <- paste(cids_to_lookup, collapse = ", ")
+        message("[SQL QUERY]")
+        message(query)
 
-      # Query the local database for properties
-      query <- sprintf("SELECT CID, Title, SMILES,
-                       Formula AS Formula_db, IUPAC AS IUPAC_db,
-                       `Monoisotopic.Mass` AS Monoisotopic_Mass_db FROM pubchem_data WHERE CID IN (%s) GROUP BY CID", cid_str)
+        db_props <- tryCatch(
+          DBI::dbGetQuery(db_con, query),
+          error = function(e) {
+            message("[DB ERROR] ", e$message)
+            return(NULL)
+          }
+        )
 
-      message("[SQL QUERY]")
-      message(query)
+        if (!is.null(db_props) && nrow(db_props) > 0) {
+          if ("CID" %in% colnames(db_props)) {
+            db_props$CID <- as.numeric(db_props$CID)
+          }
 
-      db_props <- tryCatch(
-        DBI::dbGetQuery(db_con, query),
-        error = function(e) {
-          message("[DB ERROR] ", e$message)
-          return(NULL)
+          message("[DB LOOKUP] Retrieved ", nrow(db_props), " rows")
+
+          # Join retrieved properties and update/coalesce columns
+          data <- data %>%
+            dplyr::left_join(db_props, by = "CID") %>%
+            dplyr::mutate(
+              # Use Title/IUPAC from DB, fallback to original name
+              !!rlang::sym(name_col) := dplyr::coalesce(Title, IUPAC_db, !!rlang::sym(name_col)),
+              # Use SMILES from DB, fallback to original smiles
+              !!rlang::sym(smiles_col) := dplyr::coalesce(SMILES, !!rlang::sym(smiles_col)),
+              Formula = dplyr::coalesce(Formula_db, Formula),
+              IUPAC = dplyr::coalesce(IUPAC_db, IUPAC),
+              Monoisotopic.Mass = dplyr::coalesce(Monoisotopic_Mass_db, Monoisotopic.Mass)
+            ) %>%
+            # Clean up columns used for joining/coalescing
+            dplyr::select(-Title, -SMILES, -Formula_db, -IUPAC_db, -Monoisotopic_Mass_db) # <--- CORRECTED LINE
+        } else {
+          message("[DB LOOKUP] No rows returned.")
         }
-      )
+      }
 
-      if (!is.null(db_props) && nrow(db_props) > 0) {
-        if ("CID" %in% colnames(db_props)) {
-          db_props$CID <- as.numeric(db_props$CID)
-        }
+  # ======================================================================
+  # --- PASS 3: PubChem Lookup Integration ---
+  # ======================================================================
 
-        message("[DB LOOKUP] Retrieved ", nrow(db_props), " rows")
-
-        # Join retrieved properties and update/coalesce columns
-        data <- data %>%
-          dplyr::left_join(db_props, by = "CID") %>%
-          dplyr::mutate(
-            # Use Title/IUPAC from DB, fallback to original name
-            !!rlang::sym(name_col) := dplyr::coalesce(Title, IUPAC_db, !!rlang::sym(name_col)),
-            # Use SMILES from DB, fallback to original smiles
-            !!rlang::sym(smiles_col) := dplyr::coalesce(SMILES, !!rlang::sym(smiles_col)),
-            Formula = dplyr::coalesce(Formula_db, Formula),
-            IUPAC = dplyr::coalesce(IUPAC_db, IUPAC),
-            Monoisotopic.Mass = dplyr::coalesce(Monoisotopic_Mass_db, Monoisotopic.Mass)
-          ) %>%
-          # Clean up columns used for joining/coalescing
-          dplyr::select(-Title, -SMILES, -Formula_db, -IUPAC_db, -Monoisotopic_Mass_db) # <--- CORRECTED LINE
+    # Check if the PubChem lookup feature is enabled
+    }  else if (pubchem_lookup_enabled) {
+      # Check if the required 'jsonlite' package is installed and load it
+      if (!requireNamespace("jsonlite", quietly = TRUE)) {
+        warning("PubChem lookup is enabled, but the 'jsonlite' package is not installed. Skipping lookup.")
       } else {
-        message("[DB LOOKUP] No rows returned.")
+        library(jsonlite)
+        message("Starting PubChem lookup (PASS 3)...")
+
+        # Call the function to update the compound names in the data frame.
+        # Ensure your data frame object is passed in and reassigned back.
+        # Adjust 'name_col' and 'cid_col' if your columns are named differently.
+        data <- update_compound_names(
+          data, name_col, cid_col = "CID"            # Column containing the PubChem CID
+        )
+
+        message("PubChem name enrichment complete.")
       }
     }
-
-# ======================================================================
-# --- PASS 3: PubChem Lookup Integration ---
-# ======================================================================
-
-  # Check if the PubChem lookup feature is enabled
-  }  else if (pubchem_lookup_enabled) {
-    # Check if the required 'jsonlite' package is installed and load it
-    if (!requireNamespace("jsonlite", quietly = TRUE)) {
-      warning("PubChem lookup is enabled, but the 'jsonlite' package is not installed. Skipping lookup.")
-    } else {
-      library(jsonlite)
-      message("Starting PubChem lookup (PASS 3)...")
-
-      # Call the function to update the compound names in the data frame.
-      # Ensure your data frame object is passed in and reassigned back.
-      # Adjust 'name_col' and 'cid_col' if your columns are named differently.
-      data <- update_compound_names(
-        data, name_col, cid_col = "CID"            # Column containing the PubChem CID
-      )
-
-      message("PubChem name enrichment complete.")
+    else {
+      message("[DB AND PUBCHEM LOOKUP SKIPPED] Local database not available.")
     }
   }
   else {
-    message("[DB AND PUBCHEM LOOKUP SKIPPED] Local database not available.")
+    message("Skipping standardisation.")
   }
   return(list(data = data, cache = cid_cache_df))
 }
