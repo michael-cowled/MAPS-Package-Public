@@ -168,10 +168,12 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Appending all other features and annotations
+  if (nrow(ms2query.data.lv3) > 0) {
   lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
     ms2query_data = ms2query.data.lv3,
     existing_annotations = lv1.lv2.lv3.annotations
   )
+  }
 
   full.annotation.data <- MAPS.Package::create_full_annotation_table(
     mzmine_data = mzmine.data,
