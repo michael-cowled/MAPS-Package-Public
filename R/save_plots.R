@@ -64,8 +64,6 @@ save_plots <- function(plot_list, folder, dataset.id) {
       }, error = function(e) {
         warning(paste("Failed to save", config$name, "plot:", e$message))
       })
-    } else {
-      message(paste("Skipping saving of", config$name, "as the plot object was NULL."))
     }
   }
 

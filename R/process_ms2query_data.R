@@ -70,8 +70,9 @@ process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, m
     filter(mz.diff >= 0.001) %>%
     filter(!feature.ID %in% lv1.and.lv2.annotations$feature.ID)
 
+  if (nrow(ms2query.data.lv3) > 0) {
   ms2query.data.lv3$confidence.level <- "3"
-
+}
   # Return both levels
   return(list(
     lv2.data = ms2query.data.lv2,
