@@ -9,10 +9,12 @@ process_canopus_data <- function(canopus.data_path) {
   canopus.data <- read_checked_tsv(canopus.data_path)
 
   # Select and rename columns
-  canopus.data <- canopus.data[, c(5:8, 27)]
+  canopus.data <- canopus.data[, c(5:8, 15, 16, 19, 20, 27)]
   names(canopus.data) <- c(
     "canopus.NPC.pathway", "canopus.NPC.pathway.probability",
     "canopus.NPC.superclass", "canopus.NPC.superclass.probability",
+    "canopus.classyfire.subclass", "canopus.classyfire.subclass.probability",
+    "canopus.classyfire.specclass", "canopus.classyfire.specclass.probability",
     'feature.ID'
   )
 
