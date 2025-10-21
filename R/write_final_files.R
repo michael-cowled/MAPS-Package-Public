@@ -48,6 +48,8 @@ write_final_files <- function(
                   gnps.cluster.ID, gnps.in.silico.bile.acid.info,
                   canopus.NPC.pathway, canopus.NPC.pathway.probability,
                   canopus.NPC.superclass, canopus.NPC.superclass.probability,
+                  canopus.classyfire.subclass, canopus.classyfire.subclass.probability,
+                  canopus.classyfire.specclass, canopus.classyfire.specclass.probability,
                   zodiac.formula, zodiac.confidence.score,
                   Propagated.Feature.ID, Propagated.Annotation.Type,
                   Propagated.Annotation.Class, Samples
