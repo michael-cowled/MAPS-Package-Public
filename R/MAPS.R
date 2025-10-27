@@ -161,9 +161,11 @@ MAPS <- function(
     deduplicate_data = MAPS.Package::deduplicate_data,
     standardize_annotation = MAPS.Package::standardise_annotation
   )
-
+  print("check3")
   lv1.lv2.lv3.annotations <- csi_results$annotations
+  print("check4")
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
+  print("check5")
   cid_cache_df <- csi_results$cache
 
   #-----------------------------------------------------------------------------------------------------------------------#
