@@ -78,12 +78,19 @@ process_and_append_csi <- function(
   csi.data$annotation.type <- "CSI:FingerID"
   csi.data$confidence.level <- "3"
 
+  print("check1")
   existing_annotations$feature.ID <- as.numeric(existing_annotations$feature.ID)
+  print("check2")
   csi.data$feature.ID <- as.numeric(csi.data$feature.ID)
+  print("check3")
   existing_annotations$confidence.score <- as.numeric(existing_annotations$confidence.score)
+  print("check4")
   csi.data$confidence.score <- as.numeric(csi.data$confidence.score)
+  print("check5")
   csi.data$Formula <- as.character(csi.data$Formula)
+  print("check6")
   csi.data$Monoisotopic.Mass <- as.numeric(csi.data$Monoisotopic.Mass)
+  print("check7")
   csi.data$IUPAC <- as.character(csi.data$IUPAC)
 
   # Append the filtered and processed data to the existing annotations
