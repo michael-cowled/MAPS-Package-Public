@@ -161,22 +161,23 @@ MAPS <- function(
     deduplicate_data = MAPS.Package::deduplicate_data,
     standardize_annotation = MAPS.Package::standardise_annotation
   )
-  print("check3")
+
   lv1.lv2.lv3.annotations <- csi_results$annotations
-  print("check4")
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
-  print("check5")
+  print("check1")
   cid_cache_df <- csi_results$cache
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Appending all other features and annotations
+  message("Processing all other level 3 annotations:")
   if (nrow(ms2query.data.lv3) > 0) {
+    print("check2")
   lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
     ms2query_data = ms2query.data.lv3,
     existing_annotations = lv1.lv2.lv3.annotations
   )
   }
-
+  print("check8")
   full.annotation.data <- MAPS.Package::create_full_annotation_table(
     mzmine_data = mzmine.data,
     lv_annotations = lv1.lv2.lv3.annotations,
@@ -185,7 +186,7 @@ MAPS <- function(
     gnps_data = if (exists("gnps.cluster.data")) gnps.cluster.data else NULL,
     gnps_task_id = gnps.task.id
   )
-
+  print("check9")
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 9. Propagation of annotations
   propagated_df <- MAPS.Package::propagate_annotations(
@@ -194,7 +195,7 @@ MAPS <- function(
     paired_feature_finder = MAPS.Package::paired_feature_finder,
     get_result = MAPS.Package::get_result
   )
-
+  print("check10")
   propagated.annotation.data <- MAPS.Package::append_propagated_annotations(
     full.annotation.data, propagated_df
   )

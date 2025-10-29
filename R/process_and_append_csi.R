@@ -86,10 +86,9 @@ process_and_append_csi <- function(
   csi.data$Monoisotopic.Mass <- as.numeric(csi.data$Monoisotopic.Mass)
   csi.data$IUPAC <- as.character(csi.data$IUPAC)
 
-  print("check1")
   # Append the filtered and processed data to the existing annotations
   updated_annotations <- existing_annotations %>%
     dplyr::bind_rows(csi.data)
-  print("check2")
+
   return(list(annotations = updated_annotations, cache = updated_cid_cache_df))
 }
