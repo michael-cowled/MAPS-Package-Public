@@ -170,6 +170,8 @@ MAPS <- function(
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Appending all other features and annotations
   message("Processing all other level 3 annotations:")
+  print("checking ms2query data")
+  print(head(ms2query.data.lv3))
   if (nrow(ms2query.data.lv3) > 0) {
     print("check2")
   lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
