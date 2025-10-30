@@ -17,10 +17,11 @@ append_ms2query_analogues <- function(ms2query_data, existing_annotations) {
   ms2query_data$compound.name <- paste0("Analogue of ", ms2query_data$compound.name)
   print("check4")
   # Filter for unique features not already annotated
-  unique_in_ms2query <- setdiff(ms2query_data$feature.ID, existing_annotations$feature.ID)
-  ms2query_data <- ms2query_data %>%
-    dplyr::filter(feature.ID %in% unique_in_ms2query) %>%
-    dplyr::select(-mz.diff, -precursor_mz)
+  ##TO REMOVE
+ # unique_in_ms2query <- setdiff(ms2query_data$feature.ID, existing_annotations$feature.ID)
+ # ms2query_data <- ms2query_data %>%
+ #   dplyr::filter(feature.ID %in% unique_in_ms2query) %>%
+  #  dplyr::select(-mz.diff, -precursor_mz)
   print("check5")
   # Identify and add missing columns to ensure successful binding
   missing_cols <- colnames(existing_annotations)[!colnames(existing_annotations) %in% colnames(ms2query_data)]

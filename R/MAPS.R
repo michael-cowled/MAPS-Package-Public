@@ -170,6 +170,11 @@ MAPS <- function(
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Appending all other features and annotations
   message("Processing all other level 3 annotations:")
+  #First filter to see if any leftover annotations are unique
+  unique_in_ms2query <- setdiff(ms2query.data.lv3$feature.ID, lv1.lv2.lv3.annotations$feature.ID)
+  ms2query.data.lv3 <- ms2query.data.lv3 %>%
+    dplyr::filter(feature.ID %in% unique_in_ms2query) %>%
+    dplyr::select(-mz.diff, -precursor_mz)
   print("checking ms2query data")
   print(head(ms2query.data.lv3))
   if (nrow(ms2query.data.lv3) > 0) {
