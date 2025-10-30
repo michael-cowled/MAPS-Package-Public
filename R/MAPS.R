@@ -184,7 +184,7 @@ MAPS <- function(
     existing_annotations = lv1.lv2.lv3.annotations
   )
   }
-  print("check8")
+  print("check2")
   full.annotation.data <- MAPS.Package::create_full_annotation_table(
     mzmine_data = mzmine.data,
     lv_annotations = lv1.lv2.lv3.annotations,
@@ -193,7 +193,7 @@ MAPS <- function(
     gnps_data = if (exists("gnps.cluster.data")) gnps.cluster.data else NULL,
     gnps_task_id = gnps.task.id
   )
-  print("check9")
+  print("check8")
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 9. Propagation of annotations
   propagated_df <- MAPS.Package::propagate_annotations(
@@ -202,11 +202,11 @@ MAPS <- function(
     paired_feature_finder = MAPS.Package::paired_feature_finder,
     get_result = MAPS.Package::get_result
   )
-  print("check10")
+  print("check9")
   propagated.annotation.data <- MAPS.Package::append_propagated_annotations(
     full.annotation.data, propagated_df
   )
-
+  print("check10")
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 10. Append level 4 and 5 annotations
   propagated.annotation.data <- MAPS.Package::append_annotations(
