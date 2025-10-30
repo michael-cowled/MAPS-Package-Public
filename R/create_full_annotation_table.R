@@ -19,15 +19,15 @@ create_full_annotation_table <- function(mzmine_data, lv_annotations, canopus_da
   gnps_data$feature.ID <- as.numeric(gnps_data$feature.ID)
   print("check4")
   print("mzmine")
-  print(nrow(mzmine_data))
+  print(head(mzmine_data))
   print("lv annotations")
-  print(nrow(lv_annotations))
+  print(head(lv_annotations))
   print("canopus")
-  print(nrow(canopus_data))
+  print(head(canopus_data))
   print("zodiac")
-  print(nrow(zodiac_data))
+  print(head(zodiac_data))
   print("gnps")
-  print(nrow(gnps_data))
+  print(head(gnps_data))
   # Perform full joins to combine all data
   full.annotation.data <- mzmine_data[, 1:4] %>%
     dplyr::full_join(lv_annotations, by = "feature.ID") %>%
