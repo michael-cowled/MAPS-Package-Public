@@ -175,16 +175,14 @@ MAPS <- function(
   ms2query.data.lv3 <- ms2query.data.lv3 %>%
     dplyr::filter(feature.ID %in% unique_in_ms2query) %>%
     dplyr::select(-mz.diff, -precursor_mz)
-  print("checking ms2query data")
-  print(head(ms2query.data.lv3))
-  if (nrow(ms2query.data.lv3) > 0) {
-    print("check2")
-  lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
-    ms2query_data = ms2query.data.lv3,
-    existing_annotations = lv1.lv2.lv3.annotations
-  )
+
+    if (nrow(ms2query.data.lv3) > 0) {
+    lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
+      ms2query_data = ms2query.data.lv3,
+      existing_annotations = lv1.lv2.lv3.annotations
+    )
   }
-  print("check2")
+
   full.annotation.data <- MAPS.Package::create_full_annotation_table(
     mzmine_data = mzmine.data,
     lv_annotations = lv1.lv2.lv3.annotations,
@@ -193,7 +191,7 @@ MAPS <- function(
     gnps_data = if (exists("gnps.cluster.data")) gnps.cluster.data else NULL,
     gnps_task_id = gnps.task.id
   )
-  print("check8")
+  print("check1")
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 9. Propagation of annotations
   propagated_df <- MAPS.Package::propagate_annotations(
@@ -202,11 +200,11 @@ MAPS <- function(
     paired_feature_finder = MAPS.Package::paired_feature_finder,
     get_result = MAPS.Package::get_result
   )
-  print("check9")
+  print("check7")
   propagated.annotation.data <- MAPS.Package::append_propagated_annotations(
     full.annotation.data, propagated_df
   )
-  print("check10")
+  print("check8")
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 10. Append level 4 and 5 annotations
   propagated.annotation.data <- MAPS.Package::append_annotations(
@@ -219,13 +217,13 @@ MAPS <- function(
     annotation_type = "canopus"
   )  %>%
     dplyr::mutate(confidence.level = ifelse(is.na(confidence.level), "5", confidence.level))
-
+  print("check9")
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 11. Append Sample List Data and Collapse Ion Identity Networking
   processed_results <- MAPS.Package::process_and_append_sample_data(sample.data, propagated.annotation.data)
   propagated.annotation.data.with.samples <- processed_results$combined_data
   sample.data2 <- processed_results$sample.data2
-
+  print("check10")
   processed_results <- MAPS.Package::collapse_and_reduce_networks(
     propagated.annotation.data.with.samples, sample.data2,
     process_all_features = MAPS.Package::process_all_features,

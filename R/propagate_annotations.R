@@ -27,15 +27,15 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
     total = length(na.feature.ids),
     width = 60
   )
-
+  print("check2")
   # Propagate annotations and collect results
   propagated_df <- purrr::map_dfr(na.feature.ids, function(i) {
     pb$tick()
     paired_values <- paired_feature_finder(i, gnps.cluster.pairs)
-
+    print("check3")
     selected_paired_value <- NA
     final_result_data <- list(value = NA, column = NA, superclass = NA)
-
+    print("check4")
     for (value in paired_values) {
       result_data <- get_result(value, full.annotation.data)
       if (!is.na(result_data$value)) {
@@ -49,7 +49,7 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
         break
       }
     }
-
+    print("check5")
     if (!is.na(selected_paired_value)) {
       tibble(
         feature.ID = i,
@@ -62,6 +62,6 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
       tibble() # Return an empty tibble if no annotation is found
     }
   })
-
+  print("check6")
   return(propagated_df)
 }
