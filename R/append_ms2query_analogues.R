@@ -24,7 +24,10 @@ append_ms2query_analogues <- function(ms2query_data, existing_annotations) {
   print("check5")
   # Identify and add missing columns to ensure successful binding
   missing_cols <- colnames(existing_annotations)[!colnames(existing_annotations) %in% colnames(ms2query_data)]
-  print(missing_cols)
+  print("existing_annotations")
+  print(head(existing_annotations))
+  print("ms2query_data")
+  print(head(ms2query_data))
   if(length(missing_cols) > 0) {
     for (col in missing_cols) {
       ms2query_data[[col]] <- NA
