@@ -261,4 +261,5 @@ MAPS <- function(
 
   # Return the final annotation data frame
   invisible(final.annotation.df)
+
 }

@@ -31,7 +31,12 @@ write_final_files <- function(
     }
   }
 
-  # Start the timer for progress tracking
+  #Count number of annotations per confidence level
+  usi_counts_dataset <- final.annotation.df %>%
+    group_by(confidence.level) %>%
+    summarize(total_usi = n_distinct(feature.usi), .groups = "drop")
+
+    # Start the timer for progress tracking
   start_time <- Sys.time()
   message(paste0("Starting file writing and verification for dataset '", dataset.id, "'..."))
 
@@ -71,6 +76,7 @@ write_final_files <- function(
     delete_if_exists(paste0("Y:/MA_BPA_Microbiome/Dataset-Abundances/", dataset.id, "-top-10-features.csv"))
   } else {
     delete_if_exists(paste0(folder, "/", dataset.id, ".csv"))
+    delete_if_exists(paste0(folder, "/", dataset.id, "-counts.csv"))
     delete_if_exists(paste0(folder, "/",dataset.id, "-samples-df.csv"))
     delete_if_exists(paste0(folder, "/", dataset.id, "-top-10-features.csv"))
   }
@@ -86,6 +92,7 @@ write_final_files <- function(
     write_large_csv(top_10_features, paste0("Y:/MA_BPA_Microbiome/Dataset-Abundances/", dataset.id, "-top-10-features.csv"))
   } else {
     write_large_csv(final.annotation.df2, paste0(folder, "/", dataset.id, ".csv"))
+    write_large_csv(usi_counts_dataset, paste0(folder, "/", dataset.id, "-counts.csv"))
     write_large_csv(samples.df, paste0(folder, "/",dataset.id, "-samples-df.csv"))
     write_large_csv(top_10_features, paste0(folder, "/", dataset.id, "-top-10-features.csv"))
   }
