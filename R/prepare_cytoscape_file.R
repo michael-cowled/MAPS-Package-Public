@@ -36,7 +36,7 @@ prepare_cytoscape_file <- function(
   colnames(cytoscape)[colnames(cytoscape) == 'shared.name'] <- 'shared name'
 
   # Write the final Cytoscape file
-  write_large_csv(cytoscape, paste0(folder, "/cytoscape-v2.csv"))
+  write_large_csv(cytoscape, paste0(folder, "/gnps/cytoscape-v2.csv"))
 
   return(cytoscape)
 }
