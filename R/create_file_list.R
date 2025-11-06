@@ -43,7 +43,7 @@ create_file_list <- function(dataset.id, output.directory = "HGM") {
     print(file.summary)
 
     # Define the output file name and path
-    output.filename <- paste0(dataset.id, "_file_list.csv")
+    output.filename <- paste0(dataset.id, "_file-list.csv")
     output.path <- file.path(output.folder, output.filename)
 
     # Write the file list to the specified path
