@@ -14,7 +14,8 @@ MAPS(
   ms2query.prob = 0.7,
   rt.tol = 0.1,
   cid_database_path = NULL,
-  standardisation
+  standardisation,
+  lv1
 )
 }
 \arguments{

@@ -12,7 +12,7 @@ save_plots(plot_list, folder, dataset.id)
 
 \item{folder}{Path to the local main output directory.}
 
-\item{dataset.id}{Character string identifying the dataset (used for unimelb paths).}
+\item{dataset.id}{Character string identifying the dataset (not used for plot names, but kept for function structure).}
 }
 \value{
 Invisibly returns NULL. Prints messages on success or failure.

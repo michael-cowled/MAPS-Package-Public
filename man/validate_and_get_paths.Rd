@@ -14,5 +14,6 @@ A named list of valid file paths.
 }
 \description{
 Check if the folder exists and verify the presence of expected data files.
-Stops execution with informative errors if any file is missing.
+Prioritizes 'data_annotations_new.csv' over 'data_annotations.csv' for mzmine annotations.
+Stops execution with informative errors if any required file is missing.
 }
