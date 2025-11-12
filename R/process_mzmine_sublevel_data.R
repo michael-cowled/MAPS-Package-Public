@@ -36,7 +36,7 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
   unique_in_mzmine <- setdiff(mzmine.annotations$id, mzmine.annotations.final$feature.ID)
   mzmine.annotations <- filter(mzmine.annotations, id %in% unique_in_mzmine)
 
-  if (nrow(mzmine.annotations > 0)) {
+  if (nrow(mzmine.annotations) > 0) {
 
   mzmine.annotations <- mzmine.annotations %>%
     dplyr::filter(method == "spectral_library_annotation", score > 0.7) %>%
@@ -91,9 +91,11 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
 
  mzmine.annotations.final <- rbind(mzmine.annotations.final, mzmine.annotations.new)
 
+  }
+
   return(list(
     annotations.data = mzmine.annotations.final,
     cid.cache = cid_cache_df
   ))
-  }
+
 }
