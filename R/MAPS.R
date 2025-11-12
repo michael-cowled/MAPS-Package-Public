@@ -37,7 +37,7 @@ MAPS <- function(
     stop("Processed Data Folder 'folder' cannot be empty. Please specify a path or ensure metadata extraction is successful.")
   }
 
-  paths <- MAPS.Package::validate_and_get_paths(folder)
+  paths <- MAPS.Package::validate_and_get_paths(folder, lv1)
 
   mzmine.data <- paths$mzmine_data
   mzmine.annotations = paths$mzmine_annotations
