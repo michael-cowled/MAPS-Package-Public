@@ -31,9 +31,6 @@ write_final_files <- function(
     }
   }
 
-  #DEBUG
-  write_large_csv(final.annotation.df, paste0(folder, "/final-annotation-test.csv"))
-
   #Count number of annotations per confidence level
   usi_counts_dataset <- final.annotation.df %>%
     group_by(confidence.level) %>%
