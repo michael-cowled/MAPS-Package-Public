@@ -37,7 +37,7 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
   mzmine.annotations <- filter(mzmine.annotations, id %in% unique_in_mzmine)
 
   #debug
-  message(paste0(nrow(mzine.annotations)))
+  message(paste0(nrow(mzmine.annotations)))
 
   # ----------------------------------------------------
   # 🌟 EARLY EXIT CHECK 🌟
