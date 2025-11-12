@@ -36,9 +36,6 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
   unique_in_mzmine <- setdiff(mzmine.annotations$id, mzmine.annotations.final$feature.ID)
   mzmine.annotations <- filter(mzmine.annotations, id %in% unique_in_mzmine)
 
-  #debug
-  message(paste0(nrow(mzmine.annotations)))
-
   # ----------------------------------------------------
   # 🌟 EARLY EXIT CHECK 🌟
   # If no new annotations remain after filtering against existing ones,
@@ -103,6 +100,9 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
  mzmine.annotations.new$confidence.level <- "1"
  mzmine.annotations.new$annotation.type <- "authentic standard"
 
+ #debug
+ message(head(mzmine.annotations.new))
+ message(head(mzmine.annotations.final))
  mzmine.annotations.final <- rbind(mzmine.annotations.final, mzmine.annotations.new)
 
   return(list(
