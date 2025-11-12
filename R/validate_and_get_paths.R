@@ -17,7 +17,6 @@ validate_and_get_paths <- function(folder) {
 
   path_annotations_new <- paste0(folder, "/mzmine/data_annotations_frag6.csv")
   path_annotations_old <- paste0(folder, "/mzmine/data_annotations.csv")
-message(paste0(data_annotations_frag6.csv))
 
   if (file.exists(path_annotations_new)) {
     # Prioritize new file if it exists
