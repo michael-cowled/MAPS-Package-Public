@@ -26,16 +26,16 @@
 process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annotations,
                                 cid_cache_df, lipids.file,
                                 cid_database_path, standardisation) {
-  
+
   # The code from your original function, with explicit package calls
   mzmine.annotations <- read_checked_csv(mzmine.annotations)
   mzmine.annotations$rt <- as.numeric(mzmine.annotations$rt)
-  
+
   #Filter out old annotations
   # Filter low confidence data to remove duplicates with high confidence
-  unique_in_mzmine <- setdiff(mzmine.annotations$feature.ID, mzmine.annotations.final$feature.ID)
-  mzmine.annotations <- filter(mzmine.annotations, feature.ID %in% unique_in_mzmine)
-  
+  unique_in_mzmine <- setdiff(mzmine.annotations$id, mzmine.annotations.final$feature.ID)
+  mzmine.annotations <- filter(mzmine.annotations, id %in% unique_in_mzmine)
+
   mzmine.annotations <- mzmine.annotations %>%
     dplyr::filter(method == "spectral_library_annotation", score > 0.7) %>%
     dplyr::distinct(id, compound_name, .keep_all = TRUE) %>%
@@ -50,10 +50,10 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
     dplyr::filter(score == max(score, na.rm = TRUE)) %>%
     dplyr::slice(1) %>%
     dplyr::ungroup()
-  
+
   # 4. Standardise compound names
   mzmine.annotations$smiles <- trimws(mzmine.annotations$smiles)
-  
+
   result <- standardise_annotation(
     mzmine.annotations,
     name_col = "compound_name",
@@ -63,10 +63,10 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
     cid_database_path = cid.database.path,
     standardise = standardise
   )
-  
+
   mzmine.annotations <- result$data
   cid_cache_df <- result$cache
-  
+
   # 6. Handle Level 1 annotations and compute ID probability
   if (nrow(mzmine.annotations) == 0) {
     mzmine.annotations$CID <- as.numeric(0)
@@ -74,21 +74,21 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
     mzmine.annotations$IUPAC <- as.character(0)
     mzmine.annotations$Monoisotopic.Mass <- as.numeric(0)
   }
-  
+
   mzmine.annotations <- mzmine.annotations %>%
     dplyr::rename(feature.ID = id)
-  
+
  mzmine.annotations.new <- compute_id_prob(mzmine.annotations, "score", gnps.prob) %>%
     dplyr::select(feature.ID, compound_name, score, smiles, id.prob, CID, Formula, IUPAC, Monoisotopic.Mass)
-  
+
   names(mzmine.annotations.final) <- c('feature.ID', "compound.name", "confidence.score",
                                        "smiles", "id.prob", "CID", "Formula", "IUPAC", "Monoisotopic.Mass")
  mzmine.annotations.new$feature.ID <- as.numeric(mzmine.annotations.final$feature.ID)
  mzmine.annotations.new$confidence.level <- "1"
  mzmine.annotations.new$annotation.type <- "authentic standard"
-  
- mzmine.annotations.final <- rbind(mzmine.annotations.final, mzmine.annotations.new) 
-  
+
+ mzmine.annotations.final <- rbind(mzmine.annotations.final, mzmine.annotations.new)
+
   return(list(
     annotations.data = mzmine.annotations.final,
     cid.cache = cid_cache_df
