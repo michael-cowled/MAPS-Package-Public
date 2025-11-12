@@ -102,9 +102,6 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
 
  mzmine.annotations.final <- rbind(mzmine.annotations.final, mzmine.annotations.new)
 
- #debug
- message(nrow(mzmine.annotations.final))
-
   return(list(
     annotations.data = mzmine.annotations.final,
     cid.cache = cid_cache_df

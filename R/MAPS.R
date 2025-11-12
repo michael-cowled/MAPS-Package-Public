@@ -76,6 +76,9 @@ MAPS <- function(
     }
   }
 
+  #debug
+  message(nrow(mzmine.annotations.final))
+
   #Append to all mzmine features
   mzmine.data <- read_checked_csv(mzmine.data)
 
