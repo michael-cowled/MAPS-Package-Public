@@ -87,6 +87,9 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
  mzmine.annotations.new$confidence.level <- "1"
  mzmine.annotations.new$annotation.type <- "authentic standard"
 
+ #debugging
+ message(print(names(mzmine.annotations.new)))
+ message(print(names(mzmine.annotations.final)))
  mzmine.annotations.final <- rbind(mzmine.annotations.final, mzmine.annotations.new)
 
   return(list(
