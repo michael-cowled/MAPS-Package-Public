@@ -65,9 +65,9 @@ MAPS <- function(
 
   #Appending less stringent level 1 annotations (n=4, n=2, n=0 all with rt matching)
   if (lv1 == TRUE) {
-    annotations.to.process <- c("mzmine_annotations_4", "mzmine_annotations_2", "mzmine_annotations_0")
+    annotations.to.process <- c(mzmine_annotations_4, mzmine_annotations_2, mzmine_annotations_0)
     for (i in annotations.to.process) {
-      message(paste0("Processing"), i)
+      message(paste0("Processing "), i)
       processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, i,
                                                                    cid_cache_df, lipids.file,
                                                                    cid_database_path, standardisation)
