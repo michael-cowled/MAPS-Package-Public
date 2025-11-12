@@ -136,6 +136,8 @@ MAPS <- function(
     lv1.and.lv2.annotations <- mzmine.annotations.final
   }
 
+  message(nrow(filter(lv1.and.lv2.annotations, confidence.level == 1)))
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 5. Process ms2query Data
   message("Processing ms2query data:")
