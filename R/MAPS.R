@@ -71,7 +71,7 @@ MAPS <- function(
       processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, i,
                                                                    cid_cache_df, lipids.file,
                                                                    cid_database_path, standardisation)
-      mzmine.annotations.final <- processed_data$mzmine.annotations.final
+      mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
     }
   }
