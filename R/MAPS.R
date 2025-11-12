@@ -56,10 +56,8 @@ MAPS <- function(
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 3. Process MZMine Data
   message("Processing MZMINE data")
-  processed_data <- MAPS.Package::process_mzmine_data(mzmine.annotations, cid.cache.path,
-                                                      lipids.file.path,
-                                                      cid.database.path,
-                                                      standardisation)
+  processed_data <- MAPS.Package::process_mzmine_data(mzmine.annotations, gnps.prob,
+                                                      standardisation = standardisation)
 
   mzmine.annotations.final <- processed_data$annotations.data
   cid_cache_df <- processed_data$cid.cache
