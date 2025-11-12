@@ -81,7 +81,7 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
  mzmine.annotations.new <- compute_id_prob(mzmine.annotations, "score", gnps.prob) %>%
     dplyr::select(feature.ID, compound_name, score, smiles, id.prob, CID, Formula, IUPAC, Monoisotopic.Mass)
 
-  names(mzmine.annotations.final) <- c('feature.ID', "compound.name", "confidence.score",
+  names(mzmine.annotations.new) <- c('feature.ID', "compound.name", "confidence.score",
                                        "smiles", "id.prob", "CID", "Formula", "IUPAC", "Monoisotopic.Mass")
  mzmine.annotations.new$feature.ID <- as.numeric(mzmine.annotations.new$feature.ID)
  mzmine.annotations.new$confidence.level <- "1"
