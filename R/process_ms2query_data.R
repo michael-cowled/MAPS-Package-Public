@@ -19,7 +19,7 @@
 #' @importFrom dplyr %>% mutate filter select
 #'
 #' @export
-process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, ms2query.prob) {
+process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, ms2query.prob, ppm.tol) {
   # Read raw MS2Query results
   ms2query.data <- read_checked_csv(ms2query.data.path)
 
@@ -38,7 +38,7 @@ process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, m
   # Calculate ppm difference and filter by tolerance
   ms2query.data <- ms2query.data %>%
     mutate(mz.diff.ppm = mz.diff / precursor_mz * 1e6) %>%
-    filter(mz.diff.ppm <= 5)
+    filter(mz.diff.ppm <= ppm.tol)
 
   # Mark annotation source
   ms2query.data$annotation.type <- "ms2query"

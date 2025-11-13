@@ -23,6 +23,7 @@ MAPS <- function(
     canopus.prob = 0.7,
     csi.prob = 0.64,
     ms2query.prob = 0.7,
+    ppm.tol = 5,
     rt.tol = 0.1, # Min for C18
     cid_database_path = NULL,
     standardisation,
@@ -144,7 +145,8 @@ MAPS <- function(
   ms2query_results <- MAPS.Package::process_ms2query_data(
     ms2query.data = paths$ms2query_data,
     lv1.and.lv2.annotations = lv1.and.lv2.annotations,
-    ms2query.prob = ms2query.prob
+    ms2query.prob = ms2query.prob,
+    ppm.tol = ppm.tol
   )
 
   ms2query.data.lv2 <- ms2query_results$lv2.data
