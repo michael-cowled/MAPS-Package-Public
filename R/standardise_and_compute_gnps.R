@@ -39,6 +39,7 @@ standardise_and_compute_gnps <- function(
   # Standardise smiles and add CID column
   message(head(gnps.data.lv2.high.conf))
   message(nrow(gnps.data.lv2.high.conf))
+  #debugging
   gnps.data.lv2.high.conf$smiles <- trimws(gnps.data.lv2.high.conf$smiles)
   gnps.data.lv2.high.conf$CID <- NA
   message("debug3")

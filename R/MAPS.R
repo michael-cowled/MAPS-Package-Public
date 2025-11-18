@@ -77,9 +77,6 @@ MAPS <- function(
     }
   }
 
-  #debug
-  message(nrow(mzmine.annotations.final))
-
   #Append to all mzmine features
   mzmine.data <- read_checked_csv(mzmine.data)
 
@@ -113,6 +110,13 @@ MAPS <- function(
     gnps.data.lv3 <- gnps.processed.data$lv3.data
     gnps.cluster.data <- gnps.processed.data$gnps.cluster.data
     gnps.cluster.pairs <- gnps.processed.data$gnps.cluster.pairs
+
+    message("debug1")
+    message(head(gnps.data.lv2.high.conf))
+    message(nrow(gnps.data.lv2.high.conf))
+    message("debug1b")
+    message(head(gnps.data.lv2.low.conf))
+    message(nrow(gnps.data.lv2.low.conf))
 
     gnps_lv2_results <- MAPS.Package::standardise_and_compute_gnps(
       gnps.data.lv2.high.conf, cid_cache_df, lipids.file,
