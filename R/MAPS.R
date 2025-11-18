@@ -113,12 +113,12 @@ MAPS <- function(
     gnps.data.lv3 <- gnps.processed.data$lv3.data
     gnps.cluster.data <- gnps.processed.data$gnps.cluster.data
     gnps.cluster.pairs <- gnps.processed.data$gnps.cluster.pairs
-    message("debug1")
+
     gnps_lv2_results <- MAPS.Package::standardise_and_compute_gnps(
       gnps.data.lv2.high.conf, cid_cache_df, lipids.file,
       cid_database_path, gnps.prob
     )
-    message("debug-final")
+
     gnps.data.lv2.high.conf <- gnps_lv2_results$data
     gnps.data.lv2.high.conf$feature.ID <- as.numeric(gnps.data.lv2.high.conf$feature.ID)
     gnps.data.lv2.high.conf$confidence.score <- as.numeric(gnps.data.lv2.high.conf$confidence.score)
