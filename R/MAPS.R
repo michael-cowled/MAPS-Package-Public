@@ -106,14 +106,15 @@ MAPS <- function(
   if (gnps.task.id == "") {
     warning("GNPS Task ID is empty. Skipping GNPS processing.")
   } else {
+    message("debug1")
     gnps.processed.data <- MAPS.Package::process_gnps_data(gnps.task.id, gnps.prob, mzmine.annotations.final)
-
+    message("debug2")
     gnps.data.lv2.high.conf <- gnps.processed.data$lv2.high.conf.data
     gnps.data.lv2.low.conf <- gnps.processed.data$lv2.low.conf.data
     gnps.data.lv3 <- gnps.processed.data$lv3.data
     gnps.cluster.data <- gnps.processed.data$gnps.cluster.data
     gnps.cluster.pairs <- gnps.processed.data$gnps.cluster.pairs
-
+    message("debug3")
     gnps_lv2_results <- MAPS.Package::standardise_and_compute_gnps(
       gnps.data.lv2.high.conf, cid_cache_df, lipids.file,
       cid_database_path, gnps.prob
