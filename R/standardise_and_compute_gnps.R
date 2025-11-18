@@ -35,21 +35,14 @@ standardise_and_compute_gnps <- function(
     cid_database_path,
     ms2query.prob
 ) {
-  message("debug2")
-  # Standardise smiles and add CID column
-  message(head(gnps.data.lv2.high.conf))
-  message(nrow(gnps.data.lv2.high.conf))
-  #debugging
-  gnps.data.lv2.high.conf$smiles <- trimws(gnps.data.lv2.high.conf$smiles)
-  gnps.data.lv2.high.conf$CID <- NA
-  message("debug3")
+
   # Pre-standardisation filtering for duplicates
   gnps.data.lv2.high.conf <- deduplicate_data(
     gnps.data.lv2.high.conf,
     compound.name,
     confidence.score
   )
-  message("debug4")
+
   # Standardize annotations
   result <- standardise_annotation(
     gnps.data.lv2.high.conf,
@@ -59,7 +52,7 @@ standardise_and_compute_gnps <- function(
     lipids.file = lipids.file,
     cid_database_path = cid_database_path
   )
-  message("debug5")
+
   gnps.data.lv2.high.conf <- result$data
   cid_cache_df <- result$cache
 

@@ -111,13 +111,7 @@ MAPS <- function(
     gnps.cluster.data <- gnps.processed.data$gnps.cluster.data
     gnps.cluster.pairs <- gnps.processed.data$gnps.cluster.pairs
 
-    message("debug1")
-    message(head(gnps.data.lv2.high.conf))
-    message(nrow(gnps.data.lv2.high.conf))
-    message("debug1b")
-    message(head(gnps.data.lv2.low.conf))
-    message(nrow(gnps.data.lv2.low.conf))
-
+    if (nrow(gnps.data.lv2.high.conf) > 0 ) {
     gnps_lv2_results <- MAPS.Package::standardise_and_compute_gnps(
       gnps.data.lv2.high.conf, cid_cache_df, lipids.file,
       cid_database_path, gnps.prob
@@ -134,14 +128,13 @@ MAPS <- function(
       new_data = gnps.data.lv2.high.conf,
       existing_annotations = mzmine.annotations.final
     )
+    }
   }
 
   # Initialize if skipped (to avoid errors in later steps)
   if (!exists("lv1.and.lv2.annotations")) {
     lv1.and.lv2.annotations <- mzmine.annotations.final
   }
-
-  message(nrow(filter(lv1.and.lv2.annotations, confidence.level == 1)))
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 5. Process ms2query Data
