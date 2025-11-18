@@ -1,14 +1,12 @@
-#' Save Generated Plots
+#' Save Generated Plots (Modified)
 #'
-#' Saves the barchart, cumulative histogram, and bubble chart to a 'Plots'
-#' subdirectory within the specified output structure, respecting the 'unimelb'
-#' user domain environment variable for file path destination. **Existing plot
-#' files with the same name are explicitly deleted before saving.**
+#' Saves the barchart, cumulative histogram, and bubble chart directly to the
+#' specified 'folder'. **Existing plot files with the same name are explicitly
+#' deleted before saving.**
 #'
-#' @param plot_list A named list containing the plot objects: 'barchart_plot',
-#'   'histogram_plot', and 'bubblechart_plot'. (Assumes ggplot objects).
-#' @param folder Path to the local main output directory.
-#' @param dataset.id Character string identifying the dataset (not used for plot names, but kept for function structure).
+#' @param plot_list A named list containing the plot objects.
+#' @param folder Path to the local main output directory where plots will be saved.
+#' @param dataset.id Character string identifying the dataset (kept for function structure).
 #'
 #' @return Invisibly returns NULL. Prints messages on success or failure.
 #' @export
@@ -17,16 +15,13 @@ save_plots <- function(plot_list, folder, dataset.id) {
 
   message("\nStarting Plot Saving...")
 
-  # Determine the base directory for saving the plots
-  if (Sys.getenv("USER_DOMAIN") == "unimelb") {
-    # Using a distinct subfolder for unimelb context
-    plot_dir <- paste0(folder, "/Plots_Unimelb_Data")
-  } else {
-    plot_dir <- paste0(folder, "/Plots")
-  }
+  plot_dir <- folder
 
+  # Ensure the directory exists (in case 'folder' path needs to be created)
   if (!dir.exists(plot_dir)) {
+    # If the main folder doesn't exist, create it recursively
     dir.create(plot_dir, recursive = TRUE)
+    message(paste("Created output directory:", plot_dir))
   }
 
   # Define plots and file names
@@ -37,13 +32,13 @@ save_plots <- function(plot_list, folder, dataset.id) {
   )
 
   for (config in plot_configs) {
+    # The file path is now: folder / filename
     file_path <- paste0(plot_dir, "/", config$name)
 
     # CHECK AND DELETE EXISTING FILE (Explicit pre-flight deletion)
     if (file.exists(file_path)) {
       message(paste("Checking for and deleting existing plot file:", config$name))
       tryCatch({
-        # NOTE: Using file.remove() here to explicitly delete the old file
         file.remove(file_path)
       }, error = function(e) {
         warning(paste("Could not delete existing file:", file_path, ". Overwriting anyway."))
