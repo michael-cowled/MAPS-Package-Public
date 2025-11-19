@@ -24,6 +24,7 @@ process_and_append_csi <- function(
     deduplicate_data,
     standardize_annotation
 ) {
+  message("debug1")
   # Data Cleaning and Initial Processing
   csi.data <- read_checked_tsv(csi.data)
   csi.data <- csi.data[, c(3, 14, 15, 25)]
@@ -37,7 +38,7 @@ process_and_append_csi <- function(
   # Filter based on confidence probability and compound name
   csi.data <- filter(csi.data, confidence.score >= csi.prob) %>%
     filter(!grepl("PUBCHEM", compound.name, ignore.case = TRUE))
-
+  message("debug2")
   # Fix troublesome compound names
   csi.data$compound.name[grepl("Solaparnaine", csi.data$compound.name, ignore.case = TRUE)] <- "Solaparnaine"
   csi.data$compound.name[grepl("Spectalinine", csi.data$compound.name, ignore.case = TRUE)] <- "(-)-Spectalinine"
@@ -47,10 +48,13 @@ process_and_append_csi <- function(
   for (col in missing_cols) {
     csi.data[[col]] <- NA
   }
+  message("debug3")
+  existing_annotations$gnps.shared.peaks <- as.numeric(existing_annotations$gnps.shared.peaks)
+  csi.data$gnps.shared.peaks <- as.character(csi.data$gnps.shared.peaks)
 
   # Compute ID probability
   csi.data <- compute_id_prob(csi.data, "confidence.score", csi.prob)
-
+  message("debug4")
   # Deduplicate and standardize
   csi.data <- deduplicate_data(csi.data, compound.name, confidence.score)
   result <- standardize_annotation(
@@ -61,7 +65,7 @@ process_and_append_csi <- function(
     lipids.file = lipids.file,
     cid_database_path = cid_database_path
   )
-
+  message("debug5")
   csi.data <- result$data
   updated_cid_cache_df <- result$cache
 
@@ -85,8 +89,7 @@ process_and_append_csi <- function(
   csi.data$Formula <- as.character(csi.data$Formula)
   csi.data$Monoisotopic.Mass <- as.numeric(csi.data$Monoisotopic.Mass)
   csi.data$IUPAC <- as.character(csi.data$IUPAC)
-  existing_annotations$gnps.shared.peaks <- as.numeric(existing_annotations$gnps.shared.peaks)
-  csi.data$gnps.shared.peaks <- as.character(csi.data$gnps.shared.peaks)
+
 
   # Append the filtered and processed data to the existing annotations
   updated_annotations <- existing_annotations %>%
