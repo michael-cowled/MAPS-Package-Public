@@ -70,9 +70,6 @@ process_and_append_csi <- function(
   if (!("IUPAC" %in% names(csi.data))) csi.data$IUPAC <- NA_character_
   if (!("Monoisotopic.Mass" %in% names(csi.data))) csi.data$Monoisotopic.Mass <- NA_real_
   message("debug2")
-  ##TEST
-  existing_annotations$gnps.shared.peaks <- as.numeric(existing_annotations$gnps.shared.peaks)
-  csi.data$gnps.shared.peaks <- as.character(csi.data$gnps.shared.peaks)
   # --- Filtering and Appending ---
   unique_in_csi <- setdiff(csi.data$feature.ID, existing_annotations$feature.ID)
   csi.data <- csi.data %>% dplyr::filter(feature.ID %in% unique_in_csi)
@@ -88,6 +85,8 @@ process_and_append_csi <- function(
   csi.data$Formula <- as.character(csi.data$Formula)
   csi.data$Monoisotopic.Mass <- as.numeric(csi.data$Monoisotopic.Mass)
   csi.data$IUPAC <- as.character(csi.data$IUPAC)
+  existing_annotations$gnps.shared.peaks <- as.numeric(existing_annotations$gnps.shared.peaks)
+  csi.data$gnps.shared.peaks <- as.character(csi.data$gnps.shared.peaks)
 
   message("debug4")
   # Append the filtered and processed data to the existing annotations
