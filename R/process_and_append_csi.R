@@ -86,7 +86,7 @@ process_and_append_csi <- function(
   csi.data$Monoisotopic.Mass <- as.numeric(csi.data$Monoisotopic.Mass)
   csi.data$IUPAC <- as.character(csi.data$IUPAC)
   existing_annotations$gnps.shared.peaks <- as.numeric(existing_annotations$gnps.shared.peaks)
-  csi.data$gnps.shared.peaks <- as.character(csi.data$gnps.shared.peaks)
+  csi.data$gnps.shared.peaks <- as.numeric(csi.data$gnps.shared.peaks)
 
   message("debug4")
   # Append the filtered and processed data to the existing annotations
