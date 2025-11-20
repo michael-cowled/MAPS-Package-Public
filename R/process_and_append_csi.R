@@ -94,8 +94,8 @@ process_and_append_csi <- function(
   csi.data$gnps.library.usi <- as.character(csi.data$gnps.library.usi)
 
   #debugging
-  messaeg(sapply(existing_annotations, class))
-  messaeg(sapply(csi.data, class))
+  message(sapply(existing_annotations, class))
+  message(sapply(csi.data, class))
 
   message("debug4")
   # Append the filtered and processed data to the existing annotations
