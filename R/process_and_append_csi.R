@@ -87,7 +87,8 @@ process_and_append_csi <- function(
   csi.data$IUPAC <- as.character(csi.data$IUPAC)
   existing_annotations$gnps.shared.peaks <- as.numeric(existing_annotations$gnps.shared.peaks)
   csi.data$gnps.shared.peaks <- as.numeric(csi.data$gnps.shared.peaks)
-  csi.data$library.name <- as.character(csi.data$gnps.shared.peaks)
+  csi.data$library.name <- as.character(csi.data$library.name)
+  csi.data$library.quality <- as.character(csi.data$library.quality)
 
   message("debug4")
   # Append the filtered and processed data to the existing annotations
