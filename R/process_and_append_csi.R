@@ -91,6 +91,11 @@ process_and_append_csi <- function(
   csi.data$library.quality <- as.character(csi.data$library.quality)
   csi.data$NPC.pathway <- as.character(csi.data$NPC.pathway)
   csi.data$NPC.superclass <- as.character(csi.data$NPC.superclass)
+  csi.data$gnps.library.usi <- as.character(csi.data$gnps.library.usi)
+
+  #debugging
+  messaeg(sapply(existing_annotations, class))
+  messaeg(sapply(csi.data, class))
 
   message("debug4")
   # Append the filtered and processed data to the existing annotations
