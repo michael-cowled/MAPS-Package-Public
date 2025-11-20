@@ -89,6 +89,8 @@ process_and_append_csi <- function(
   csi.data$gnps.shared.peaks <- as.numeric(csi.data$gnps.shared.peaks)
   csi.data$library.name <- as.character(csi.data$library.name)
   csi.data$library.quality <- as.character(csi.data$library.quality)
+  csi.data$NPC.pathway <- as.character(csi.data$NPC.pathway)
+  csi.data$NPC.superclass <- as.character(csi.data$NPC.superclass)
 
   message("debug4")
   # Append the filtered and processed data to the existing annotations
