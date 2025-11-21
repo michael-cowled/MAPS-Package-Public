@@ -95,9 +95,11 @@ process_and_append_csi <- function(
   csi.data$gnps.in.silico.bile.acid.info <- as.character(csi.data$gnps.in.silico.bile.acid.info)
 
   #debugging
+  message("Existing")
   message(colnames(existing_annotations))
   message(sapply(existing_annotations, class))
-  message(colnames(csi_data))
+  message("CSI")
+  message(colnames(csi.data))
   message(sapply(csi.data, class))
 
   message("debug4")
