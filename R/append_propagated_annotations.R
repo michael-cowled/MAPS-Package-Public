@@ -8,6 +8,11 @@
 #' @importFrom dplyr %>% left_join mutate select
 #' @export
 append_propagated_annotations <- function(full.annotation.data, propagated_df) {
+  message("full.annotations")
+  message(names(full.annotation.data))
+  message("propagated")
+  message(names(propagated_df))
+
   propagated_data <- full.annotation.data %>%
     dplyr::left_join(propagated_df, by = "feature.ID") %>%
     dplyr::mutate(
