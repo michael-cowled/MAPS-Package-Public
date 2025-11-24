@@ -206,7 +206,7 @@ MAPS <- function(
 
   lv1.lv2.lv3.annotations <- csi_results$annotations
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
-  print("check1")
+
   cid_cache_df <- csi_results$cache
 
   #-----------------------------------------------------------------------------------------------------------------------#
@@ -244,7 +244,11 @@ MAPS <- function(
   )
 
   propagated.annotation.data <- MAPS.Package::append_propagated_annotations(
-    full.annotation.data, propagated_df
+    full.annotation.data,
+    propagated_df,
+    mod_db = modification_db,
+    ppm_tol = ppm.tol,
+    abs_tol = 0.01
   )
 
   #-----------------------------------------------------------------------------------------------------------------------#

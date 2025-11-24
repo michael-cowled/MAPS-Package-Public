@@ -61,7 +61,7 @@ process_and_append_csi <- function(
     lipids.file = lipids.file,
     cid_database_path = cid_database_path
   )
-  message("debug1")
+
   csi.data <- result$data
   updated_cid_cache_df <- result$cache
 
@@ -69,11 +69,11 @@ process_and_append_csi <- function(
   if (!("Formula" %in% names(csi.data))) csi.data$Formula <- NA_character_
   if (!("IUPAC" %in% names(csi.data))) csi.data$IUPAC <- NA_character_
   if (!("Monoisotopic.Mass" %in% names(csi.data))) csi.data$Monoisotopic.Mass <- NA_real_
-  message("debug2")
+
   # --- Filtering and Appending ---
   unique_in_csi <- setdiff(csi.data$feature.ID, existing_annotations$feature.ID)
   csi.data <- csi.data %>% dplyr::filter(feature.ID %in% unique_in_csi)
-  message("debug3")
+
   # Set annotation metadata
   csi.data$annotation.type <- "CSI:FingerID"
   csi.data$confidence.level <- "3"
@@ -102,10 +102,10 @@ process_and_append_csi <- function(
   message(colnames(csi.data))
   message(sapply(csi.data, class))
 
-  message("debug4")
+
   # Append the filtered and processed data to the existing annotations
   updated_annotations <- existing_annotations %>%
     dplyr::bind_rows(csi.data)
-  message("debug5")
+
   return(list(annotations = updated_annotations, cache = updated_cid_cache_df))
 }
