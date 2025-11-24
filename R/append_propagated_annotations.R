@@ -28,7 +28,8 @@ append_propagated_annotations <- function(full.annotation.data,
     dplyr::select(feature.ID, mz) %>%
     # Rename the feature.ID from the full data to match the PARENT ID column
     # in propagated_df, which is 'Propagated.Feature.ID'
-    dplyr::rename(parent_mz = mz, Propagated.Feature.ID = feature.ID)
+    dplyr::rename(parent_mz = mz, Propagated.Feature.ID = feature.ID) %>%
+    dplyr::mutate(Propagated.Feature.ID = as.character(Propagated.Feature.ID))
 
   # Join parent M/Z into propagated_df
   # Join on 'Propagated.Feature.ID' to link the parent's mass
