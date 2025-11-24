@@ -17,9 +17,6 @@ append_propagated_annotations <- function(full.annotation.data,
                                           ppm_tol = 10,
                                           abs_tol = 0.01) {
 
-  message("full.annotations columns: ", paste(names(full.annotation.data), collapse=", "))
-  message("propagated columns: ", paste(names(propagated_df), collapse=", "))
-
   # 1. Retrieve the Source/Parent MZ
 
   # Create a temporary lookup for M/Z from the full data
