@@ -7,7 +7,8 @@
 process_ms2query_data(
   ms2query.data.path,
   lv1.and.lv2.annotations,
-  ms2query.prob
+  ms2query.prob,
+  ppm.tol
 )
 }
 \arguments{

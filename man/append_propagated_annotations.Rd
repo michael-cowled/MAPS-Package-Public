@@ -4,16 +4,28 @@
 \alias{append_propagated_annotations}
 \title{Append Propagated Annotations to a Data Frame}
 \usage{
-append_propagated_annotations(full.annotation.data, propagated_df)
+append_propagated_annotations(
+  full.annotation.data,
+  propagated_df,
+  mod_db = modification_db,
+  ppm_tol = 10,
+  abs_tol = 0.01
+)
 }
 \arguments{
-\item{full.annotation.data}{The original full annotation data frame.}
+\item{full.annotation.data}{The original full annotation data frame. Must contain 'feature.ID' and 'mz'.}
 
-\item{propagated_df}{The data frame of newly propagated annotations.}
+\item{propagated_df}{The data frame of newly propagated annotations. Must contain 'feature.ID' (the target) and 'Propagated.Feature.ID' (the source/parent feature ID).}
+
+\item{mod_db}{The modification dataframe (defaults to the modification_db defined above).}
+
+\item{ppm_tol}{The mass tolerance in ppm (default 10).}
+
+\item{abs_tol}{The absolute mass tolerance in Daltons (default 0.01).}
 }
 \value{
-A single data frame with the propagated annotations appended.
+A single data frame with the propagated annotations appended and specific modifications named.
 }
 \description{
-Merges propagated annotations into the main annotation data frame and updates relevant columns.
+Merges propagated annotations into the main annotation data frame, calculates mass differences to identify specific modifications, and updates compound names.
 }

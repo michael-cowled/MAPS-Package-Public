@@ -12,10 +12,13 @@ MAPS(
   canopus.prob = 0.7,
   csi.prob = 0.64,
   ms2query.prob = 0.7,
+  ppm.tol = 5,
   rt.tol = 0.1,
   cid_database_path = NULL,
   standardisation,
-  lv1
+  lv1.subclasses,
+  lv2.mzmine,
+  modification_db
 )
 }
 \arguments{

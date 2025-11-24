@@ -90,7 +90,7 @@ MAPS <- function(
       mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
     }
-  }
+
 
   #Append to all mzmine features
   mzmine.data <- read_checked_csv(mzmine.data)

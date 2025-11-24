@@ -2,24 +2,22 @@
 % Please edit documentation in R/save_plots.R
 \name{save_plots}
 \alias{save_plots}
-\title{Save Generated Plots}
+\title{Save Generated Plots (Modified)}
 \usage{
 save_plots(plot_list, folder, dataset.id)
 }
 \arguments{
-\item{plot_list}{A named list containing the plot objects: 'barchart_plot',
-'histogram_plot', and 'bubblechart_plot'. (Assumes ggplot objects).}
+\item{plot_list}{A named list containing the plot objects.}
 
-\item{folder}{Path to the local main output directory.}
+\item{folder}{Path to the local main output directory where plots will be saved.}
 
-\item{dataset.id}{Character string identifying the dataset (not used for plot names, but kept for function structure).}
+\item{dataset.id}{Character string identifying the dataset (kept for function structure).}
 }
 \value{
 Invisibly returns NULL. Prints messages on success or failure.
 }
 \description{
-Saves the barchart, cumulative histogram, and bubble chart to a 'Plots'
-subdirectory within the specified output structure, respecting the 'unimelb'
-user domain environment variable for file path destination. \strong{Existing plot
-files with the same name are explicitly deleted before saving.}
+Saves the barchart, cumulative histogram, and bubble chart directly to the
+specified 'folder'. \strong{Existing plot files with the same name are explicitly
+deleted before saving.}
 }

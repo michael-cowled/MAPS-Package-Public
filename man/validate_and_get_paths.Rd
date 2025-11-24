@@ -4,10 +4,12 @@
 \alias{validate_and_get_paths}
 \title{Validate and Get Paths}
 \usage{
-validate_and_get_paths(folder)
+validate_and_get_paths(folder, lv1.subclasses = FALSE)
 }
 \arguments{
 \item{folder}{A character string specifying the folder path containing the data files.}
+
+\item{lv1}{A logical value. If TRUE, includes paths and validates files for LV1 annotations (frag4, frag2, frag0, lv2_annotations).}
 }
 \value{
 A named list of valid file paths.
