@@ -97,7 +97,7 @@ append_propagated_annotations <- function(full.annotation.data,
       )
     ) %>%
     # Clean up helper columns. Note: Propagated.Feature.ID is no longer needed.
-    dplyr::select(-propagation_mask, -mz_delta, -mod_name, -parent_mz, -Propagated.Feature.ID)
+    dplyr::select(-propagation_mask, -mz_delta, -mod_name, -parent_mz)
 
   return(propagated_data)
 }
