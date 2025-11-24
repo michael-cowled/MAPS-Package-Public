@@ -29,7 +29,7 @@ append_propagated_annotations <- function(full.annotation.data,
 
   # Join parent M/Z into propagated_df
   propagated_df_w_mass <- propagated_df %>%
-    dplyr::rename(connected_to_ID = feature.ID)
+    dplyr::rename(connected_to_ID = feature.ID) %>%
     dplyr::left_join(mz_lookup, by = "connected_to_ID")
 
 
