@@ -21,12 +21,8 @@ append_propagated_annotations <- function(full.annotation.data,
 
   # 1. Retrieve the Source/Parent MZ
   # We look up the 'mz' of the 'connected_to_ID' from the full dataset
-  # Assumes propagated_df has a column 'connected_to_ID' representing the parent node
-  if(!"connected_to_ID" %in% names(propagated_df)){
-    stop("propagated_df must contain a column 'connected_to_ID' to retrieve the parent M/Z.")
-  }
 
-  # Create a temporary lookup for M/Z
+    # Create a temporary lookup for M/Z
   mz_lookup <- full.annotation.data %>%
     dplyr::select(feature.ID, mz) %>%
     dplyr::rename(parent_mz = mz, connected_to_ID = feature.ID)
