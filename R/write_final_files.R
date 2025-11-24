@@ -11,7 +11,8 @@
 #' @return A message indicating success or an error with processing time.
 #' @importFrom dplyr %>% filter select full_join
 #' @importFrom readr write_csv
-#' @importFrom fs file_exists file_delete # Added dependency for file operations
+#' @importFrom fs file_exists file_delete
+# The comment was moved here to avoid Roxygen reading it as function names.
 #' @export
 write_final_files <- function(
     final.annotation.df,
@@ -36,7 +37,7 @@ write_final_files <- function(
     group_by(confidence.level) %>%
     summarize(total_usi = n_distinct(feature.usi), .groups = "drop")
 
-    # Start the timer for progress tracking
+  # Start the timer for progress tracking
   start_time <- Sys.time()
   message(paste0("Starting file writing and verification for dataset '", dataset.id, "'..."))
 
