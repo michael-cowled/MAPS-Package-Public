@@ -27,7 +27,7 @@ MAPS <- function(
     rt.tol = 0.1, # Min for C18
     cid_database_path = NULL,
     standardisation,
-    lv1,
+    lv1.subclasses,
     modification_db
 ) {
 
@@ -39,11 +39,11 @@ MAPS <- function(
     stop("Processed Data Folder 'folder' cannot be empty. Please specify a path or ensure metadata extraction is successful.")
   }
 
-  paths <- MAPS.Package::validate_and_get_paths(folder, lv1)
+  paths <- MAPS.Package::validate_and_get_paths(folder, lv1.subclasses)
 
   mzmine.data <- paths$mzmine_data
   mzmine.annotations = paths$mzmine_annotations
-  if (lv1 == TRUE) {
+  if (lv1.subclasses == TRUE) {
     mzmine_annotations_4 = paths$mzmine_annotations_4
     mzmine_annotations_2 = paths$mzmine_annotations_2
     mzmine_annotations_0 = paths$mzmine_annotations_0
@@ -66,7 +66,7 @@ MAPS <- function(
   lipids.file <- processed_data$lipids.file
 
   #Appending less stringent level 1 annotations (n=4, n=2, n=0 all with rt matching)
-  if (lv1 == TRUE) {
+  if (lv1.subclasses == TRUE) {
     annotations.to.process <- c(mzmine_annotations_4, mzmine_annotations_2, mzmine_annotations_0)
     for (i in annotations.to.process) {
       message(paste0("Processing "), i)

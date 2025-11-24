@@ -8,7 +8,7 @@
 #' @param lv1 A logical value. If TRUE, includes paths and validates files for LV1 annotations (frag4, frag2, frag0, lv2_annotations).
 #' @return A named list of valid file paths.
 #' @export
-validate_and_get_paths <- function(folder, lv1) {
+validate_and_get_paths <- function(folder, lv1.subclasses = FALSE) {
   # Normalize path slashes for consistency
   folder <- gsub("\\\\", "/", folder)
 
@@ -57,7 +57,7 @@ validate_and_get_paths <- function(folder, lv1) {
   )
 
   # --- 4. Conditionally add LV1 files if lv1 == TRUE ---
-  if (isTRUE(lv1)) {
+  if (isTRUE(lv1.subclasses)) {
 
     # Conditionally add paths
     lv1_paths <- list(
