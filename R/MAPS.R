@@ -27,7 +27,8 @@ MAPS <- function(
     rt.tol = 0.1, # Min for C18
     cid_database_path = NULL,
     standardisation,
-    lv1
+    lv1,
+    modification_db
 ) {
 
   # NOTE: All required libraries (dplyr, MAPS.Package, etc.) are assumed to be loaded.
