@@ -94,15 +94,6 @@ process_and_append_csi <- function(
   csi.data$gnps.library.usi <- as.character(csi.data$gnps.library.usi)
   csi.data$gnps.in.silico.bile.acid.info <- as.character(csi.data$gnps.in.silico.bile.acid.info)
 
-  #debugging
-  message("Existing")
-  message(colnames(existing_annotations))
-  message(sapply(existing_annotations, class))
-  message("CSI")
-  message(colnames(csi.data))
-  message(sapply(csi.data, class))
-
-
   # Append the filtered and processed data to the existing annotations
   updated_annotations <- existing_annotations %>%
     dplyr::bind_rows(csi.data)
