@@ -21,34 +21,28 @@ append_propagated_annotations <- function(full.annotation.data,
   message("propagated columns: ", paste(names(propagated_df), collapse=", "))
 
   # 1. Retrieve the Source/Parent MZ
-  # We look up the 'mz' of the 'Propagated.Feature.ID' (the parent/source)
 
   # Create a temporary lookup for M/Z from the full data
   mz_lookup <- full.annotation.data %>%
     dplyr::select(feature.ID, mz) %>%
-    # Rename the feature.ID from the full data to match the PARENT ID column
-    # in propagated_df, which is 'Propagated.Feature.ID'
     dplyr::rename(parent_mz = mz, Propagated.Feature.ID = feature.ID) %>%
+    # FIX 1: Convert feature ID to character for consistent joining
     dplyr::mutate(Propagated.Feature.ID = as.character(Propagated.Feature.ID))
 
   # Join parent M/Z into propagated_df
-  # Join on 'Propagated.Feature.ID' to link the parent's mass
   propagated_df_w_mass <- propagated_df %>%
     dplyr::left_join(mz_lookup, by = "Propagated.Feature.ID")
 
-  # Ensure the necessary parent_mz column was successfully added
-  if (!"parent_mz" %in% names(propagated_df_w_mass)) {
-    stop("Failed to join 'parent_mz' to propagated_df. Check column names and data.")
-  }
 
   # 2. Main Join and Calculation
   propagated_data <- full.annotation.data %>%
-    # Main join on 'feature.ID' (the target feature)
     dplyr::left_join(propagated_df_w_mass, by = "feature.ID") %>%
     dplyr::mutate(
+      # FIX 2: Ensure mz and parent_mz are numeric before calculation
+      mz = as.double(mz),
+      parent_mz = as.double(parent_mz),
+
       confidence.level = as.character(confidence.level),
-      # Mask for features that need propagation: unannotated (NA compound.name)
-      # but have a probable analogue (not NA Probable.Analogue.Of)
       propagation_mask = is.na(compound.name) & !is.na(Probable.Analogue.Of),
 
       # --- CALCULATION BLOCK ---
