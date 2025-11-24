@@ -28,6 +28,7 @@ MAPS <- function(
     cid_database_path = NULL,
     standardisation,
     lv1.subclasses,
+    lv2.mzmine,
     modification_db
 ) {
 
@@ -67,12 +68,25 @@ MAPS <- function(
 
   #Appending less stringent level 1 annotations (n=4, n=2, n=0 all with rt matching)
   if (lv1.subclasses == TRUE) {
-    annotations.to.process <- c(mzmine_annotations_4, mzmine_annotations_2, mzmine_annotations_0)
+    annotations.to.process <- c(mzmine_annotations_4, mzmine_annotations_2, mzmine_annotations_0, lv2_mzmine_annotations)
     for (i in annotations.to.process) {
       message(paste0("Processing "), i)
       processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, i,
                                                                    cid_cache_df, lipids.file,
-                                                                   cid_database_path, standardisation)
+                                                                   cid_database_path, standardisation,
+                                                                   level = "1", type = "authentic standard")
+      mzmine.annotations.final <- processed_data$annotations.data
+      cid_cache_df <- processed_data$cid.cache
+    }
+  }
+
+  #Appending level 2 annotations from mzmine if applicable
+  if (lv2.mzmine == TRUE) {
+      message(paste0("Processing "), "lv2_mzmine_annotations")
+      processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, lv2_mzmine_annotations,
+                                                                   cid_cache_df, lipids.file,
+                                                                   cid_database_path, standardisation,
+                                                                   level = "2", type = "mzmine")
       mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
     }

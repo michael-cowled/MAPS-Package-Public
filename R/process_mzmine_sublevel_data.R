@@ -25,7 +25,7 @@
 #' @export
 process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annotations,
                                 cid_cache_df, lipids.file,
-                                cid_database_path, standardisation) {
+                                cid_database_path, standardisation, level, type) {
 
   # The code from your original function, with explicit package calls
   mzmine.annotations <- read_checked_csv(mzmine.annotations)
@@ -97,8 +97,8 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
   names(mzmine.annotations.new) <- c('feature.ID', "compound.name", "confidence.score",
                                        "smiles", "id.prob", "CID", "Formula", "IUPAC", "Monoisotopic.Mass")
  mzmine.annotations.new$feature.ID <- as.numeric(mzmine.annotations.new$feature.ID)
- mzmine.annotations.new$confidence.level <- "1"
- mzmine.annotations.new$annotation.type <- "authentic standard"
+ mzmine.annotations.new$confidence.level <- level
+ mzmine.annotations.new$annotation.type <- type
 
  mzmine.annotations.final <- rbind(mzmine.annotations.final, mzmine.annotations.new)
 
