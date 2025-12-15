@@ -23,7 +23,8 @@
 #'   cid_cache_df,
 #'   "lipids.csv",
 #'   "cid_lookup.sqlite",
-#'   ms2query.prob = 0.7
+#'   ms2query.prob = 0.7,
+#'   standardisation = standardisation
 #' )
 #' }
 #'
@@ -33,7 +34,8 @@ standardise_and_compute_gnps <- function(
     cid_cache_df,
     lipids.file,
     cid_database_path,
-    ms2query.prob
+    ms2query.prob,
+    standardisation = standardisation
 ) {
 
   # Pre-standardisation filtering for duplicates
@@ -50,7 +52,8 @@ standardise_and_compute_gnps <- function(
     smiles_col = "smiles",
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
-    cid_database_path = cid_database_path
+    cid_database_path = cid_database_path,
+    standardisation = standardisation
   )
 
   gnps.data.lv2.high.conf <- result$data
