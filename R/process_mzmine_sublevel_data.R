@@ -24,7 +24,7 @@
 #'
 #' @export
 process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annotations,
-                                cid_cache_df, lipids.file,
+                                cid_cache_df, lipids.file, gnps.prob,
                                 cid_database_path, standardisation, level, type) {
 
   # The code from your original function, with explicit package calls
@@ -91,7 +91,7 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
   mzmine.annotations <- mzmine.annotations %>%
     dplyr::rename(feature.ID = id)
 
- mzmine.annotations.new <- compute_id_prob(mzmine.annotations, "score", gnps.prob) %>%
+ mzmine.annotations.new <- compute_id_prob(df = mzmine.annotations, score_col = "score", threshold = gnps.prob) %>%
     dplyr::select(feature.ID, compound_name, score, smiles, id.prob, CID, Formula, IUPAC, Monoisotopic.Mass)
 
   names(mzmine.annotations.new) <- c('feature.ID', "compound.name", "confidence.score",
