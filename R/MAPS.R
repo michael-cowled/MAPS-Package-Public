@@ -84,7 +84,7 @@ MAPS <- function(
   if (lv2.mzmine == TRUE) {
       message(paste0("Processing "), "lv2_mzmine_annotations")
       processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, lv2_mzmine_annotations,
-                                                                   cid_cache_df, lipids.file,
+                                                                   cid_cache_df, lipids.file, gnps.prob,
                                                                    cid_database_path, standardisation,
                                                                    level = "2", type = "mzmine")
       mzmine.annotations.final <- processed_data$annotations.data
