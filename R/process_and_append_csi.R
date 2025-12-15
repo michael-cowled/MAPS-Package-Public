@@ -22,7 +22,8 @@ process_and_append_csi <- function(
     cid_database_path,
     compute_id_prob,
     deduplicate_data,
-    standardize_annotation
+    standardize_annotation,
+    standardisation
 ) {
   # Data Cleaning and Initial Processing
   csi.data <- read_checked_tsv(csi.data)
@@ -59,7 +60,8 @@ process_and_append_csi <- function(
     smiles_col = "smiles",
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
-    cid_database_path = cid_database_path
+    cid_database_path = cid_database_path,
+    standardisation = standardisation
   )
 
   csi.data <- result$data

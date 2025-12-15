@@ -71,9 +71,9 @@ MAPS <- function(
     annotations.to.process <- c(mzmine_annotations_4, mzmine_annotations_2, mzmine_annotations_0)
     for (i in annotations.to.process) {
       message(paste0("Processing "), i)
-      processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, i,
+      processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, mzmine.annotations = i,
                                                                    cid_cache_df, lipids.file,
-                                                                   cid_database_path, standardisation,
+                                                                   cid_database_path = cid_cache_df, standardisation = standardisation,
                                                                    level = "1", type = "authentic standard")
       mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
@@ -85,7 +85,7 @@ MAPS <- function(
       message(paste0("Processing "), "lv2_mzmine_annotations")
       processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, lv2_mzmine_annotations,
                                                                    cid_cache_df, lipids.file,
-                                                                   cid_database_path, standardisation,
+                                                                   cid_database_path = cid_cache_df, standardisation = standardisation,
                                                                    level = "2", type = "mzmine")
       mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
@@ -170,7 +170,8 @@ MAPS <- function(
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
     cid_database.path = cid_database_path,
-    ms2query.prob = ms2query.prob
+    ms2query.prob = ms2query.prob,
+    standardisation = standardisation
   )
 
   lv2.annotations <- lv2_processed_results$data
@@ -216,7 +217,8 @@ MAPS <- function(
     cid_database_path = cid_database_path,
     compute_id_prob = MAPS.Package::compute_id_prob,
     deduplicate_data = MAPS.Package::deduplicate_data,
-    standardize_annotation = MAPS.Package::standardise_annotation
+    standardize_annotation = MAPS.Package::standardise_annotation,
+    standardisation = standardisation
   )
 
   lv1.lv2.lv3.annotations <- csi_results$annotations

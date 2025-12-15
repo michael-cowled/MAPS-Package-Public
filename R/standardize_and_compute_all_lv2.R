@@ -21,7 +21,8 @@ standardize_and_compute_all_lv2 <- function(
     cid_cache_df,
     lipids.file,
     cid_database.path,
-    ms2query.prob) {
+    ms2query.prob, 
+    standardisation ) {
 
   lv2.annotations <- rbind(gnps.data.lv2.low.conf, ms2query.data.lv2)
 
@@ -37,7 +38,8 @@ standardize_and_compute_all_lv2 <- function(
     smiles_col = "smiles",
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
-    cid_database_path = cid_database.path
+    cid_database_path = cid_database.path,
+    standardisation = standardisation
   )
 
   lv2.annotations <- result$data
