@@ -170,7 +170,8 @@ MAPS <- function(
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
     cid_database.path = cid_database_path,
-    ms2query.prob = ms2query.prob
+    ms2query.prob = ms2query.prob,
+    standardisation = standardisation
   )
 
   lv2.annotations <- lv2_processed_results$data
@@ -216,7 +217,8 @@ MAPS <- function(
     cid_database_path = cid_database_path,
     compute_id_prob = MAPS.Package::compute_id_prob,
     deduplicate_data = MAPS.Package::deduplicate_data,
-    standardize_annotation = MAPS.Package::standardise_annotation
+    standardize_annotation = MAPS.Package::standardise_annotation,
+    standardisation = standardisation
   )
 
   lv1.lv2.lv3.annotations <- csi_results$annotations
