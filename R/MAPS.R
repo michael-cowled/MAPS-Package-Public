@@ -71,7 +71,7 @@ MAPS <- function(
     annotations.to.process <- c(mzmine_annotations_4, mzmine_annotations_2, mzmine_annotations_0, lv2_mzmine_annotations)
     for (i in annotations.to.process) {
       message(paste0("Processing "), i)
-      processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, i,
+      processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, mzmine.annotations = i,
                                                                    cid_cache_df, lipids.file,
                                                                    cid_database_path = cid_cache_df, standardisation = standardisation,
                                                                    level = "1", type = "authentic standard")
