@@ -73,7 +73,7 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
     smiles_col = "smiles",
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
-    cid_database_path = cid.database.path,
+    cid_database_path = cid_database_path,
     standardisation = standardisation
   )
 
