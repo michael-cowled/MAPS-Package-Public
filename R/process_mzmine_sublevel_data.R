@@ -74,7 +74,7 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
     cid_database_path = cid.database.path,
-    standardise = standardisation
+    standardisation = standardisation
   )
 
   mzmine.annotations <- result$data
