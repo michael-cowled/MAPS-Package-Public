@@ -13,7 +13,8 @@ process_and_append_csi(
   cid_database_path,
   compute_id_prob,
   deduplicate_data,
-  standardize_annotation
+  standardize_annotation,
+  standardisation
 )
 }
 \arguments{

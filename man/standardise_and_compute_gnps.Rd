@@ -9,7 +9,8 @@ standardise_and_compute_gnps(
   cid_cache_df,
   lipids.file,
   cid_database_path,
-  ms2query.prob
+  ms2query.prob,
+  standardisation = standardisation
 )
 }
 \arguments{
@@ -42,7 +43,8 @@ result <- standardise_and_compute_gnps(
   cid_cache_df,
   "lipids.csv",
   "cid_lookup.sqlite",
-  ms2query.prob = 0.7
+  ms2query.prob = 0.7,
+  standardisation = standardisation
 )
 }
 

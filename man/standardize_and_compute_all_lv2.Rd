@@ -10,7 +10,8 @@ standardize_and_compute_all_lv2(
   cid_cache_df,
   lipids.file,
   cid_database.path,
-  ms2query.prob
+  ms2query.prob,
+  standardisation
 )
 }
 \arguments{
