@@ -73,7 +73,7 @@ MAPS <- function(
       message(paste0("Processing "), i)
       processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, i,
                                                                    cid_cache_df, lipids.file,
-                                                                   cid_database_path, standardisation,
+                                                                   cid_database_path = cid_cache_df, standardisation = standardisation,
                                                                    level = "1", type = "authentic standard")
       mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
@@ -85,7 +85,7 @@ MAPS <- function(
       message(paste0("Processing "), "lv2_mzmine_annotations")
       processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, lv2_mzmine_annotations,
                                                                    cid_cache_df, lipids.file,
-                                                                   cid_database_path, standardisation,
+                                                                   cid_database_path = cid_cache_df, standardisation = standardisation,
                                                                    level = "2", type = "mzmine")
       mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
