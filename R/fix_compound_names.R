@@ -21,7 +21,7 @@ fix_compound_names <- function(df, columns) {
     "_", "\\[", "\\]", "\\{", "\\}", " :102040", " :205060",
     " - ", "30.0 eV", "Massbank:[[:alnum:]]+\\s? ", "MassbankEU:[[:alnum:]]+\\s? ",
     "MoNA:[[:alnum:]]+\\s? ", " \\(Chimeric precursor selection\\)",
-    "; \\(M\\+.*"
+    "; \\(M\\+.*", " M+formate"
   )
   replacements <- c(
     "\\1-", "delta-", "", "", "", "", "", "", "",
