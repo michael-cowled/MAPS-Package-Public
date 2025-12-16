@@ -78,7 +78,7 @@ standardise_and_compute_gnps <- function(
   gnps.data.lv2.high.conf <- compute_id_prob(
     gnps.data.lv2.high.conf,
     "confidence.score",
-    ms2query.prob
+    gnps.prob
   )
 
   return(list(
