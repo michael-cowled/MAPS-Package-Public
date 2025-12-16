@@ -2,7 +2,7 @@
 % Please edit documentation in R/MAPS.R
 \name{MAPS}
 \alias{MAPS}
-\title{Metabolomics ANnotation Processing and Standardisation (MAPS)}
+\title{Metabolomics Annotation Processing and Standardisation (MAPS)}
 \usage{
 MAPS(
   dataset.id,
@@ -18,7 +18,8 @@ MAPS(
   standardisation,
   lv1.subclasses,
   lv2.mzmine,
-  modification_db
+  modification_db,
+  updateProgress = NULL
 )
 }
 \arguments{
@@ -39,6 +40,8 @@ MAPS(
 \item{rt.tol}{Numeric. Retention time tolerance, e.g., for C18 column (default: 0.1).}
 
 \item{cid_database_path}{Character string. Path to the indexed PubChem SQLite database (default: "Y:/MA_BPA_Microbiome/Databases/PubChem/PubChem_Indexed.sqlite").}
+
+\item{updateProgress}{Function. A callback function to update a Shiny progress bar (optional).}
 }
 \value{
 An invisible data frame containing the final, processed, and propagated annotations.

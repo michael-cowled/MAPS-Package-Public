@@ -9,7 +9,7 @@ standardise_and_compute_gnps(
   cid_cache_df,
   lipids.file,
   cid_database_path,
-  ms2query.prob,
+  gnps.prob,
   standardisation = standardisation
 )
 }
