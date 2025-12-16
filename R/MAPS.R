@@ -337,10 +337,11 @@ MAPS <- function(
   ## 12. Writing Final Files (0.95 to 1.0)
   prog("11/12: Writing final files to disk", 0.97)
   message("Writing files to disk: PLEASE WAIT...")
-  MAPS.Package::write_final_files(
+  results <- MAPS.Package::write_final_files(
     final.annotation.df, samples.df, folder, dataset.id, mzmine.data, cid_cache_df,
     write_large_csv = MAPS.Package::write_large_csv
   )
+  final.annotation.df2 <- results$final.annotation.df2
 
   cytoscape_df <- MAPS.Package::prepare_cytoscape_file(
     folder, propagated.annotation.data.with.samples,
@@ -359,6 +360,6 @@ MAPS <- function(
   prog("12/12: Finishing pipeline", 1.0)
 
   # Return the final annotation data frame
-  invisible(final.annotation.df)
+  invisible(final.annotation.df2)
 
 }
