@@ -129,7 +129,7 @@ MAPS <- function(
     if (nrow(gnps.data.lv2.high.conf) > 0 ) {
     gnps_lv2_results <- MAPS.Package::standardise_and_compute_gnps(
       gnps.data.lv2.high.conf, cid_cache_df, lipids.file,
-      cid_database_path, gnps.prob
+      cid_database_path, gnps.prob, standardisation
     )
 
     gnps.data.lv2.high.conf <- gnps_lv2_results$data
