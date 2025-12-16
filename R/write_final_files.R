@@ -139,6 +139,6 @@ write_final_files <- function(
       warning("Duplicates found ⚠️")
     }
 
-    return(final.annotation.df2)
+    return(final_message)
   }
 }
