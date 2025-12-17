@@ -135,8 +135,10 @@ write_final_files <- function(
     # Duplicate check
     if (all(!duplicated(final.annotation.df$feature.ID))) {
       message("All feature.ID are unique ✅")
-    } else {
+      prog("SUCCESS: All feature.ID are unique ✅" , 0.98)
+          } else {
       warning("Duplicates found ⚠️")
+      prog("CAUTION: Duplicates feature IDs found ⚠️", 0.98)
     }
 
     return(final_message)
