@@ -12,6 +12,7 @@
 #' @importFrom dplyr %>% filter select full_join
 #' @importFrom readr write_csv
 #' @importFrom fs file_exists file_delete
+#' @param updateProgress Function. A callback function to update a Shiny progress bar (optional).
 # The comment was moved here to avoid Roxygen reading it as function names.
 #' @export
 write_final_files <- function(

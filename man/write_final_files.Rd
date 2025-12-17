@@ -28,6 +28,8 @@ write_final_files(
 \item{cid_cache_df}{The CID cache data frame to be saved.}
 
 \item{write_large_csv}{A function to write large CSV files.}
+
+\item{updateProgress}{Function. A callback function to update a Shiny progress bar (optional).}
 }
 \value{
 A message indicating success or an error with processing time.
