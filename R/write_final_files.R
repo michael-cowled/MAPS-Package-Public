@@ -22,7 +22,8 @@ write_final_files <- function(
     dataset.id,
     mzmine.data,
     cid_cache_df,
-    write_large_csv
+    write_large_csv,
+    updateProgress = NULL
 ) {
 
   # Helper function to check for and delete a file
