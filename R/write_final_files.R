@@ -26,6 +26,12 @@ write_final_files <- function(
     updateProgress = NULL
 ) {
 
+  prog <- function(stage, value, detail = NULL) {
+    if (is.function(updateProgress)) {
+      updateProgress(stage = stage, value = value, detail = detail)
+    }
+  }
+
   # Helper function to check for and delete a file
   delete_if_exists <- function(path) {
     if (fs::file_exists(path)) {
