@@ -16,7 +16,7 @@
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom stats setNames
 #' @export
-make_starburst <- function(data,
+generate_starburst <- function(data,
                                    level1_col = "canopus.NPC.pathway",
                                    level2_col = "canopus.NPC.superclass",
                                    min_count = 10,
