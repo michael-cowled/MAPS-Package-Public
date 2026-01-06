@@ -11,7 +11,8 @@ write_final_files(
   dataset.id,
   mzmine.data,
   cid_cache_df,
-  write_large_csv
+  write_large_csv,
+  updateProgress = NULL
 )
 }
 \arguments{
