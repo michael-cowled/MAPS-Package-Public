@@ -108,6 +108,13 @@ make_plots <- function(
     results$bubblechart_plot <- bubblechart_results$plot
   }
 
+  # --- 4. STARBURST CHART FUNCTION CALL ---
+  starburst_results <- generate_starburst(
+    data = final.annotation.df
+  )
+  results$starburst_data <- starburst_results$data
+  results$starburst_plot <- starburst_results$plot
+
   # Return all data frames and plot objects
   return(results)
 }
