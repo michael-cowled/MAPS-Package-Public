@@ -27,7 +27,7 @@ make_plots <- function(
 ) {
 
   # --- File Path Setup ---
-
+  starburst.data <- final.annotation.df
   # 1. Check for Metadata file existence (case-sensitive)
   metadata_base_path <- "HGM/A - Analysis.csv"
   if (file.exists(metadata_base_path)) {
@@ -87,6 +87,14 @@ make_plots <- function(
   results$histogram_data <- histogram_results$data
   results$histogram_plot <- histogram_results$plot
 
+  # --- . STARBURST CHART FUNCTION CALL ---
+  message("\nStarting Starburst Chart Generation (Class distribution for dataset)...")
+  starburst_results <- generate_starburst(
+    data = starburst.data
+  )
+  results$starburst_data <- starburst_results$data
+  results$starburst_plot <- starburst_results$plot
+
   # --- 3. BUBBLE CHART FUNCTION CALL ---
 
   message("\nStarting Metabolite Class Bubble Chart Generation (MS2Query Data)...")
@@ -108,12 +116,7 @@ make_plots <- function(
     results$bubblechart_plot <- bubblechart_results$plot
   }
 
-  # --- 4. STARBURST CHART FUNCTION CALL ---
-  starburst_results <- generate_starburst(
-    data = final.annotation.df
-  )
-  results$starburst_data <- starburst_results$data
-  results$starburst_plot <- starburst_results$plot
+
 
   # Return all data frames and plot objects
   return(results)
