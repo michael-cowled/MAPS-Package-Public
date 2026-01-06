@@ -5,7 +5,7 @@
 #' derived from MS2Query data. Plots are generated but not saved internally; they are
 #' returned for subsequent saving by 'save_plots'.
 #'
-#' @param final.annotation.df A data frame containing processed feature annotations.
+#' @param final_annotations A data frame containing processed feature annotations.
 #'    Must include 'feature.ID', 'Samples', and 'compound.name'.
 #' @param folder Path to the main output directory.
 #' @param remove_sample Optional sample name to exclude.
@@ -19,7 +19,7 @@
 #' @export
 #' @importFrom dplyr select rename mutate
 make_plots <- function(
-    final.annotation.df,
+    final_annotations,
     folder,
     remove_sample = NULL,
     ms2query_threshold = 0.7,
@@ -27,7 +27,7 @@ make_plots <- function(
 ) {
 
   # --- File Path Setup ---
-  starburst.data <- final.annotation.df
+  starburst.data <- final_annotations
   # 1. Check for Metadata file existence (case-sensitive)
   metadata_base_path <- "HGM/A - Analysis.csv"
   if (file.exists(metadata_base_path)) {
@@ -61,7 +61,7 @@ make_plots <- function(
   message("\nStarting Barchart Generation (Feature Counts per Sample)...")
   # ASSUMPTION: generate_feature_barchart returns a list with $data and $plot
   barchart_results <- generate_feature_barchart(
-    final.annotation.df = final.annotation.df,
+    final_annotations = final_annotations,
     folder = folder,
     metadata.path = metadata_file
   )
@@ -73,7 +73,7 @@ make_plots <- function(
   message("\nStarting Cumulative Histogram Generation (Unique Annotations per Fraction)...")
 
   # Re-create the 'Annotations.with.samples' input
-  Annotations.with.samples_input <- final.annotation.df %>%
+  Annotations.with.samples_input <- final_annotations %>%
     dplyr::select(feature.ID, Samples, compound.name) %>%
     dplyr::rename(annotation = compound.name) %>%
     dplyr::mutate(annotation = ifelse(is.na(annotation), 0, 1))
