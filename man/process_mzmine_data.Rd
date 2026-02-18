@@ -7,8 +7,8 @@
 process_mzmine_data(
   mzmine.annotations,
   gnps.prob,
-  cid.cache.path = "~/MAPS/cid_cache.csv",
-  lipids.file.path = "~/MAPS/lipids_expanded.tsv",
+  cid.cache.path = cache.location,
+  lipids.file.path = lipids.location,
   cid.database.path = NULL,
   standardisation
 )

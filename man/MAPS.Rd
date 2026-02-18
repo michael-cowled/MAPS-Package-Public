@@ -7,6 +7,8 @@
 MAPS(
   dataset.id,
   folder,
+  cache.location,
+  lipids.location,
   gnps.task.id,
   gnps.prob = 0.7,
   canopus.prob = 0.7,
