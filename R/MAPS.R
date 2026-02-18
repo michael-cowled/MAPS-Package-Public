@@ -343,7 +343,7 @@ MAPS <- function(
   message("Writing files to disk: PLEASE WAIT...")
   MAPS.Package::write_final_files(
     final.annotation.df, samples.df, folder, dataset.id, mzmine.data, cid_cache_df,
-    write_large_csv = MAPS.Package::write_large_csv
+    write_large_csv = MAPS.Package::write_large_csv, cache.location = cache.location
   )
 
   cytoscape_df <- MAPS.Package::prepare_cytoscape_file(
@@ -353,7 +353,7 @@ MAPS <- function(
   )
 
   tryCatch({R
-    readr::write_csv(cid_cache_df, "~/MAPS/cid_cache.csv")
+    readr::write_csv(cid_cache_df, cache.location)
     message("Cache updated and saved successfully.")
   }, error = function(e) {
     warning("Failed to save cache: ", e$message)

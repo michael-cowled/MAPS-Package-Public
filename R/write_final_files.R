@@ -23,7 +23,8 @@ write_final_files <- function(
     mzmine.data,
     cid_cache_df,
     write_large_csv,
-    updateProgress = NULL
+    updateProgress = NULL,
+    cache.location = cache.location
 ) {
 
   prog <- function(stage, value, detail = NULL) {
@@ -108,8 +109,8 @@ write_final_files <- function(
 
   # Step 5: Close connections and save cache
   tryCatch({
-    readr::write_csv(cid_cache_df, "~/MAPS/cid_cache.csv")
-    message("[CACHE WRITE] Saved cache to: ", "~/MAPS/cid_cache.csv")
+    readr::write_csv(cid_cache_df, cache.location)
+    message("[CACHE WRITE] Saved cache to: ", cache.location)
   }, error = function(e) {
     warning("Failed to save cache: ", e$message)
   })
