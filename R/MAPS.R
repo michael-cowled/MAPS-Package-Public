@@ -19,6 +19,8 @@
 MAPS <- function(
     dataset.id,
     folder, # Required: Specified Processed Data Folder
+    cache.location,
+    lipids.location,
     gnps.task.id, # Required: External GNPS ID (can be extracted from metadata)
     gnps.prob = 0.7,
     canopus.prob = 0.7,
@@ -69,6 +71,8 @@ MAPS <- function(
   prog("2/12: Processing MZmine Level 1/2 data", 0.10)
   message("Processing MZMINE data")
   processed_data <- MAPS.Package::process_mzmine_data(mzmine.annotations, gnps.prob,
+                                                      cid.cache.path = cache.location,
+                                                      lipids.file.path = lipids.location,
                                                       standardisation = standardisation)
 
   mzmine.annotations.final <- processed_data$annotations.data
