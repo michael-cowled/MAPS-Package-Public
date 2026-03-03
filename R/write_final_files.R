@@ -132,7 +132,7 @@ write_final_files <- function(
     )
     if (Sys.getenv("USER_DOMAIN") == "unimelb") {
     readr::write_csv(tibble::tibble(message = error.message), paste0("Y:/MA_BPA_Microbiome/Dataset-Annotations/", Sys.Date(), "_DATA_ERROR_", dataset.id, ".csv"))
-    }`else {
+    } else {
       readr::write_csv(tibble::tibble(message = error.message), paste0(folder, Sys.Date(), "_DATA_ERROR_", dataset.id, ".csv"))
     }
     return(error.message)
