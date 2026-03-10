@@ -267,8 +267,7 @@ MAPS <- function(
       cid_cache_df = cid_cache_df,
       lipids.file = lipids.file,
       cid_database_path = cid_database_path,
-      compute_id_prob = MAPS.Package::compute_id_prob,
-      deduplicate_data = MAPS.Package::deduplicate_data
+      compute_id_prob = MAPS.Package::compute_id_prob
     )
 
     # Final Update

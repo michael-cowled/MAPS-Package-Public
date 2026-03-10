@@ -20,7 +20,6 @@ process_and_append_msnovelist <- function(
     lipids.file,
     cid_database_path,
     compute_id_prob,
-    deduplicate_data
 ) {
   # 1. Load and Initial Clean
   msn.df <- read_checked_tsv(msn.data)
@@ -48,9 +47,6 @@ process_and_append_msnovelist <- function(
 
   # 5. ID Probability (We pass a dummy threshold of -Inf since you want all hits)
   msn.df <- compute_id_prob(msn.df, "confidence.score", threshold = -Inf)
-
-  # 6. Deduplicate: This will now keep the best score per feature due to the sort in step 3
-  msn.df <- deduplicate_data(msn.df, compound.name, confidence.score)
 
   final_msn <- msn.df
 
