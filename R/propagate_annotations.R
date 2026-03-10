@@ -14,7 +14,7 @@
 #' @export
 propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, paired_feature_finder, get_result) {
   # Identify the unknown features that need annotation
-  na.rows <- dplyr::filter(full.annotation.data, is.na(compound.name))
+  na.rows <- dplyr::filter(full.annotation.data, is.na(compound.name) | annotation.type == "MSNovelist")
   na.feature.ids <- na.rows$feature.ID
 
   if (length(na.feature.ids) == 0) {
