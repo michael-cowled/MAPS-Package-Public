@@ -12,7 +12,8 @@ write_final_files(
   mzmine.data,
   cid_cache_df,
   write_large_csv,
-  updateProgress = NULL
+  updateProgress = NULL,
+  cache.location = cache.location
 )
 }
 \arguments{
