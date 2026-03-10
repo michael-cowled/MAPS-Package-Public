@@ -77,7 +77,7 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
         Propagated.Feature.ID = selected_paired_value,
         Propagated.Annotation.Type = final_result_data$column,
         Propagated.Annotation.Class = final_result_data$superclass,
-        propagated.smiles = parent_smiles
+        Propagated.Smiles = parent_smiles
       )
     } else {
       tibble::tibble()

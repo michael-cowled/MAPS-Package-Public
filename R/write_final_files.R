@@ -67,7 +67,7 @@ write_final_files <- function(
                   canopus.classyfire.specclass, canopus.classyfire.specclass.probability,
                   zodiac.formula, zodiac.confidence.score,
                   Propagated.Feature.ID, Propagated.Annotation.Type,
-                  Propagated.Annotation.Class, Samples
+                  Propagated.Annotation.Class, Propagated.Smiles, Samples
     )
 
   # Step 2: Extract and write the top 10 features per sample
