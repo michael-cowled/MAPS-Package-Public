@@ -12,6 +12,7 @@
 #' @importFrom dplyr %>% filter select full_join
 #' @importFrom readr write_csv
 #' @importFrom fs file_exists file_delete
+#' @param updateProgress Function. A callback function to update a Shiny progress bar (optional).
 # The comment was moved here to avoid Roxygen reading it as function names.
 #' @export
 write_final_files <- function(
@@ -21,8 +22,16 @@ write_final_files <- function(
     dataset.id,
     mzmine.data,
     cid_cache_df,
-    write_large_csv
+    write_large_csv,
+    updateProgress = NULL,
+    cache.location = cache.location
 ) {
+
+  prog <- function(stage, value, detail = NULL) {
+    if (is.function(updateProgress)) {
+      updateProgress(stage = stage, value = value, detail = detail)
+    }
+  }
 
   # Helper function to check for and delete a file
   delete_if_exists <- function(path) {
@@ -100,8 +109,8 @@ write_final_files <- function(
 
   # Step 5: Close connections and save cache
   tryCatch({
-    readr::write_csv(cid_cache_df, "~/MAPS/cid_cache.csv")
-    message("[CACHE WRITE] Saved cache to: ", "~/MAPS/cid_cache.csv")
+    readr::write_csv(cid_cache_df, cache.location)
+    message("[CACHE WRITE] Saved cache to: ", cache.location)
   }, error = function(e) {
     warning("Failed to save cache: ", e$message)
   })
@@ -135,8 +144,10 @@ write_final_files <- function(
     # Duplicate check
     if (all(!duplicated(final.annotation.df$feature.ID))) {
       message("All feature.ID are unique ✅")
-    } else {
+      prog("SUCCESS: All feature.ID are unique ✅" , 0.98)
+          } else {
       warning("Duplicates found ⚠️")
+      prog("CAUTION: Duplicates feature IDs found ⚠️", 0.98)
     }
 
     return(final_message)

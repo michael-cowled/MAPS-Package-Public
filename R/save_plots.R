@@ -28,7 +28,8 @@ save_plots <- function(plot_list, folder, dataset.id) {
   plot_configs <- list(
     list(plot = plot_list$barchart_plot, name = "feature_count_barchart.png", width = 8, height = 6),
     list(plot = plot_list$histogram_plot, name = "cumulative_annotation_histogram.png", width = 8, height = 6),
-    list(plot = plot_list$bubblechart_plot, name = "ms2query_class_bubblechart.png", width = 10, height = 7)
+    list(plot = plot_list$bubblechart_plot, name = "ms2query_class_bubblechart.png", width = 10, height = 7),
+    list(plot = plot_list$starburst_plot, name = "starburst_classes.png", width = 10, height = 10)
   )
 
   for (config in plot_configs) {

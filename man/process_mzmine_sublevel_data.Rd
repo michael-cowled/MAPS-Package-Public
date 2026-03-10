@@ -9,6 +9,7 @@ process_mzmine_sublevel_data(
   mzmine.annotations,
   cid_cache_df,
   lipids.file,
+  gnps.prob,
   cid_database_path,
   standardisation,
   level,
@@ -24,11 +25,11 @@ process_mzmine_sublevel_data(
 
 \item{lipids.file}{Path to a TSV file containing lipid nomenclature for standardization.}
 
+\item{gnps.prob}{A numeric value for the GNPS confidence probability threshold used in \code{compute_id_prob}. This is not present in the function definition but seems necessary based on the code's call to \code{compute_id_prob}. \strong{(Note: This parameter is used in the body but not in the function signature you provided. It's added here for completeness based on code usage.)}}
+
 \item{cid_database_path}{Path to the PubChem CID SQLite database for name/SMILES lookup.}
 
 \item{standardisation}{A logical flag indicating whether to perform compound name standardization.}
-
-\item{gnps.prob}{A numeric value for the GNPS confidence probability threshold used in \code{compute_id_prob}. This is not present in the function definition but seems necessary based on the code's call to \code{compute_id_prob}. \strong{(Note: This parameter is used in the body but not in the function signature you provided. It's added here for completeness based on code usage.)}}
 }
 \value{
 A list containing two elements:
