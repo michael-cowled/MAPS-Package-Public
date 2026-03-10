@@ -13,7 +13,6 @@ MAPS(
   gnps.prob = 0.7,
   canopus.prob = 0.7,
   csi.prob = 0.64,
-  msn.prob = 0.7,
   ms2query.prob = 0.7,
   ppm.tol = 5,
   rt.tol = 0.1,

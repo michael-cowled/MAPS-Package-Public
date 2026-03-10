@@ -25,7 +25,6 @@ MAPS <- function(
     gnps.prob = 0.7,
     canopus.prob = 0.7,
     csi.prob = 0.64,
-    msn.prob = 0.7,
     ms2query.prob = 0.7,
     ppm.tol = 5,
     rt.tol = 0.1, # Min for C18
@@ -263,9 +262,9 @@ MAPS <- function(
     # --- MSNovelist Integration (De Novo Structures) ---
     prog("6/12: Integrating MSNovelist de novo annotations", 0.60)
     msn_results <- MAPS.Package::process_and_append_msnovelist(
-      msn.data = denovo.data, # Ensure denovo.data path is defined earlier
+      msn.data = msn.data,
       existing_annotations = lv1.lv2.lv3.annotations,
-      msn.threshold = msn.threshold, # Define your ModelScore threshold (e.g., -10)
+      msn.threshold = msn.threshold,
       cid_cache_df = cid_cache_df,
       lipids.file = lipids.file,
       cid_database_path = cid_database_path,

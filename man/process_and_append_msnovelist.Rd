@@ -7,7 +7,6 @@
 process_and_append_msnovelist(
   msn.data,
   existing_annotations,
-  msn.threshold,
   cid_cache_df,
   lipids.file,
   cid_database_path,
@@ -22,8 +21,6 @@ process_and_append_msnovelist(
 
 \item{existing_annotations}{A data frame of existing annotations.}
 
-\item{msn.threshold}{A numeric threshold for MSNovelist ModelScore.}
-
 \item{cid_cache_df}{A data frame used for caching CID lookups.}
 
 \item{lipids.file}{Path to a lipids file for standardization.}
@@ -35,6 +32,8 @@ process_and_append_msnovelist(
 \item{deduplicate_data}{A function to remove duplicate annotations.}
 
 \item{standardise_annotation}{A function to standardize annotations.}
+
+\item{msn.threshold}{A numeric threshold for MSNovelist ModelScore.}
 }
 \value{
 A list containing the updated annotations data frame and the updated CID cache.

@@ -16,7 +16,6 @@
 process_and_append_msnovelist <- function(
     msn.data,
     existing_annotations,
-    msn.threshold,
     cid_cache_df,
     lipids.file,
     cid_database_path,
@@ -25,38 +24,39 @@ process_and_append_msnovelist <- function(
     standardise_annotation,
     standardisation
 ) {
-  # Data Cleaning and Initial Processing
-  msn.data <- read_checked_tsv(msn.data)
+  # 1. Load and Initial Clean
+  msn.df <- read_checked_tsv(msn.data)
 
-  # Use dplyr::select for robust column mapping instead of hardcoded indices
-  msn.data <- msn.data %>%
+  msn.df <- msn.df %>%
     dplyr::select(
-      confidence.score = ModelScore, # Adjust if you prefer SiriusScore here
+      confidence.score = ModelScore,
       compound.name = name,
       smiles = smiles,
       feature.ID = mappingFeatureId
-    )
+    ) %>%
+    dplyr::mutate(confidence.score = as.numeric(confidence.score))
 
-  # Remove features already annotated in previous levels
-  msn.data <- msn.data[!(msn.data$feature.ID %in% existing_annotations$feature.ID), ]
+  # 2. Filter out features already successfully annotated in Levels 1-3
+  msn.df <- msn.df[!(msn.df$feature.ID %in% existing_annotations$feature.ID), ]
 
-  # Filter based on ModelScore threshold
-  msn.data$confidence.score <- as.numeric(msn.data$confidence.score)
-  msn.data <- dplyr::filter(msn.data, confidence.score >= msn.threshold)
+  # 3. Sort by Score (Closest to Zero is Best)
+  # Since ModelScores are negative, "descending" puts -1.5 above -10.0
+  msn.df <- msn.df %>%
+    dplyr::arrange(feature.ID, desc(confidence.score))
 
-  # Add missing columns before processing to prevent errors
-  missing_cols <- colnames(existing_annotations)[!colnames(existing_annotations) %in% colnames(msn.data)]
-  for (col in missing_cols) {
-    msn.data[[col]] <- NA
-  }
+  # 4. Preparation for MAPS Pipeline
+  missing_cols <- setdiff(colnames(existing_annotations), colnames(msn.df))
+  for (col in missing_cols) msn.df[[col]] <- NA
 
-  # Compute ID probability (Ensure this helper handles negative scores if using ModelScore!)
-  msn.data <- compute_id_prob(msn.data, "confidence.score", msn.threshold)
+  # 5. ID Probability (We pass a dummy threshold of -Inf since you want all hits)
+  msn.df <- compute_id_prob(msn.df, "confidence.score", threshold = -Inf)
 
-  # Deduplicate and standardize
-  msn.data <- deduplicate_data(msn.data, compound.name, confidence.score)
+  # 6. Deduplicate: This will now keep the best score per feature due to the sort in step 3
+  msn.df <- deduplicate_data(msn.df, compound.name, confidence.score)
+
+  # 7. Standardization
   result <- standardise_annotation(
-    msn.data,
+    msn.df,
     name_col = "compound.name",
     smiles_col = "smiles",
     cid_cache_df = cid_cache_df,
@@ -65,46 +65,26 @@ process_and_append_msnovelist <- function(
     standardisation = standardisation
   )
 
-  msn.data <- result$data
-  updated_cid_cache_df <- result$cache
+  final_msn <- result$data
 
-  # Add missing columns after standardization
-  if (!("Formula" %in% names(msn.data))) msn.data$Formula <- NA_character_
-  if (!("IUPAC" %in% names(msn.data))) msn.data$IUPAC <- NA_character_
-  if (!("Monoisotopic.Mass" %in% names(msn.data))) msn.data$Monoisotopic.Mass <- NA_real_
+  # 8. Metadata and Type Correction
+  final_msn$annotation.type <- "MSNovelist"
+  final_msn$confidence.level <- "3" # Per your previous setting
 
-  # --- Filtering and Appending ---
-  unique_in_msn <- setdiff(msn.data$feature.ID, existing_annotations$feature.ID)
-  msn.data <- msn.data %>% dplyr::filter(feature.ID %in% unique_in_msn)
+  # Cast columns to ensure bind_rows doesn't crash on type mismatch
+  final_msn <- final_msn %>%
+    dplyr::mutate(
+      feature.ID = as.numeric(feature.ID),
+      confidence.score = as.numeric(confidence.score),
+      Formula = as.character(Formula),
+      IUPAC = as.character(IUPAC),
+      Monoisotopic.Mass = as.numeric(Monoisotopic.Mass)
+    )
 
-  # Set annotation metadata
-  msn.data$annotation.type <- "MSNovelist"
-  msn.data$confidence.level <- "3"
-
-  # Standardize types before binding
-  existing_annotations$feature.ID <- as.numeric(existing_annotations$feature.ID)
-  msn.data$feature.ID <- as.numeric(msn.data$feature.ID)
-
-  existing_annotations$confidence.score <- as.numeric(existing_annotations$confidence.score)
-  msn.data$confidence.score <- as.numeric(msn.data$confidence.score)
-
-  msn.data$Formula <- as.character(msn.data$Formula)
-  msn.data$Monoisotopic.Mass <- as.numeric(msn.data$Monoisotopic.Mass)
-  msn.data$IUPAC <- as.character(msn.data$IUPAC)
-
-  existing_annotations$gnps.shared.peaks <- as.numeric(existing_annotations$gnps.shared.peaks)
-  msn.data$gnps.shared.peaks <- as.numeric(msn.data$gnps.shared.peaks)
-
-  msn.data$library.name <- as.character(msn.data$library.name)
-  msn.data$library.quality <- as.character(msn.data$library.quality)
-  msn.data$NPC.pathway <- as.character(msn.data$NPC.pathway)
-  msn.data$NPC.superclass <- as.character(msn.data$NPC.superclass)
-  msn.data$gnps.library.usi <- as.character(msn.data$gnps.library.usi)
-  msn.data$gnps.in.silico.bile.acid.info <- as.character(msn.data$gnps.in.silico.bile.acid.info)
-
-  # Append the filtered and processed data to the existing annotations
+  # 9. Final Merge
   updated_annotations <- existing_annotations %>%
-    dplyr::bind_rows(msn.data)
+    dplyr::mutate(feature.ID = as.numeric(feature.ID)) %>%
+    dplyr::bind_rows(final_msn)
 
-  return(list(annotations = updated_annotations, cache = updated_cid_cache_df))
+  return(list(annotations = updated_annotations, cache = result$cache))
 }
