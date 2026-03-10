@@ -11,9 +11,7 @@ process_and_append_msnovelist(
   lipids.file,
   cid_database_path,
   compute_id_prob,
-  deduplicate_data,
-  standardise_annotation,
-  standardisation
+  deduplicate_data
 )
 }
 \arguments{
@@ -31,9 +29,9 @@ process_and_append_msnovelist(
 
 \item{deduplicate_data}{A function to remove duplicate annotations.}
 
-\item{standardise_annotation}{A function to standardize annotations.}
-
 \item{msn.threshold}{A numeric threshold for MSNovelist ModelScore.}
+
+\item{standardise_annotation}{A function to standardize annotations.}
 }
 \value{
 A list containing the updated annotations data frame and the updated CID cache.

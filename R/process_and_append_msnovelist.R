@@ -20,9 +20,7 @@ process_and_append_msnovelist <- function(
     lipids.file,
     cid_database_path,
     compute_id_prob,
-    deduplicate_data,
-    standardise_annotation,
-    standardisation
+    deduplicate_data
 ) {
   # 1. Load and Initial Clean
   msn.df <- read_checked_tsv(msn.data)
@@ -54,18 +52,7 @@ process_and_append_msnovelist <- function(
   # 6. Deduplicate: This will now keep the best score per feature due to the sort in step 3
   msn.df <- deduplicate_data(msn.df, compound.name, confidence.score)
 
-  # 7. Standardization
-  result <- standardise_annotation(
-    msn.df,
-    name_col = "compound.name",
-    smiles_col = "smiles",
-    cid_cache_df = cid_cache_df,
-    lipids.file = lipids.file,
-    cid_database_path = cid_database_path,
-    standardisation = standardisation
-  )
-
-  final_msn <- result$data
+  final_msn <- msn.df
 
   # 8. Metadata and Type Correction
   final_msn$annotation.type <- "MSNovelist"

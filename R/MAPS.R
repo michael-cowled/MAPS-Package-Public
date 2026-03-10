@@ -268,9 +268,7 @@ MAPS <- function(
       lipids.file = lipids.file,
       cid_database_path = cid_database_path,
       compute_id_prob = MAPS.Package::compute_id_prob,
-      deduplicate_data = MAPS.Package::deduplicate_data,
-      standardise_annotation = MAPS.Package::standardise_annotation,
-      standardisation = standardisation
+      deduplicate_data = MAPS.Package::deduplicate_data
     )
 
     # Final Update
