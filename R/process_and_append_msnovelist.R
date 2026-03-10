@@ -19,7 +19,7 @@ process_and_append_msnovelist <- function(
     cid_cache_df,
     lipids.file,
     cid_database_path,
-    compute_id_prob,
+    compute_id_prob
 ) {
   # 1. Load and Initial Clean
   msn.df <- read_checked_tsv(msn.data)
