@@ -6,60 +6,69 @@
 #' @param paired_feature_finder A function to find paired features (e.g., from MAPS.Package).
 #' @param get_result A function to retrieve annotation details for a feature ID.
 #'
-#' @return A data frame with propagated annotations.
-#' @importFrom dplyr %>% filter pull first
-#' @importFrom progress progress_bar
-#' @importFrom purrr map_dfr
-#' @importFrom tibble tibble
+#' @return A data frame with propagated annotations and structural metadata.
 #' @export
 propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, paired_feature_finder, get_result) {
-  # Identify the unknown features that need annotation
+
+  # 1. Identify "Targets": Unknowns OR MSNovelist hits (which are candidates for propagation)
   na.rows <- dplyr::filter(full.annotation.data, is.na(compound.name) | annotation.type == "MSNovelist")
   na.feature.ids <- na.rows$feature.ID
 
   if (length(na.feature.ids) == 0) {
-    return(tibble())
+    return(tibble::tibble())
   }
 
-  # Initialize progress bar
   pb <- progress::progress_bar$new(
     format = "Propagating annotations [:bar] :percent eta: :eta",
     total = length(na.feature.ids),
     width = 60
   )
 
-  # Propagate annotations and collect results
+  # 2. Main Propagation Loop
   propagated_df <- purrr::map_dfr(na.feature.ids, function(i) {
     pb$tick()
+
+    # Find features clustered with this ID in GNPS
     paired_values <- paired_feature_finder(i, gnps.cluster.pairs)
 
     selected_paired_value <- NA
     final_result_data <- list(value = NA, column = NA, superclass = NA)
 
+    # Structural metadata to capture from parent
+    parent_smiles <- NA_character_
+
     for (value in paired_values) {
       result_data <- get_result(value, full.annotation.data)
+
       if (!is.na(result_data$value)) {
         selected_paired_value <- value
         final_result_data <- result_data
-        annotation_type_value <- full.annotation.data %>%
+
+        # Capture metadata from the Parent Feature
+        parent_info <- full.annotation.data %>%
           dplyr::filter(feature.ID == selected_paired_value) %>%
-          dplyr::pull(annotation.type) %>%
-          first()
-        final_result_data$column <- annotation_type_value
+          dplyr::select(annotation.type, smiles) %>%
+          dplyr::slice(1)
+
+        final_result_data$column <- parent_info$annotation.type
+        parent_smiles <- parent_info$smiles
         break
       }
     }
 
+    # 3. Construct the output row
     if (!is.na(selected_paired_value)) {
-      tibble(
+      tibble::tibble(
         feature.ID = i,
         Probable.Analogue.Of = final_result_data$value,
         Propagated.Feature.ID = selected_paired_value,
         Propagated.Annotation.Type = final_result_data$column,
-        Propagated.Annotation.Class = final_result_data$superclass
+        Propagated.Annotation.Class = final_result_data$superclass,
+        # Added structural metadata
+        propagated.smiles = parent_smiles
       )
     } else {
-      tibble() # Return an empty tibble if no annotation is found
+      tibble::tibble()
     }
   })
 
