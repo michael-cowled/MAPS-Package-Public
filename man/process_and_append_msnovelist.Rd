@@ -10,8 +10,7 @@ process_and_append_msnovelist(
   cid_cache_df,
   lipids.file,
   cid_database_path,
-  compute_id_prob,
-  deduplicate_data
+  compute_id_prob
 )
 }
 \arguments{
@@ -27,9 +26,9 @@ process_and_append_msnovelist(
 
 \item{compute_id_prob}{A function to compute identification probability.}
 
-\item{deduplicate_data}{A function to remove duplicate annotations.}
-
 \item{msn.threshold}{A numeric threshold for MSNovelist ModelScore.}
+
+\item{deduplicate_data}{A function to remove duplicate annotations.}
 
 \item{standardise_annotation}{A function to standardize annotations.}
 }
