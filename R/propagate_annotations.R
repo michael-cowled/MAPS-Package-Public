@@ -10,7 +10,8 @@
 #' @export
 propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, paired_feature_finder, get_result) {
 
-  # 1. Identify "Targets": Unknowns OR MSNovelist hits (which are candidates for propagation)
+  # 1. Identify "Targets": Features that need a better ID.
+  # We include MSNovelist hits here so propagation can "upgrade" them if a database hit is nearby.
   na.rows <- dplyr::filter(full.annotation.data, is.na(compound.name) | annotation.type == "MSNovelist")
   na.feature.ids <- na.rows$feature.ID
 
@@ -28,31 +29,38 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
   propagated_df <- purrr::map_dfr(na.feature.ids, function(i) {
     pb$tick()
 
-    # Find features clustered with this ID in GNPS
+    # Find features clustered with this ID
     paired_values <- paired_feature_finder(i, gnps.cluster.pairs)
 
     selected_paired_value <- NA
     final_result_data <- list(value = NA, column = NA, superclass = NA)
-
-    # Structural metadata to capture from parent
     parent_smiles <- NA_character_
 
     for (value in paired_values) {
-      result_data <- get_result(value, full.annotation.data)
+      # CRITICAL FIX: Check if the potential parent is an MSNovelist feature
+      parent_type <- full.annotation.data %>%
+        dplyr::filter(feature.ID == value) %>%
+        dplyr::pull(annotation.type) %>%
+        dplyr::first()
 
-      if (!is.na(result_data$value)) {
-        selected_paired_value <- value
-        final_result_data <- result_data
+      # Only proceed if the parent is NOT MSNovelist (and not NA)
+      if (!is.na(parent_type) && parent_type != "MSNovelist") {
 
-        # Capture metadata from the Parent Feature
-        parent_info <- full.annotation.data %>%
-          dplyr::filter(feature.ID == selected_paired_value) %>%
-          dplyr::select(annotation.type, smiles) %>%
-          dplyr::slice(1)
+        result_data <- get_result(value, full.annotation.data)
 
-        final_result_data$column <- parent_info$annotation.type
-        parent_smiles <- parent_info$smiles
-        break
+        if (!is.na(result_data$value)) {
+          selected_paired_value <- value
+          final_result_data <- result_data
+
+          # Capture structure from the verified Parent
+          parent_smiles <- full.annotation.data %>%
+            dplyr::filter(feature.ID == selected_paired_value) %>%
+            dplyr::pull(smiles) %>%
+            dplyr::first()
+
+          final_result_data$column <- parent_type
+          break
+        }
       }
     }
 
@@ -64,7 +72,6 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
         Propagated.Feature.ID = selected_paired_value,
         Propagated.Annotation.Type = final_result_data$column,
         Propagated.Annotation.Class = final_result_data$superclass,
-        # Added structural metadata
         propagated.smiles = parent_smiles
       )
     } else {
