@@ -25,6 +25,7 @@ MAPS <- function(
     gnps.prob = 0.7,
     canopus.prob = 0.7,
     csi.prob = 0.64,
+    msn.prob = 0.7,
     ms2query.prob = 0.7,
     ppm.tol = 5,
     rt.tol = 0.1, # Min for C18
@@ -32,6 +33,7 @@ MAPS <- function(
     standardisation,
     lv1.subclasses,
     lv2.mzmine,
+    msnovelist,
     modification_db,
     updateProgress = NULL # <--- NEW ARGUMENT
 ) {
@@ -62,6 +64,7 @@ MAPS <- function(
   }
   canopus.data <- paths$canopus_data
   csi.data <- paths$csi_data
+  msn.data <- paths$msn_data
   zodiac.data <- paths$zodiac_data
   ms2query.data <- paths$ms2query_data
   cytoscape <- paths$cytoscape
@@ -232,27 +235,54 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 7. Process SIRIUS data (0.50 to 0.65)
-  prog("6/12: Processing SIRIUS data (CANOPUS, ZODIAC, CSI:FingerID)", 0.55)
+  prog("6/12: Processing SIRIUS data (CANOPUS, ZODIAC, CSI:FingerID)", 0.52)
   message("Processing SIRIUS data:")
   canopus.data <- MAPS.Package::process_canopus_data(canopus.data)
   zodiac.data <- MAPS.Package::process_zodiac_data(zodiac.data)
 
-  prog("6/12: Integrating CSI:FingerID annotations", 0.60)
+  # --- CSI:FingerID Integration (Database Matches) ---
+  prog("6/12: Integrating CSI:FingerID annotations", 0.55)
   csi_results <- MAPS.Package::process_and_append_csi(
-    csi.data, existing_annotations = lv1.lv2.lv3.annotations,
-    csi.prob, cid_cache_df, lipids.file,
+    csi.data = csi.data,
+    existing_annotations = lv1.lv2.lv3.annotations,
+    csi.prob = csi.prob,
+    cid_cache_df = cid_cache_df,
+    lipids.file = lipids.file,
     cid_database_path = cid_database_path,
     compute_id_prob = MAPS.Package::compute_id_prob,
     deduplicate_data = MAPS.Package::deduplicate_data,
-    standardize_annotation = MAPS.Package::standardise_annotation,
+    standardise_annotation = MAPS.Package::standardise_annotation,
     standardisation = standardisation
   )
 
+  # Update annotations and cache before MSNovelist
   lv1.lv2.lv3.annotations <- csi_results$annotations
+  cid_cache_df <- csi_results$cache
+
+  if (msnovelist == TRUE) {
+    # --- MSNovelist Integration (De Novo Structures) ---
+    prog("6/12: Integrating MSNovelist de novo annotations", 0.60)
+    msn_results <- MAPS.Package::process_and_append_msnovelist(
+      msn.data = denovo.data, # Ensure denovo.data path is defined earlier
+      existing_annotations = lv1.lv2.lv3.annotations,
+      msn.threshold = msn.threshold, # Define your ModelScore threshold (e.g., -10)
+      cid_cache_df = cid_cache_df,
+      lipids.file = lipids.file,
+      cid_database_path = cid_database_path,
+      compute_id_prob = MAPS.Package::compute_id_prob,
+      deduplicate_data = MAPS.Package::deduplicate_data,
+      standardise_annotation = MAPS.Package::standardise_annotation,
+      standardisation = standardisation
+    )
+
+    # Final Update
+    lv1.lv2.lv3.annotations <- msn_results$annotations
+    cid_cache_df <- msn_results$cache
+  }
+
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
 
-  cid_cache_df <- csi_results$cache
-  prog("6/12: SIRIUS processing complete", 0.65)
+  prog("6/12: SIRIUS & MSNovelist processing complete", 0.65)
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Appending all other features and annotations (0.65 to 0.70)

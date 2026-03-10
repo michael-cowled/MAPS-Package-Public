@@ -40,6 +40,7 @@ validate_and_get_paths <- function(folder, lv1.subclasses = FALSE) {
     mzmine_annotations = path_mzmine_annotations_final, # Dynamically set
     canopus_data = paste0(folder, "/sirius/canopus_structure_summary.tsv"),
     csi_data = paste0(folder, "/sirius/structure_identifications_top-100.tsv"),
+    msn_data = paste0(folder, "/sirius/denovo_structure_identifications_top-100.tsv"),
     zodiac_data = paste0(folder, "/sirius/formula_identifications.tsv"),
     ms2query_data = paste0(folder, "/ms2query/ms2query.csv"),
     cytoscape = paste0(folder, "/gnps/cytoscape.csv")
@@ -51,6 +52,7 @@ validate_and_get_paths <- function(folder, lv1.subclasses = FALSE) {
     mzmine_annotations = error_mzmine_annotations, # Dynamically set
     canopus_data = "The file 'canopus_structure_summary.tsv' is missing from the sirius folder.",
     csi_data = "The file 'structure_identifications_top-100.tsv' is missing from the sirius folder. Recompute for top K=100 hits.",
+    msn_data = "The file 'denovo_structure_identifications_top-100.tsv' is missing from the sirius folder. Recompute for top K=100 hits.",
     zodiac_data = "The file 'formula_identifications.tsv' is missing from the sirius folder.",
     ms2query_data = "The file 'ms2query.csv' is missing from the ms2query folder.",
     cytoscape = "The file 'cytoscape.csv' is missing from the gnps folder."

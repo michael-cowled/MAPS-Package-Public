@@ -9,10 +9,68 @@
 #' @param cid_database_path Path to the PubChem CID database.
 #' @param compute_id_prob A function to compute identification probability (e.g., MAPS.Package::compute_id_prob).
 #' @param deduplicate_data A function to remove duplicate annotations (e.g., MAPS.Package::deduplicate_data).
-#' @param standardize_annotation A function to standardize annotations (e.g., MAPS.Package::standardize_annotation).
+#' @param standardise_annotation A function to standardize annotations (e.g., MAPS.Package::standardise_annotation).
 #'
 #' @return A list containing the updated annotations data frame and the updated CID cache.
 #' @export
+process_and_append_csi <- function(
+    csi.data, existing_annotations, csi.prob, cid_cache_df, lipids.file,
+    cid_database_path, compute_id_prob, deduplicate_data,
+    standardise_annotation, standardisation
+) {
+  # Data Cleaning and Initial Processing
+  csi.df <- read_checked_tsv(csi.data)
+
+  # Use Column Names for Stability
+  csi.df <- csi.df %>%
+    dplyr::select(
+      confidence.score = ConfidenceScoreExact,
+      compound.name = name,
+      smiles = smiles,
+      feature.ID = mappingFeatureId # Using mapping ID for consistency
+    )
+
+  # Filter out existing annotations
+  csi.df <- csi.df[!(csi.df$feature.ID %in% existing_annotations$feature.ID), ]
+
+  # Clean Confidence Scores
+  csi.df$confidence.score[csi.df$confidence.score == -Inf] <- 0
+  csi.df$confidence.score <- as.numeric(csi.df$confidence.score)
+
+  # Filter based on probability and known problematic "PUBCHEM" names
+  csi.df <- csi.df %>%
+    dplyr::filter(confidence.score >= csi.prob) %>%
+    dplyr::filter(!grepl("PUBCHEM", compound.name, ignore.case = TRUE))
+
+  # Specific natural product name fixes
+  csi.df$compound.name[grepl("Solaparnaine", csi.df$compound.name, ignore.case = TRUE)] <- "Solaparnaine"
+  csi.df$compound.name[grepl("Spectalinine", csi.df$compound.name, ignore.case = TRUE)] <- "(-)-Spectalinine"
+
+  # Add missing columns from the main annotation table
+  missing_cols <- setdiff(colnames(existing_annotations), colnames(csi.df))
+  for (col in missing_cols) csi.df[[col]] <- NA
+
+  # MAPS Pipeline: Probabilities, Deduplication, and Standardization
+  csi.df <- compute_id_prob(csi.df, "confidence.score", csi.prob)
+  csi.df <- deduplicate_data(csi.df, compound.name, confidence.score)
+
+  result <- standardise_annotation(
+    csi.df, name_col = "compound.name", smiles_col = "smiles",
+    cid_cache_df = cid_cache_df, lipids.file = lipids.file,
+    cid_database_path = cid_database_path, standardisation = standardisation
+  )
+
+  final_csi <- result$data
+  final_csi$annotation.type <- "CSI:FingerID"
+  final_csi$confidence.level <- "3"
+
+  # Ensure types match before binding
+  updated_annotations <- existing_annotations %>%
+    dplyr::mutate(feature.ID = as.numeric(feature.ID)) %>%
+    dplyr::bind_rows(dplyr::mutate(final_csi, feature.ID = as.numeric(feature.ID)))
+
+  return(list(annotations = updated_annotations, cache = result$cache))
+}
 process_and_append_csi <- function(
     csi.data,
     existing_annotations,
@@ -22,7 +80,7 @@ process_and_append_csi <- function(
     cid_database_path,
     compute_id_prob,
     deduplicate_data,
-    standardize_annotation,
+    standardise_annotation,
     standardisation
 ) {
   # Data Cleaning and Initial Processing
@@ -54,7 +112,7 @@ process_and_append_csi <- function(
 
   # Deduplicate and standardize
   csi.data <- deduplicate_data(csi.data, compound.name, confidence.score)
-  result <- standardize_annotation(
+  result <- standardise_annotation(
     csi.data,
     name_col = "compound.name",
     smiles_col = "smiles",
