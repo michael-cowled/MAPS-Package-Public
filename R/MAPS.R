@@ -264,7 +264,6 @@ MAPS <- function(
     msn_results <- MAPS.Package::process_and_append_msnovelist(
       msn.data = msn.data,
       existing_annotations = lv1.lv2.lv3.annotations,
-      msn.threshold = msn.threshold,
       cid_cache_df = cid_cache_df,
       lipids.file = lipids.file,
       cid_database_path = cid_database_path,
