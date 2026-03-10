@@ -11,8 +11,12 @@
 propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, paired_feature_finder, get_result) {
 
   # 1. Identify "Targets": Features that need a better ID.
-  # We include MSNovelist hits here so propagation can "upgrade" them if a database hit is nearby.
-  na.rows <- dplyr::filter(full.annotation.data, is.na(compound.name) | annotation.type == "MSNovelist")
+  # We include Level 3/MSNovelist here so they can be "upgraded" by a Level 1/2 neighbor.
+  na.rows <- dplyr::filter(full.annotation.data,
+                           is.na(compound.name) |
+                             confidence.level == "3" |
+                             annotation.type == "MSNovelist")
+
   na.feature.ids <- na.rows$feature.ID
 
   if (length(na.feature.ids) == 0) {
@@ -37,28 +41,29 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
     parent_smiles <- NA_character_
 
     for (value in paired_values) {
-      # CRITICAL FIX: Check if the potential parent is an MSNovelist feature
-      parent_type <- full.annotation.data %>%
+      # Extract metadata for the potential parent
+      parent_meta <- full.annotation.data %>%
         dplyr::filter(feature.ID == value) %>%
-        dplyr::pull(annotation.type) %>%
-        dplyr::first()
+        dplyr::select(annotation.type, confidence.level, smiles) %>%
+        dplyr::slice(1)
 
-      # Only proceed if the parent is NOT MSNovelist (and not NA)
-      if (!is.na(parent_type) && parent_type != "MSNovelist") {
+      # --- STRICT SOURCE GUARD ---
+      # Parent must:
+      # 1. Have a confidence level that is NOT "3" (so 1 or 2)
+      # 2. NOT be an MSNovelist annotation type
+      # 3. NOT have a missing confidence level
+      is_valid_source <- !is.na(parent_meta$confidence.level) &&
+        parent_meta$confidence.level != "3" &&
+        parent_meta$annotation.type != "MSNovelist"
 
+      if (is_valid_source) {
         result_data <- get_result(value, full.annotation.data)
 
         if (!is.na(result_data$value)) {
           selected_paired_value <- value
           final_result_data <- result_data
-
-          # Capture structure from the verified Parent
-          parent_smiles <- full.annotation.data %>%
-            dplyr::filter(feature.ID == selected_paired_value) %>%
-            dplyr::pull(smiles) %>%
-            dplyr::first()
-
-          final_result_data$column <- parent_type
+          parent_smiles <- parent_meta$smiles
+          final_result_data$column <- parent_meta$annotation.type
           break
         }
       }
