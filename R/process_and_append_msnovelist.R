@@ -73,5 +73,5 @@ process_and_append_msnovelist <- function(
     dplyr::mutate(feature.ID = as.numeric(feature.ID)) %>%
     dplyr::bind_rows(final_msn)
 
-  return(list(annotations = updated_annotations, cache = result$cache))
+  return(list(annotations = updated_annotations))
 }

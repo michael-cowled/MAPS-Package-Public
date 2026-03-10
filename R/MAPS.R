@@ -273,7 +273,6 @@ MAPS <- function(
 
     # Final Update
     lv1.lv2.lv3.annotations <- msn_results$annotations
-    cid_cache_df <- msn_results$cache
   }
 
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
