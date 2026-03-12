@@ -13,8 +13,8 @@
 #' @param noise_area_threshold Peak area threshold for quantification data (default 10000).
 #'
 #' @return A list containing all generated data frames and plot objects:
-#'    'barchart_data', 'histogram_data', 'bubblechart_data',
-#'    'barchart_plot', 'histogram_plot', and 'bubblechart_plot'.
+#'    'barchart_data', 'histogram_data', 'starburst_data', 'bubblechart_data',
+#'    'barchart_plot', 'histogram_plot', 'starburst_plot', and 'bubblechart_plot'.
 #'
 #' @export
 #' @importFrom dplyr select rename mutate
@@ -28,8 +28,10 @@ make_plots <- function(
 
   # --- File Path Setup ---
   starburst.data <- final.annotation.df
+
   # 1. Check for Metadata file existence (case-sensitive)
-  metadata_base_path <- "HGM/A - Analysis.csv"
+  # FIX: Prepend the 'folder' to the path so it works regardless of working directory
+  metadata_base_path <- file.path(folder, "HGM/A - Analysis.csv")
   if (file.exists(metadata_base_path)) {
     metadata_file <- metadata_base_path
   } else {
@@ -38,11 +40,11 @@ make_plots <- function(
   }
 
   # 2. MS2Query file path
-  ms2query_file <- paste0(folder, "/ms2query/ms2query.csv")
+  ms2query_file <- file.path(folder, "ms2query/ms2query.csv")
 
   # 3. Check for Quantification file existence (handling two common spellings)
-  quant_file_base_1 <- paste0(folder, "/mzmine/DATA_iimn_gnps_quant.csv")
-  quant_file_base_2 <- paste0(folder, "/mzmine/data_iimn_gnps_quant.csv") # lowercase d
+  quant_file_base_1 <- file.path(folder, "mzmine/DATA_iimn_gnps_quant.csv")
+  quant_file_base_2 <- file.path(folder, "mzmine/data_iimn_gnps_quant.csv") # lowercase d
 
   if (file.exists(quant_file_base_1)) {
     quant_file <- quant_file_base_1
@@ -57,9 +59,7 @@ make_plots <- function(
   results <- list()
 
   # --- 1. BARCHART FUNCTION CALL ---
-
   message("\nStarting Barchart Generation (Feature Counts per Sample)...")
-  # ASSUMPTION: generate_feature_barchart returns a list with $data and $plot
   barchart_results <- generate_feature_barchart(
     final.annotation.df = final.annotation.df,
     folder = folder,
@@ -69,25 +69,21 @@ make_plots <- function(
   results$barchart_plot <- barchart_results$plot
 
   # --- 2. CUMULATIVE HISTOGRAM FUNCTION CALL ---
-
   message("\nStarting Cumulative Histogram Generation (Unique Annotations per Fraction)...")
-
-  # Re-create the 'Annotations.with.samples' input
   Annotations.with.samples_input <- final.annotation.df %>%
     dplyr::select(feature.ID, Samples, compound.name) %>%
     dplyr::rename(annotation = compound.name) %>%
     dplyr::mutate(annotation = ifelse(is.na(annotation), 0, 1))
 
-  # ASSUMPTION: generate_cumulative_histogram returns a list with $data and $plot
   histogram_results <- generate_cumulative_histogram(
     Annotations.with.samples = Annotations.with.samples_input,
     folder = folder,
-    remove_sample = remove_sample # Pass NULL if not provided
+    remove_sample = remove_sample
   )
   results$histogram_data <- histogram_results$data
   results$histogram_plot <- histogram_results$plot
 
-  # --- . STARBURST CHART FUNCTION CALL ---
+  # --- 3. STARBURST CHART FUNCTION CALL ---
   message("\nStarting Starburst Chart Generation (Class distribution for dataset)...")
   starburst_results <- generate_starburst(
     data = starburst.data
@@ -95,16 +91,13 @@ make_plots <- function(
   results$starburst_data <- starburst_results$data
   results$starburst_plot <- starburst_results$plot
 
-  # --- 3. BUBBLE CHART FUNCTION CALL ---
-
+  # --- 4. BUBBLE CHART FUNCTION CALL ---
   message("\nStarting Metabolite Class Bubble Chart Generation (MS2Query Data)...")
-
   if (is.null(quant_file) || !file.exists(ms2query_file)) {
     results$bubblechart_data <- NULL
     results$bubblechart_plot <- NULL
     warning("Skipping bubble chart generation because required files were not found.")
   } else {
-    # ASSUMPTION: generate_ms2query_bubblechart returns a list with $data and $plot
     bubblechart_results <- generate_ms2query_bubblechart(
       ms2query.path = ms2query_file,
       quant.data.path = quant_file,
@@ -116,8 +109,5 @@ make_plots <- function(
     results$bubblechart_plot <- bubblechart_results$plot
   }
 
-
-
-  # Return all data frames and plot objects
   return(results)
 }
