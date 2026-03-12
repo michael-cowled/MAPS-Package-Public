@@ -51,7 +51,7 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
 
   mzmine.annotations <- mzmine.annotations %>%
     dplyr::filter(
-      method %in% c("spectral_library_annotation", "RT_PPM_only_match", "simple_compound_db_annotation"),
+      method %in% c("spectral_library_annotation", "RT_PPM_match", "simple_compound_db_annotation"),
       score > 0.7
     ) %>%
     dplyr::distinct(id, compound_name, .keep_all = TRUE) %>%
