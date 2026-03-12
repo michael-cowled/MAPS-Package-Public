@@ -9,6 +9,7 @@
 #' @return A named list of valid file paths.
 #' @export
 validate_and_get_paths <- function(folder, lv1.subclasses = FALSE) {
+
   # Normalize path slashes for consistency
   folder <- gsub("\\\\", "/", folder)
 
@@ -20,18 +21,25 @@ validate_and_get_paths <- function(folder, lv1.subclasses = FALSE) {
   path_annotations_old <- paste0(folder, "/mzmine/data_annotations.csv")
 
   if (file.exists(path_annotations_new)) {
-    # Prioritize new file if it exists
+    # 1. Prioritize new file if it exists
     path_mzmine_annotations_final <- path_annotations_new
-    error_mzmine_annotations <- "The preferred file 'data_annotations_frag6.csv' was selected but is missing from the mzmine folder."
+    error_mzmine_annotations <- "" # Clear error since file is found
     message("Note: Using the preferred annotation file: 'data_annotations_frag6.csv'")
-  } else {
-    # Fallback to old file
+
+  } else if (file.exists(path_annotations_old)) {
+    # 2. Fallback to old file if it exists
     path_mzmine_annotations_final <- path_annotations_old
+    error_mzmine_annotations <- "" # Clear error since fallback is found
+    message("Note: Using the fallback annotation file: 'data_annotations.csv'. 'data_annotations_frag6.csv' was not found.")
+
+  } else {
+    # 3. Handle the case where NEITHER file exists
+    path_mzmine_annotations_final <- ""
     error_mzmine_annotations <- paste(
-      "The fallback file 'data_annotations.csv' is missing from the mzmine folder.",
-      "The preferred file 'data_annotations_frag6.csv' was not found."
+      "Both annotation files are missing from the mzmine folder.",
+      "Could not find 'data_annotations_frag6.csv' or 'data_annotations.csv'."
     )
-    message("Note: Using the fallback annotation file: 'data_annotations.csv' (if it exists). 'data_annotations_frag6.csv' was not found.")
+    message("Warning: No valid annotation file found in the mzmine folder.")
   }
 
   # --- 2. Assemble the REQUIRED file paths list ---
@@ -79,7 +87,6 @@ validate_and_get_paths <- function(folder, lv1.subclasses = FALSE) {
     )
     error_messages <- c(error_messages, lv1_errors) # Append to main list
   }
-
 
   # --- 5. Run the validation loop ---
   # The loop now runs over the combined list of REQUIRED + CONDITIONAL files
