@@ -51,16 +51,14 @@ MAPS <- function(
     stop("Processed Data Folder 'folder' cannot be empty. Please specify a path or ensure metadata extraction is successful.")
   }
 
-  paths <- MAPS.Package::validate_and_get_paths(folder, lv1.subclasses)
+  # Make sure to pass BOTH logical flags to your updated validation function
+  paths <- MAPS.Package::validate_and_get_paths(folder,
+                                                lv1.subclasses = lv1.subclasses,
+                                                lv2.mzmine = lv2.mzmine)
 
+  # Core files
   mzmine.data <- paths$mzmine_data
-  mzmine.annotations = paths$mzmine_annotations
-  if (lv1.subclasses == TRUE) {
-    mzmine_annotations_4 = paths$mzmine_annotations_4
-    mzmine_annotations_2 = paths$mzmine_annotations_2
-    mzmine_annotations_0 = paths$mzmine_annotations_0
-    lv2_mzmine_annotations = paths$lv2_mzmine_annotations
-  }
+  mzmine.annotations <- paths$mzmine_annotations
   canopus.data <- paths$canopus_data
   csi.data <- paths$csi_data
   msn.data <- paths$msn_data
@@ -68,8 +66,20 @@ MAPS <- function(
   ms2query.data <- paths$ms2query_data
   cytoscape <- paths$cytoscape
 
+  # Conditionally extract LV1 paths
+  if (lv1.subclasses == TRUE) {
+    mzmine_annotations_4 <- paths$mzmine_annotations_4
+    mzmine_annotations_2 <- paths$mzmine_annotations_2
+    mzmine_annotations_0 <- paths$mzmine_annotations_0
+  }
+
+  # Conditionally extract LV2 paths
+  if (lv2.mzmine == TRUE) {
+    lv2_mzmine_annotations <- paths$lv2_mzmine_annotations
+  }
+
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 3. Process MZMine Data (0.05 to 0.20)
+  ## 2. Process MZMine Data (0.05 to 0.20)
   prog("2/12: Processing MZmine Level 1/2 data", 0.10)
   message("Processing MZMINE data")
   processed_data <- MAPS.Package::process_mzmine_data(mzmine.annotations, gnps.prob,
@@ -81,7 +91,7 @@ MAPS <- function(
   cid_cache_df <- processed_data$cid.cache
   lipids.file <- processed_data$lipids.file
 
-  #Appending less stringent level 1 annotations
+  # Appending less stringent level 1 annotations
   if (lv1.subclasses == TRUE) {
     annotations.to.process <- c(mzmine_annotations_4, mzmine_annotations_2, mzmine_annotations_0)
     num_sublevels <- length(annotations.to.process)
@@ -98,7 +108,7 @@ MAPS <- function(
     }
   }
 
-  #Appending level 2 annotations from mzmine if applicable
+  # Appending level 2 annotations from mzmine if applicable
   if (lv2.mzmine == TRUE) {
     prog("2/12: Processing MZmine Level 2 annotations", 0.15)
     message(paste0("Processing "), "lv2_mzmine_annotations")
@@ -111,14 +121,14 @@ MAPS <- function(
   }
 
   prog("2/12: Merging features", 0.20)
-  #Append to all mzmine features
+  # Append to all mzmine features
   mzmine.data <- read_checked_csv(mzmine.data)
 
   if (!("spectral_db_matches.compound_name" %in% names(mzmine.data))) {
     mzmine.data$spectral_db_matches.compound_name <- NA
   }
 
-  sample.data <- mzmine.data #creating a copy for later
+  sample.data <- mzmine.data # creating a copy for later
 
   mzmine.data <- mzmine.data %>%
     dplyr::select("id", "rt", "mz", "ion_identities.iin_id") %>%
@@ -132,7 +142,7 @@ MAPS <- function(
     dplyr::left_join(mzmine.annotations.final, by = "feature.ID")
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 4. Process GNPS Data (0.20 to 0.35)
+  ## 3. Process GNPS Data (0.20 to 0.35)
   prog("3/12: Processing GNPS data", 0.25, detail = paste("Task:", gnps.task.id))
   message("Processing GNPS data:")
   if (gnps.task.id == "") {
@@ -174,7 +184,7 @@ MAPS <- function(
   prog("3/12: GNPS data processing complete", 0.35)
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 5. Process ms2query Data (0.35 to 0.45)
+  ## 4. Process ms2query Data (0.35 to 0.45)
   prog("4/12: Processing MS2Query data", 0.40)
   message("Processing ms2query data:")
   ms2query_results <- MAPS.Package::process_ms2query_data(
@@ -210,7 +220,7 @@ MAPS <- function(
 
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 6. Process lv3 in silico matches from GNPS (0.45 to 0.50)
+  ## 5. Process lv3 in silico matches from GNPS (0.45 to 0.50)
   prog("5/12: Processing GNPS Level 3 in silico matches", 0.48)
   if (exists("gnps.data.lv3") && nrow(gnps.data.lv3) > 0) {
     unique_in_lv3 <- setdiff(gnps.data.lv3$feature.ID, lv1.and.lv2.annotations$feature.ID)
@@ -233,7 +243,7 @@ MAPS <- function(
   prog("5/12: GNPS Level 3 processing complete", 0.50)
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 7. Process SIRIUS data (0.50 to 0.65)
+  ## 6. Process SIRIUS data (0.50 to 0.65)
   prog("6/12: Processing SIRIUS data (CANOPUS, ZODIAC, CSI:FingerID)", 0.52)
   message("Processing SIRIUS data:")
   canopus.data <- MAPS.Package::process_canopus_data(canopus.data)
@@ -279,7 +289,7 @@ MAPS <- function(
   prog("6/12: SIRIUS & MSNovelist processing complete", 0.65)
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 8. Appending all other features and annotations (0.65 to 0.70)
+  ## 7. Appending all other features and annotations (0.65 to 0.70)
   prog("7/12: Processing final Level 3 annotations & creating full table", 0.68)
   message("Processing all other level 3 annotations:")
   #First filter to see if any leftover annotations are unique
@@ -306,7 +316,7 @@ MAPS <- function(
   prog("7/12: Full annotation table created", 0.70)
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 9. Propagation of annotations (0.70 to 0.80)
+  ## 8. Propagation of annotations (0.70 to 0.80)
   prog("8/12: Propagating annotations", 0.75)
   propagated_df <- MAPS.Package::propagate_annotations(
     full.annotation.data,
@@ -326,7 +336,7 @@ MAPS <- function(
   prog("8/12: Propagation complete", 0.80)
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 10. Append level 4 and 5 annotations (0.80 to 0.85)
+  ## 9. Append level 4 and 5 annotations (0.80 to 0.85)
   prog("9/12: Appending Level 4/5 (CANOPUS) annotations", 0.83)
   propagated.annotation.data <- MAPS.Package::append_annotations(
     data = propagated.annotation.data,
@@ -341,7 +351,7 @@ MAPS <- function(
   prog("9/12: Level 4/5 assignment complete", 0.85)
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 11. Append Sample List Data and Collapse Ion Identity Networking (0.85 to 0.95)
+  ## 10. Append Sample List Data and Collapse Ion Identity Networking (0.85 to 0.95)
   prog("10/12: Processing sample data", 0.88)
   processed_results <- MAPS.Package::process_and_append_sample_data(sample.data, propagated.annotation.data)
   propagated.annotation.data.with.samples <- processed_results$combined_data
@@ -362,7 +372,7 @@ MAPS <- function(
   prog("10/12: Network processing complete", 0.95)
 
   #-----------------------------------------------------------------------------------------------------------------------#
-  ## 12. Writing Final Files (0.95 to 1.0)
+  ## 11. Writing Final Files (0.95 to 0.97)
   prog("11/12: Writing final files to disk", 0.97)
   message("Writing files to disk: PLEASE WAIT...")
   MAPS.Package::write_final_files(
@@ -383,6 +393,8 @@ MAPS <- function(
     warning("Failed to save cache: ", e$message)
   })
 
+  #-----------------------------------------------------------------------------------------------------------------------#
+  ## 12. Finalising Pipeline (0.97 to 1.0)
   closeAllConnections()
   prog("12/12: Finishing pipeline", 1.0)
 
