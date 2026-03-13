@@ -21,7 +21,7 @@ propagate_annotations(
 \item{get_result}{A function to retrieve annotation details for a feature ID.}
 }
 \value{
-A data frame with propagated annotations.
+A data frame with propagated annotations and structural metadata.
 }
 \description{
 Finds and propagates annotations for unknown features based on GNPS cluster relationships.

@@ -118,8 +118,15 @@ standardise_annotation <- function(data,
         db_props <- tryCatch(
           DBI::dbGetQuery(db_con, query),
           error = function(e) {
-            message("[DB ERROR] ", e$message)
-            return(NULL)
+            # Halt the script completely with a descriptive network error message
+            stop(
+              sprintf(
+                "\n[FATAL DB ERROR] %s\nThis 'disk I/O' error is likely due to a network disconnection or sync interruption while accessing the database.\nPlease check your connection to: %s",
+                e$message,
+                cid_database_path
+              ),
+              call. = FALSE # Hides the messy tryCatch call stack from the user
+            )
           }
         )
 

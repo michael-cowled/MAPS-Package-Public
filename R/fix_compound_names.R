@@ -4,16 +4,16 @@
 #'
 #' @import data.table
 #' @param df A data.frame or data.table with compound names.
-#' @param column A character vector of column names to clean.
+#' @param columns A character vector of column names to clean.
 #' @return A cleaned data frame.
 #' @export
 fix_compound_names <- function(df, columns) {
-  # Ensure data.table is loaded
   requireNamespace("data.table", quietly = TRUE)
   dt <- data.table::as.data.table(df)
 
+  # Added the "::" pattern at the beginning to strip metadata early
   patterns <- c(
-    "\\.(alpha|beta|gamma|omega)\\.-", "\\.(DELTA)\\.",
+    "[[:space:]]*::.*", "\\.(alpha|beta|gamma|omega)\\.-", "\\.(DELTA)\\.",
     "[[:space:]]*\\[IIN-based(?:[[:space:]]+on)?[[:space:]]*:[[:space:]]*[^)]*\\]",
     "NCG[[:alnum:]-]+_[[:alnum:]]+_", "NCG[^\\s!]+[\\s!]?",
     "Spectral Match to ", " from NIST14",
@@ -23,49 +23,36 @@ fix_compound_names <- function(df, columns) {
     "MoNA:[[:alnum:]]+\\s? ", " \\(Chimeric precursor selection\\)",
     "; \\(M\\+.*", " M+formate"
   )
+
   replacements <- c(
-    "\\1-", "delta-", "", "", "", "", "", "", "",
+    "", "\\1-", "delta-", "", "", "", "", "", "",
     "", "", "", "", "", " ", "(", ")", "(", ")", "",
     "", "", "", "", "", "", "", "", ""
   )
 
   for (col in columns) {
+    # Vectorized cleanup is significantly faster than row-wise loops
     for (i in seq_along(patterns)) {
-      rows <- which(grepl(patterns[i], dt[[col]], ignore.case = TRUE))
-      if (length(rows) > 0) {
-        for (r in rows) {
-          new_val <- gsub(patterns[i], replacements[i], dt[[col]][r], ignore.case = TRUE)
-          data.table::set(dt, i = r, j = col, value = new_val)
-        }
-      }
+      dt[[col]] <- gsub(patterns[i], replacements[i], dt[[col]], ignore.case = TRUE)
     }
 
-    # Trim whitespace before capitalization
+    # Trim whitespace
     dt[[col]] <- trimws(dt[[col]])
 
-    # Capitalization rules
-
     # 1. ALL CAPS -> Capitalize first letter only
-    rows <- which(grepl("^[[:upper:]\\s\\d\\W]*$", dt[[col]]) & grepl("[[:alpha:]]", dt[[col]]))
-    if (length(rows) > 0) {
-      for (r in rows) {
-        val <- dt[[col]][r]
-        new_val <- paste0(toupper(substr(val, 1, 1)), tolower(substr(val, 2, nchar(val))))
-        data.table::set(dt, i = r, j = col, value = new_val)
-      }
+    all_caps_idx <- grepl("^[[:upper:]\\s\\d\\W]*$", dt[[col]]) & grepl("[[:alpha:]]", dt[[col]])
+    if (any(all_caps_idx)) {
+      vals <- dt[[col]][all_caps_idx]
+      dt[all_caps_idx, (col) := paste0(toupper(substr(vals, 1, 1)), tolower(substr(vals, 2, nchar(vals))))]
     }
 
     # 2. all lowercase -> capitalize first letter
-    rows <- which(grepl("^[[:lower:]\\s\\d\\W]*$", dt[[col]]) & grepl("[[:alpha:]]", dt[[col]]))
-    if (length(rows) > 0) {
-      for (r in rows) {
-        val <- dt[[col]][r]
-        new_val <- paste0(toupper(substr(val, 1, 1)), substr(val, 2, nchar(val)))
-        data.table::set(dt, i = r, j = col, value = new_val)
-      }
+    all_lower_idx <- grepl("^[[:lower:]\\s\\d\\W]*$", dt[[col]]) & grepl("[[:alpha:]]", dt[[col]])
+    if (any(all_lower_idx)) {
+      vals <- dt[[col]][all_lower_idx]
+      dt[all_lower_idx, (col) := paste0(toupper(substr(vals, 1, 1)), substr(vals, 2, nchar(vals)))]
     }
   }
 
-  # Return as data.frame for general compatibility
   return(as.data.frame(dt))
 }

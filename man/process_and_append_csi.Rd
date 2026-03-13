@@ -13,7 +13,7 @@ process_and_append_csi(
   cid_database_path,
   compute_id_prob,
   deduplicate_data,
-  standardize_annotation,
+  standardise_annotation,
   standardisation
 )
 }
@@ -34,7 +34,7 @@ process_and_append_csi(
 
 \item{deduplicate_data}{A function to remove duplicate annotations (e.g., MAPS.Package::deduplicate_data).}
 
-\item{standardize_annotation}{A function to standardize annotations (e.g., MAPS.Package::standardize_annotation).}
+\item{standardise_annotation}{A function to standardize annotations (e.g., MAPS.Package::standardise_annotation).}
 }
 \value{
 A list containing the updated annotations data frame and the updated CID cache.

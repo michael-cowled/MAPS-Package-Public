@@ -20,6 +20,7 @@ MAPS(
   standardisation,
   lv1.subclasses,
   lv2.mzmine,
+  msnovelist,
   modification_db,
   updateProgress = NULL
 )

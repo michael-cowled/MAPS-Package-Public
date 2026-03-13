@@ -20,22 +20,16 @@ collapse_and_reduce_networks <- function(
     redundancy_fixer
 ) {
 
-  # Step 1: Collapsing Ion Identity Networks
-  # This part of the code assumes that process_all_features and update_data_frame are functions you have defined elsewhere.
-  # They are passed as arguments to make the function more robust and flexible.
+  # --- Step 1: Collapsing Ion Identity Networks ---
+  iin.features <- dplyr::filter(propagated.annotation.data.with.samples,
+                                !is.na(ion.identity.ID) & ion.identity.ID != "")
 
-  # Filter for features with Ion Identity IDs
-  iin.features <- dplyr::filter(propagated.annotation.data.with.samples, !is.na(ion.identity.ID) & ion.identity.ID != "")
-
-  # Process all features to get the best annotations
   results <- process_all_features(iin.features, "ion.identity.ID", c("feature1", "feature2"))
 
-  # Update the final data frame by removing redundant rows
   final_annotation_df <- update_data_frame(propagated.annotation.data.with.samples, results, "ion.identity.ID") %>%
     dplyr::select(-ion.identity.ID, -Probable.Analogue.Of)
 
-  # Step 2: Create Samples Data Frame
-  # Remove the 'Samples' column if it exists and pivot the data to long format
+  # --- Step 2: Create Samples Data Frame ---
   if ("Samples" %in% names(sample.data2)) {
     sample.data2 <- sample.data2 %>% dplyr::select(-Samples)
   }
@@ -47,7 +41,6 @@ collapse_and_reduce_networks <- function(
       values_to = "area"
     )
 
-  # Join with the final annotation data
   samples_df <- final_annotation_df %>%
     dplyr::select(feature.ID, feature.usi, compound.name, smiles, Formula, IUPAC, Monoisotopic.Mass)
   samples_df$feature.ID <- as.numeric(samples_df$feature.ID)
@@ -55,33 +48,38 @@ collapse_and_reduce_networks <- function(
   samples_df <- long_df %>%
     dplyr::full_join(samples_df, by = "feature.ID")
 
-  # Step 3: Fix Compound Names
+  # --- Step 3: Fix Compound Names ---
   final_annotation_df <- fix_compound_names(final_annotation_df, "compound.name")
 
-  # Step 4: Redundancy Reduction
-  # Separate data into those with and without SMILES strings
+  # --- Step 4: Redundancy Reduction (with Protection Logic) ---
+
+  # 1. Protected Data: ms2query Level 3 hits should NOT be collapsed/deduplicated
+  protected_data <- final_annotation_df %>%
+    dplyr::filter(annotation.type == "ms2query" & confidence.level == "3")
+
+  # 2. Dataset for Redundancy Check: Has SMILES and is NOT protected
   dataset <- final_annotation_df %>%
-    dplyr::filter(!is.na(smiles) & smiles != "N/A")
+    dplyr::filter(!is.na(smiles) & smiles != "N/A") %>%
+    dplyr::filter(!(feature.ID %in% protected_data$feature.ID))
 
+  # 3. Other Data: No SMILES
   other_data <- final_annotation_df %>%
-    dplyr::filter(is.na(smiles) | smiles == "N/A")
+    dplyr::filter((is.na(smiles) | smiles == "N/A")) %>%
+    dplyr::filter(!(feature.ID %in% protected_data$feature.ID))
 
-  # Add this block to explicitly convert the 'rt' column
-  if("rt" %in% names(dataset)) {
-    dataset$rt <- as.numeric(dataset$rt)
-  }
-  if("rt" %in% names(other_data)) {
-    other_data$rt <- as.numeric(other_data$rt)
-  }
+  # Ensure RT is numeric for safe processing
+  if("rt" %in% names(dataset)) dataset$rt <- as.numeric(dataset$rt)
+  if("rt" %in% names(other_data)) other_data$rt <- as.numeric(other_data$rt)
+  if("rt" %in% names(protected_data)) protected_data$rt <- as.numeric(protected_data$rt)
 
+  # Run redundancy fixer only on the unprotected dataset
   if(nrow(dataset) > 0) {
-    dataset$rt <- as.numeric(dataset$rt)
     dataset$redundant <- FALSE
     dataset <- redundancy_fixer(dataset, column_to_check = "smiles")
   }
 
-  # Combine the processed data frames
-  final_annotation_df <- dplyr::bind_rows(dataset, other_data)
+  # Combine all three streams back together
+  final_annotation_df <- dplyr::bind_rows(dataset, other_data, protected_data)
 
   return(list(
     final_annotation_df = final_annotation_df,
