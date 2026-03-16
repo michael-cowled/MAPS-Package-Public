@@ -14,64 +14,6 @@
 #' @return A list containing the updated annotations data frame and the updated CID cache.
 #' @export
 process_and_append_csi <- function(
-    csi.data, existing_annotations, csi.prob, cid_cache_df, lipids.file,
-    cid_database_path, compute_id_prob, deduplicate_data,
-    standardise_annotation, standardisation
-) {
-  # Data Cleaning and Initial Processing
-  csi.df <- read_checked_tsv(csi.data)
-
-  # Use Column Names for Stability
-  csi.df <- csi.df %>%
-    dplyr::select(
-      confidence.score = ConfidenceScoreExact,
-      compound.name = name,
-      smiles = smiles,
-      feature.ID = mappingFeatureId # Using mapping ID for consistency
-    )
-
-  # Filter out existing annotations
-  csi.df <- csi.df[!(csi.df$feature.ID %in% existing_annotations$feature.ID), ]
-
-  # Clean Confidence Scores
-  csi.df$confidence.score[csi.df$confidence.score == -Inf] <- 0
-  csi.df$confidence.score <- as.numeric(csi.df$confidence.score)
-
-  # Filter based on probability and known problematic "PUBCHEM" names
-  csi.df <- csi.df %>%
-    dplyr::filter(confidence.score >= csi.prob) %>%
-    dplyr::filter(!grepl("PUBCHEM", compound.name, ignore.case = TRUE))
-
-  # Specific natural product name fixes
-  csi.df$compound.name[grepl("Solaparnaine", csi.df$compound.name, ignore.case = TRUE)] <- "Solaparnaine"
-  csi.df$compound.name[grepl("Spectalinine", csi.df$compound.name, ignore.case = TRUE)] <- "(-)-Spectalinine"
-
-  # Add missing columns from the main annotation table
-  missing_cols <- setdiff(colnames(existing_annotations), colnames(csi.df))
-  for (col in missing_cols) csi.df[[col]] <- NA
-
-  # MAPS Pipeline: Probabilities, Deduplication, and Standardization
-  csi.df <- compute_id_prob(csi.df, "confidence.score", csi.prob)
-  csi.df <- deduplicate_data(csi.df, compound.name, confidence.score)
-
-  result <- standardise_annotation(
-    csi.df, name_col = "compound.name", smiles_col = "smiles",
-    cid_cache_df = cid_cache_df, lipids.file = lipids.file,
-    cid_database_path = cid_database_path, standardisation = standardisation
-  )
-
-  final_csi <- result$data
-  final_csi$annotation.type <- "CSI:FingerID"
-  final_csi$confidence.level <- "3"
-
-  # Ensure types match before binding
-  updated_annotations <- existing_annotations %>%
-    dplyr::mutate(feature.ID = as.numeric(feature.ID)) %>%
-    dplyr::bind_rows(dplyr::mutate(final_csi, feature.ID = as.numeric(feature.ID)))
-
-  return(list(annotations = updated_annotations, cache = result$cache))
-}
-process_and_append_csi <- function(
     csi.data,
     existing_annotations,
     csi.prob,
@@ -84,18 +26,29 @@ process_and_append_csi <- function(
     standardisation
 ) {
   # Data Cleaning and Initial Processing
+  # 1. Load the data
   csi.data <- read_checked_tsv(csi.data)
-  csi.data <- csi.data[, c(3, 14, 15, 25)]
-  names(csi.data) <- c("confidence.score", "compound.name", "smiles", 'feature.ID')
+
+  # 2. Select and Rename using specific column names for stability
+  # This also handles the column swapping (compound.name is now first)
+  csi.data <- csi.data %>%
+    dplyr::select(
+      compound.name = name,
+      confidence.score = ConfidenceScoreExact,
+      smiles = smiles,
+      feature.ID = mappingFeatureId
+    )
+
+  # 3. Filter out existing annotations
   csi.data <- csi.data[!(csi.data$feature.ID %in% existing_annotations$feature.ID), ]
-  csi.data <- csi.data[, c(2, 1, 3:ncol(csi.data))] #Swap cols 1 and 2
 
   csi.data$confidence.score[csi.data$confidence.score == -Inf] <- 0
   csi.data$confidence.score <- as.numeric(csi.data$confidence.score)
 
   # Filter based on confidence probability and compound name
-  csi.data <- filter(csi.data, confidence.score >= csi.prob) %>%
-    filter(!grepl("PUBCHEM", compound.name, ignore.case = TRUE))
+  csi.data <- csi.data %>%
+    dplyr::filter(confidence.score >= csi.prob) %>%
+    dplyr::filter(!grepl("PUBCHEM", compound.name, ignore.case = TRUE))
 
   # Fix troublesome compound names
   csi.data$compound.name[grepl("Solaparnaine", csi.data$compound.name, ignore.case = TRUE)] <- "Solaparnaine"
