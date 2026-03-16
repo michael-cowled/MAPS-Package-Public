@@ -22,7 +22,7 @@ append_propagated_annotations <- function(full.annotation.data,
     message("Notice: No propagation data found. Returning original data with empty placeholders.")
 
     # Ensure columns exist so downstream functions don't crash
-    cols_to_add <- c("Probable.Analogue.Of", "Propagated.Annotation.Class", "Propagated.Feature.ID")
+    cols_to_add <- c("Propagated.Feature.ID", "Propagated.Annotation.Type", "Propagated.Annotation.Class", "Propagated.Annotation.Smiles")
     for (col in cols_to_add) {
       if (!(col %in% colnames(full.annotation.data))) full.annotation.data[[col]] <- NA
     }
