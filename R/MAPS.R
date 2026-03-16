@@ -102,7 +102,8 @@ MAPS <- function(
       processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, mzmine.annotations = file,
                                                                    cid_cache_df, lipids.file, gnps.prob,
                                                                    cid_database_path, standardisation,
-                                                                   level = "1", type = "authentic standard")
+                                                                   level = "1", type = "authentic standard",
+                                                                   cache.location)
       mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
     }
@@ -115,7 +116,8 @@ MAPS <- function(
     processed_data <- MAPS.Package::process_mzmine_sublevel_data(mzmine.annotations.final, lv2_mzmine_annotations,
                                                                  cid_cache_df, lipids.file, gnps.prob,
                                                                  cid_database_path, standardisation,
-                                                                 level = "2", type = "mzmine")
+                                                                 level = "2", type = "mzmine",
+                                                                 cache.location)
     mzmine.annotations.final <- processed_data$annotations.data
     cid_cache_df <- processed_data$cid.cache
   }
@@ -160,7 +162,7 @@ MAPS <- function(
       prog("3/12: Standardizing GNPS Level 2 (High Conf)", 0.30)
       gnps_lv2_results <- MAPS.Package::standardise_and_compute_gnps(
         gnps.data.lv2.high.conf, cid_cache_df, lipids.file,
-        cid_database_path, gnps.prob, standardisation
+        cid_database_path, gnps.prob, standardisation, cache.location
       )
 
       gnps.data.lv2.high.conf <- gnps_lv2_results$data
@@ -261,7 +263,8 @@ MAPS <- function(
     compute_id_prob = MAPS.Package::compute_id_prob,
     deduplicate_data = MAPS.Package::deduplicate_data,
     standardise_annotation = MAPS.Package::standardise_annotation,
-    standardisation = standardisation
+    standardisation = standardisation,
+    cache.location
   )
 
   # Update annotations and cache before MSNovelist

@@ -35,7 +35,8 @@ standardise_and_compute_gnps <- function(
     lipids.file,
     cid_database_path,
     gnps.prob,
-    standardisation = standardisation
+    standardisation = standardisation,
+    cache.location
 ) {
 
   # Pre-standardisation filtering for duplicates
@@ -53,7 +54,8 @@ standardise_and_compute_gnps <- function(
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
     cid_database_path = cid_database_path,
-    standardisation = standardisation
+    standardisation = standardisation,
+    cache.location
   )
 
   gnps.data.lv2.high.conf <- result$data

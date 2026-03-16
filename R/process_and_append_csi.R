@@ -23,7 +23,8 @@ process_and_append_csi <- function(
     compute_id_prob,
     deduplicate_data,
     standardise_annotation,
-    standardisation
+    standardisation,
+    cache.location
 ) {
   # Data Cleaning and Initial Processing
   # 1. Load the data
@@ -72,7 +73,8 @@ process_and_append_csi <- function(
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
     cid_database_path = cid_database_path,
-    standardisation = standardisation
+    standardisation = standardisation,
+    cache.location
   )
 
   csi.data <- result$data

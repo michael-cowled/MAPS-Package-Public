@@ -83,7 +83,8 @@ process_mzmine_data <- function(mzmine.annotations, gnps.prob,
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
     cid_database_path = cid.database.path,
-    standardisation = standardisation
+    standardisation = standardisation,
+    cache.location = cid.cache.path
   )
 
   mzmine.annotations <- result$data

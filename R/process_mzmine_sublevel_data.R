@@ -25,7 +25,8 @@
 #' @export
 process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annotations,
                                 cid_cache_df, lipids.file, gnps.prob,
-                                cid_database_path, standardisation, level, type) {
+                                cid_database_path, standardisation, level, type,
+                                cache.location) {
 
   # The code from your original function, with explicit package calls
   mzmine.annotations <- read_checked_csv(mzmine.annotations)
@@ -77,7 +78,8 @@ process_mzmine_sublevel_data <- function(mzmine.annotations.final, mzmine.annota
     cid_cache_df = cid_cache_df,
     lipids.file = lipids.file,
     cid_database_path = cid_database_path,
-    standardisation = standardisation
+    standardisation = standardisation,
+    cache.location
   )
 
   mzmine.annotations <- result$data

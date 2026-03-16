@@ -23,7 +23,8 @@ standardise_annotation <- function(data,
                                    cid_cache_df = NULL,
                                    lipids.file = NULL,
                                    cid_database_path = NULL,
-                                   standardisation = standardisation) {
+                                   standardisation = standardisation,
+                                   cache.location) {
 
   # --- Libraries ---
   # NOTE: In R packages, use @importFrom in documentation instead of library() inside the function.
