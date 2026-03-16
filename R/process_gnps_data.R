@@ -7,91 +7,81 @@
 #' @param gnps.prob Minimum confidence score (numeric)
 #' @param mzmine.annotations.final Data frame of MZmine annotations
 #'
-#' @return A list with three data frames:
-#' \describe{
-#'   \item{lv2.high.conf.data}{Level 2 high-confidence GNPS annotations}
-#'   \item{lv2.low.conf.data}{Level 2 low-confidence GNPS annotations}
-#'   \item{lv3.data}{Level 3 GNPS annotations}
-#' }
+#' @return A list with five data frames including levels 2 and 3 annotations and networking data.
 #' @export
 process_gnps_data <- function(gnps.task.id, gnps.prob, mzmine.annotations.final) {
 
-  # 1. Load, tidy, and standardize GNPS2 annotation data
-  gnps.annotation.data <- read_checked_tsv(paste0("https://gnps2.org/resultfile?task=", gnps.task.id, "&file=nf_output/library/merged_results_with_gnps.tsv"))
+  # 1. Load and Standardize GNPS2 annotation data
+  gnps.url <- paste0("https://gnps2.org/resultfile?task=", gnps.task.id, "&file=nf_output/library/merged_results_with_gnps.tsv")
+  gnps.annotation.data <- read_checked_tsv(gnps.url)
 
-  # Select and rename columns for clarity
-  gnps.annotation.data <- gnps.annotation.data[, c(2, 4, 5, 8, 9, 15, 27, 35, 43, 45, 46)]
-  names(gnps.annotation.data) <- c("feature.ID", "library.name", "confidence.score",
-                                   "mz.diff.ppm", "gnps.shared.peaks", "compound.name",
-                                   "smiles", "library.quality", "NPC.superclass", "NPC.pathway", "gnps.library.usi")
-
-  # Standardize GNPS library USI format
-  gnps.annotation.data$gnps.library.usi <- str_replace(
-    gnps.annotation.data$gnps.library.usi,
-    "mzspec:GNPS:GNPS-LIBRARY:(.*)",
-    "mzspec:GNPS:GNPS-LIBRARY:accession:\\1"
-  )
-
-  # Extract bile acid info into a new column
-  gnps.annotation.data$gnps.in.silico.bile.acid.info <- NA
-  gnps.annotation.data$gnps.in.silico.bile.acid.info[grepl("Candidate ", gnps.annotation.data$compound.name)] <-
-    gnps.annotation.data$compound.name[grepl("Candidate ", gnps.annotation.data$compound.name)]
-
-  # Reorder and filter annotations
-  gnps.annotation.data <- gnps.annotation.data[, c(1, 6, 7, 3:5, 2, 8, 10, 9, 11, 12)]
+  # Select, Rename, and Initial Clean in one pipe
   gnps.annotation.data <- gnps.annotation.data %>%
-    filter(mz.diff.ppm <= 5) %>%
-    filter(confidence.score >= gnps.prob)
+    dplyr::select(
+      feature.ID = `#Scan#`,
+      compound.name = Compound_Name,
+      smiles = Smiles,
+      confidence.score = MQScore,
+      mz.diff.ppm = MZErrorPPM,
+      gnps.shared.peaks = SharedPeaks,
+      library.name = LibraryName,
+      library.quality = LibraryQualityString,
+      NPC.superclass = npclassifier_superclass, # matched to your previous request
+      NPC.pathway = npclassifier_pathway,
+      gnps.library.usi = library_usi
+    ) %>%
+    dplyr::mutate(
+      # Standardize USI format
+      gnps.library.usi = stringr::str_replace(gnps.library.usi, "mzspec:GNPS:GNPS-LIBRARY:(.*)", "mzspec:GNPS:GNPS-LIBRARY:accession:\\1"),
+      # Extract bile acid info
+      gnps.in.silico.bile.acid.info = ifelse(grepl("Candidate ", compound.name), compound.name, NA_character_),
+      annotation.type = "gnps",
+      confidence.score = as.numeric(confidence.score),
+      mz.diff.ppm = as.numeric(mz.diff.ppm)
+    ) %>%
+    # Initial Filter
+    dplyr::filter(mz.diff.ppm <= 5, confidence.score >= gnps.prob)
 
   # 2. Load and process GNPS cluster data and pairs
-  gnps.cluster.data <- read_checked_tsv(paste0("https://gnps2.org/resultfile?task=", gnps.task.id, "&file=nf_output/networking/clustersummary_with_network.tsv"))
-  gnps.cluster.data <- select(gnps.cluster.data, 'cluster index', 'component')
-  names(gnps.cluster.data) <- c('feature.ID', "gnps.cluster.ID")
+  gnps.cluster.url <- paste0("https://gnps2.org/resultfile?task=", gnps.task.id, "&file=nf_output/networking/clustersummary_with_network.tsv")
+  gnps.cluster.data <- read_checked_tsv(gnps.cluster.url) %>%
+    dplyr::select(feature.ID = `cluster index`, gnps.cluster.ID = component)
 
-  gnps.cluster.pairs <- read_checked_tsv(paste0("https://gnps2.org/resultfile?task=", gnps.task.id, "&file=nf_output/networking/filtered_pairs.tsv"))
+  gnps.pairs.url <- paste0("https://gnps2.org/resultfile?task=", gnps.task.id, "&file=nf_output/networking/filtered_pairs.tsv")
+  gnps.cluster.pairs <- read_checked_tsv(gnps.pairs.url)
 
-  # 3. Create different confidence levels (Levels 2 and 3)
-  gnps.annotation.data$annotation.type <- "gnps"
+  # 3. Confidence Level Splitting
 
-  # Filter out features that are already in MZMINE Level 1
-  unique_in_gnps <- setdiff(gnps.annotation.data$feature.ID, mzmine.annotations.final$feature.ID)
-  gnps.annotation.data <- filter(gnps.annotation.data, feature.ID %in% unique_in_gnps)
+  # Remove features already identified in Level 1 (MZmine)
+  gnps.annotation.data <- gnps.annotation.data %>%
+    dplyr::filter(!(feature.ID %in% mzmine.annotations.final$feature.ID))
 
-  # Create level 2 data frames
-  gnps.data.lv2 <- filter(gnps.annotation.data, library.quality != "Insilico")
-  gnps.data.lv2$confidence.level <- "2"
-  # This relies on a user-defined function, assumed to be available
-  gnps.data.lv2 <- fix_compound_names(gnps.data.lv2, "compound.name")
+  # --- Level 2 (Library Matches) ---
+  gnps.data.lv2 <- gnps.annotation.data %>%
+    dplyr::filter(library.quality != "Insilico") %>%
+    dplyr::mutate(confidence.level = "2") %>%
+    fix_compound_names("compound.name")
 
-  # Separate high and low confidence Level 2 data
-  gnps.data.lv2.high.conf <- filter(gnps.data.lv2, library.quality != "Bronze")
-  gnps.data.lv2.low.conf <- filter(gnps.data.lv2, library.quality == "Bronze")
+  # Split Lv2 into High (Gold/Silver) and Low (Bronze)
+  gnps.data.lv2.high.conf <- gnps.data.lv2 %>% dplyr::filter(library.quality != "Bronze")
+  gnps.data.lv2.low.conf  <- gnps.data.lv2 %>%
+    dplyr::filter(library.quality == "Bronze") %>%
+    dplyr::filter(!(feature.ID %in% gnps.data.lv2.high.conf$feature.ID))
 
-  # Filter low confidence data to remove duplicates with high confidence
-  unique_in_gnps <- setdiff(gnps.data.lv2.low.conf$feature.ID, gnps.data.lv2.high.conf$feature.ID)
-  gnps.data.lv2.low.conf <- filter(gnps.data.lv2.low.conf, feature.ID %in% unique_in_gnps)
-
-  # Create level 3 data frame
-  gnps.data.lv3 <- filter(gnps.annotation.data, library.quality == "Insilico")
-  gnps.data.lv3$confidence.level <- "3"
-
-  # Clean up compound names for Level 3
-  gnps.data.lv3 <- gnps.data.lv3 %>%
-    mutate(
-      compound.name = ifelse(
-        grepl("Candidate ", compound.name),
-        sub("\\s*\\(.*$", "", compound.name),
-        compound.name
-      )
+  # --- Level 3 (In-silico / Putative) ---
+  gnps.data.lv3 <- gnps.annotation.data %>%
+    dplyr::filter(library.quality == "Insilico") %>%
+    dplyr::mutate(
+      confidence.level = "3",
+      # Clean Candidate names
+      compound.name = ifelse(grepl("Candidate ", compound.name), sub("\\s*\\(.*$", "", compound.name), compound.name),
+      # Remove quotes and add placeholders
+      compound.name = gsub('"', "", compound.name),
+      gnps.in.silico.bile.acid.info = gsub('"', "", gnps.in.silico.bile.acid.info),
+      CID = NA,
+      id.prob = NA
     )
 
-  # Tidy up additional columns
-  gnps.data.lv3$gnps.in.silico.bile.acid.info <- gsub('"', "", gnps.data.lv3$gnps.in.silico.bile.acid.info)
-  gnps.data.lv3$compound.name <- gsub('"', "", gnps.data.lv3$compound.name)
-  gnps.data.lv3$CID <- NA
-  gnps.data.lv3$id.prob <- NA
-
-  # Return the processed data frames
   return(list(
     lv2.high.conf.data = gnps.data.lv2.high.conf,
     lv2.low.conf.data = gnps.data.lv2.low.conf,

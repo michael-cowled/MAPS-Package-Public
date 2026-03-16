@@ -24,7 +24,18 @@ process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, m
   ms2query.data <- read_checked_csv(ms2query.data.path)
 
   # Select and rename relevant columns
-  ms2query.data <- ms2query.data[, c(2, 3, 4, 7, 8, 10, 17, 18)]
+  ms2query.data <- ms2query.data %>%
+    dplyr::select(
+      confidence.score = ms2query_model_prediction,
+      precursor_mz_diff = precursor_mz_difference,
+      precursor_mz_query = precursor_mz_query_spectrum,
+      compound.name = analog_compound_name,
+      smiles = smiles,
+      feature.ID = feature_id,
+      NPC.superclass = npc_superclass_results,
+      NPC.pathway = npc_pathway_results
+    )
+
   names(ms2query.data) <- c(
     "confidence.score", "mz.diff", "precursor_mz",
     "compound.name", "smiles", "feature.ID",
