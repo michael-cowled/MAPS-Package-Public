@@ -322,6 +322,7 @@ MAPS <- function(
   ## 8. Propagation of annotations (0.70 to 0.80)
   prog("8/12: Propagating annotations", 0.75)
 
+  # 1. Run the propagation tool
   propagated_df <- MAPS.Package::propagate_annotations(
     full.annotation.data,
     gnps.cluster.pairs = if (exists("gnps.cluster.pairs")) gnps.cluster.pairs else data.frame(),
@@ -330,13 +331,34 @@ MAPS <- function(
   )
 
   prog("8/12: Appending propagated annotations", 0.78)
-  propagated.annotation.data <- MAPS.Package::append_propagated_annotations(
-    full.annotation.data,
-    propagated_df,
-    mod_db = modification_db,
-    ppm_tol = ppm.tol,
-    abs_tol = 0.01
-  )
+
+  # 2. Defensive check before running the append function
+  if (!is.null(propagated_df) && nrow(propagated_df) > 0 && ncol(propagated_df) > 0) {
+
+    # Run the full append logic if data exists
+    propagated.annotation.data <- MAPS.Package::append_propagated_annotations(
+      full.annotation.data,
+      propagated_df,
+      mod_db = modification_db,
+      ppm_tol = ppm.tol,
+      abs_tol = 0.01
+    )
+
+  } else {
+
+    # Early Exit logic moved here: Keep the data but add the placeholder columns
+    message("Notice: No propagation data found. Skipping append step and adding NA columns.")
+
+    propagated.annotation.data <- full.annotation.data
+
+    cols_to_add <- c("Propagated.Feature.ID", "Propagated.Annotation.Type", "Propagated.Annotation.Class", "Propagated.Annotation.Smiles")
+    for (col in cols_to_add) {
+      if (!(col %in% colnames(propagated.annotation.data))) {
+        propagated.annotation.data[[col]] <- NA
+      }
+    }
+  }
+
   prog("8/12: Propagation complete", 0.80)
 
   #-----------------------------------------------------------------------------------------------------------------------#
