@@ -321,7 +321,7 @@ MAPS <- function(
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Propagation of annotations (0.70 to 0.80)
   prog("8/12: Propagating annotations", 0.75)
-  message("debug1")
+
   message(head(full.annotation.data))
   propagated_df <- MAPS.Package::propagate_annotations(
     full.annotation.data,
@@ -329,7 +329,7 @@ MAPS <- function(
     paired_feature_finder = MAPS.Package::paired_feature_finder,
     get_result = MAPS.Package::get_result
   )
-message("debug3")
+
   prog("8/12: Appending propagated annotations", 0.78)
   propagated.annotation.data <- MAPS.Package::append_propagated_annotations(
     full.annotation.data,
@@ -339,7 +339,7 @@ message("debug3")
     abs_tol = 0.01
   )
   prog("8/12: Propagation complete", 0.80)
-message("debug5")
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 9. Append level 4 and 5 annotations (0.80 to 0.85)
   prog("9/12: Appending Level 4/5 (CANOPUS) annotations", 0.83)
