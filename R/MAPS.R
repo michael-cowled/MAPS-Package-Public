@@ -206,7 +206,8 @@ MAPS <- function(
     lipids.file = lipids.file,
     cid_database.path = cid_database_path,
     ms2query.prob = ms2query.prob,
-    standardisation = standardisation
+    standardisation = standardisation,
+    cache.location
   )
 
   lv2.annotations <- lv2_processed_results$data
@@ -351,7 +352,7 @@ MAPS <- function(
 
     propagated.annotation.data <- full.annotation.data
 
-    cols_to_add <- c("Probable.Analogue.Of", "Propagated.Feature.ID", "Propagated.Annotation.Type", "Propagated.Annotation.Class", "Propagated.Annotation.Smiles")
+    cols_to_add <- c("Probable.Analogue.Of", "Propagated.Feature.ID", "Propagated.Annotation.Type", "Propagated.Annotation.Class", "Propagated.Smiles")
     for (col in cols_to_add) {
       if (!(col %in% colnames(propagated.annotation.data))) {
         propagated.annotation.data[[col]] <- NA
