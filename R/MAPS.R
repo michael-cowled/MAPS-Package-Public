@@ -351,7 +351,7 @@ MAPS <- function(
 
     propagated.annotation.data <- full.annotation.data
 
-    cols_to_add <- c("Propagated.Feature.ID", "Propagated.Annotation.Type", "Propagated.Annotation.Class", "Propagated.Annotation.Smiles")
+    cols_to_add <- c("Probably.Analogue.Of", "Propagated.Feature.ID", "Propagated.Annotation.Type", "Propagated.Annotation.Class", "Propagated.Annotation.Smiles")
     for (col in cols_to_add) {
       if (!(col %in% colnames(propagated.annotation.data))) {
         propagated.annotation.data[[col]] <- NA
