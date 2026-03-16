@@ -322,7 +322,6 @@ MAPS <- function(
   ## 8. Propagation of annotations (0.70 to 0.80)
   prog("8/12: Propagating annotations", 0.75)
 
-  message(head(full.annotation.data))
   propagated_df <- MAPS.Package::propagate_annotations(
     full.annotation.data,
     gnps.cluster.pairs = if (exists("gnps.cluster.pairs")) gnps.cluster.pairs else data.frame(),
