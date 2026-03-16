@@ -10,6 +10,7 @@
 #' @export
 propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, paired_feature_finder, get_result) {
 
+  message("debug2")
   # 1. Identify "Targets": Features that need a better ID.
   # We include Level 3/MSNovelist here so they can be "upgraded" by a Level 1/2 neighbor.
   na.rows <- dplyr::filter(full.annotation.data,

@@ -16,7 +16,8 @@ append_propagated_annotations <- function(full.annotation.data,
                                           mod_db = modification_db,
                                           ppm_tol = 10,
                                           abs_tol = 0.01) {
-
+message("debug4")
+  message(head(full.annotation.data))
   # 1. Retrieve the Source/Parent MZ
 
   # Create a temporary lookup for M/Z from the full data
