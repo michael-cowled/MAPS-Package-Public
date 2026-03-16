@@ -16,8 +16,18 @@ append_propagated_annotations <- function(full.annotation.data,
                                           mod_db = modification_db,
                                           ppm_tol = 10,
                                           abs_tol = 0.01) {
-message("debug4")
-  message(head(full.annotation.data))
+  # --- DEBUGGING BLOCK 4.5 ---
+  message("--- DEBUG 4.5: Checking Input Data Structures ---")
+  message("Full Annotation Data Columns: ", paste(colnames(full.annotation.data), collapse = ", "))
+  message("Propagated DF Columns: ", paste(colnames(propagated_df), collapse = ", "))
+
+  if (!"Propagated.Feature.ID" %in% colnames(propagated_df)) {
+    message("CRITICAL: 'Propagated.Feature.ID' is MISSING from propagated_df!")
+    message("Showing first few rows of propagated_df to identify correct column name:")
+    print(head(propagated_df))
+  }
+  # ---------------------------
+
   # 1. Retrieve the Source/Parent MZ
 
   # Create a temporary lookup for M/Z from the full data
@@ -30,6 +40,18 @@ message("debug4")
   # Join parent M/Z into propagated_df
   propagated_df_w_mass <- propagated_df %>%
     dplyr::left_join(mz_lookup, by = "Propagated.Feature.ID")
+
+  # --- DEBUGGING BLOCK 4.6 ---
+  message("--- DEBUG 4.6: Checking Input Data Structures ---")
+  message("Full Annotation Data Columns: ", paste(colnames(full.annotation.data), collapse = ", "))
+  message("Propagated DF Columns: ", paste(colnames(propagated_df), collapse = ", "))
+
+  if (!"Propagated.Feature.ID" %in% colnames(propagated_df)) {
+    message("CRITICAL: 'Propagated.Feature.ID' is MISSING from propagated_df!")
+    message("Showing first few rows of propagated_df to identify correct column name:")
+    print(head(propagated_df))
+  }
+  # ---------------------------
 
 
   # 2. Main Join and Calculation
@@ -96,6 +118,18 @@ message("debug4")
     ) %>%
     # Clean up helper columns. Note: Propagated.Feature.ID is no longer needed.
     dplyr::select(-propagation_mask, -mz_delta, -mod_name, -parent_mz)
+
+  # --- DEBUGGING BLOCK 4.7 ---
+  message("--- DEBUG 4.7: Checking Input Data Structures ---")
+  message("Full Annotation Data Columns: ", paste(colnames(full.annotation.data), collapse = ", "))
+  message("Propagated DF Columns: ", paste(colnames(propagated_df), collapse = ", "))
+
+  if (!"Propagated.Feature.ID" %in% colnames(propagated_df)) {
+    message("CRITICAL: 'Propagated.Feature.ID' is MISSING from propagated_df!")
+    message("Showing first few rows of propagated_df to identify correct column name:")
+    print(head(propagated_df))
+  }
+  # ---------------------------
 
   return(propagated_data)
 }
