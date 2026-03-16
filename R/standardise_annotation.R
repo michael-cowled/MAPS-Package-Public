@@ -94,6 +94,13 @@ standardise_annotation <- function(data,
       data$CID[i] <- pubchem_result$CID
       cid_cache_df <- pubchem_result$cache
 
+      tryCatch({R
+        readr::write_csv(cid_cache_df, cache.location)
+        message("Cache updated and saved successfully.")
+      }, error = function(e) {
+        warning("Failed to save cache: ", e$message)
+      })
+
       utils::setTxtProgressBar(pb, i)
     }
     close(pb)
