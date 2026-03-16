@@ -14,12 +14,7 @@ process_gnps_data(gnps.task.id, gnps.prob, mzmine.annotations.final)
 \item{mzmine.annotations.final}{Data frame of MZmine annotations}
 }
 \value{
-A list with three data frames:
-\describe{
-\item{lv2.high.conf.data}{Level 2 high-confidence GNPS annotations}
-\item{lv2.low.conf.data}{Level 2 low-confidence GNPS annotations}
-\item{lv3.data}{Level 3 GNPS annotations}
-}
+A list with five data frames including levels 2 and 3 annotations and networking data.
 }
 \description{
 Loads, tidies, and standardizes GNPS2 annotation data, and splits into

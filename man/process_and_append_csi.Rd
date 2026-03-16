@@ -14,7 +14,8 @@ process_and_append_csi(
   compute_id_prob,
   deduplicate_data,
   standardise_annotation,
-  standardisation
+  standardisation,
+  cache.location
 )
 }
 \arguments{

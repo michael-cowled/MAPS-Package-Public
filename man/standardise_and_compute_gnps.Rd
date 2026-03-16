@@ -10,7 +10,8 @@ standardise_and_compute_gnps(
   lipids.file,
   cid_database_path,
   gnps.prob,
-  standardisation = standardisation
+  standardisation = standardisation,
+  cache.location
 )
 }
 \arguments{

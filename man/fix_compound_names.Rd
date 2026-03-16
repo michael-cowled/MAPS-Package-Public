@@ -9,7 +9,7 @@ fix_compound_names(df, columns)
 \arguments{
 \item{df}{A data.frame or data.table with compound names.}
 
-\item{column}{A character vector of column names to clean.}
+\item{columns}{A character vector of column names to clean.}
 }
 \value{
 A cleaned data frame.

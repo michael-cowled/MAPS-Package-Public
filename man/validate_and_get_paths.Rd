@@ -4,18 +4,20 @@
 \alias{validate_and_get_paths}
 \title{Validate and Get Paths}
 \usage{
-validate_and_get_paths(folder, lv1.subclasses = FALSE)
+validate_and_get_paths(folder, lv1.subclasses = FALSE, lv2.mzmine = FALSE)
 }
 \arguments{
 \item{folder}{A character string specifying the folder path containing the data files.}
 
-\item{lv1}{A logical value. If TRUE, includes paths and validates files for LV1 annotations (frag4, frag2, frag0, lv2_annotations).}
+\item{lv1.subclasses}{A logical value. If TRUE, includes paths and validates files for LV1 annotations (frag4, frag2, frag0).}
+
+\item{lv2.mzmine}{A logical value. If TRUE, includes paths and validates files for LV2 annotations.}
 }
 \value{
 A named list of valid file paths.
 }
 \description{
 Check if the folder exists and verify the presence of expected data files.
-Prioritizes 'data_annotations_new.csv' over 'data_annotations.csv' for mzmine annotations.
+Prioritizes 'data_annotations_frag6.csv' over 'data_annotations.csv' for mzmine annotations.
 Stops execution with informative errors if any required file is missing.
 }

@@ -26,8 +26,8 @@ Must include 'feature.ID', 'Samples', and 'compound.name'.}
 }
 \value{
 A list containing all generated data frames and plot objects:
-'barchart_data', 'histogram_data', 'bubblechart_data',
-'barchart_plot', 'histogram_plot', and 'bubblechart_plot'.
+'barchart_data', 'histogram_data', 'starburst_data', 'bubblechart_data',
+'barchart_plot', 'histogram_plot', 'starburst_plot', and 'bubblechart_plot'.
 }
 \description{
 Executes a sequence of three plotting functions: barchart of total annotations,
