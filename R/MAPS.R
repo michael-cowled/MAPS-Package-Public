@@ -272,9 +272,30 @@ MAPS <- function(
   lv1.lv2.lv3.annotations <- csi_results$annotations
   cid_cache_df <- csi_results$cache
 
+  lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
+
+  prog("6/12: SIRIUS processing complete", 0.60)
+
+  #-----------------------------------------------------------------------------------------------------------------------#
+  ## 7. Appending all other features and annotations (0.65 to 0.70)
+  prog("7/12: Processing final Level 3 annotations & creating full table", 0.62)
+  message("Processing ms2query level 3 annotations:")
+  #First filter to see if any leftover annotations are unique
+  unique_in_ms2query <- setdiff(ms2query.data.lv3$feature.ID, lv1.lv2.lv3.annotations$feature.ID)
+  ms2query.data.lv3 <- ms2query.data.lv3 %>%
+    dplyr::filter(feature.ID %in% unique_in_ms2query) %>%
+    dplyr::select(-mz.diff, -precursor_mz)
+
+  if (nrow(ms2query.data.lv3) > 0) {
+    lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
+      ms2query_data = ms2query.data.lv3,
+      existing_annotations = lv1.lv2.lv3.annotations
+    )
+  }
+
+  # --- MSNovelist Integration (De Novo Structures) ---
   if (msnovelist == TRUE) {
-    # --- MSNovelist Integration (De Novo Structures) ---
-    prog("6/12: Integrating MSNovelist de novo annotations", 0.60)
+    prog("7/12: Integrating MSNovelist de novo annotations", 0.65)
     msn_results <- MAPS.Package::process_and_append_msnovelist(
       msn.data = msn.data,
       existing_annotations = lv1.lv2.lv3.annotations,
@@ -290,24 +311,8 @@ MAPS <- function(
 
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
 
-  prog("6/12: SIRIUS & MSNovelist processing complete", 0.65)
-
-  #-----------------------------------------------------------------------------------------------------------------------#
-  ## 7. Appending all other features and annotations (0.65 to 0.70)
-  prog("7/12: Processing final Level 3 annotations & creating full table", 0.68)
-  message("Processing all other level 3 annotations:")
-  #First filter to see if any leftover annotations are unique
-  unique_in_ms2query <- setdiff(ms2query.data.lv3$feature.ID, lv1.lv2.lv3.annotations$feature.ID)
-  ms2query.data.lv3 <- ms2query.data.lv3 %>%
-    dplyr::filter(feature.ID %in% unique_in_ms2query) %>%
-    dplyr::select(-mz.diff, -precursor_mz)
-
-  if (nrow(ms2query.data.lv3) > 0) {
-    lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
-      ms2query_data = ms2query.data.lv3,
-      existing_annotations = lv1.lv2.lv3.annotations
-    )
-  }
+  # --- Creating full annotation table ---
+  prog("7/12: Creating full annotation table", 0.68)
 
   full.annotation.data <- MAPS.Package::create_full_annotation_table(
     mzmine_data = mzmine.data,
