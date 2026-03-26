@@ -75,7 +75,7 @@ append_propagated_annotations <- function(full.annotation.data,
       ),
 
       smiles = ifelse(
-        propagation_mask & !is.na(Propagated.Annotation.Smiles),
+        propagation_mask & !is.na(Propagated.Smiles),
         Propagated.Smiles,
         smiles
       ),
