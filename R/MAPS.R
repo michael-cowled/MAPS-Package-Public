@@ -372,7 +372,7 @@ MAPS <- function(
   prog("9/12: Appending Level 4/5 (CANOPUS) annotations", 0.83)
   propagated.annotation.data <- MAPS.Package::append_annotations(
     data = propagated.annotation.data,
-    mask_condition = is.na(compound.name) & !is.na(canopus.NPC.pathway) & canopus.NPC.pathway.probability >= canopus.prob,
+    mask_condition = is.na(compound.name) & !is.na(canopus.NPC.pathway) & canopus.NPC.pathway.probability >= canopus.prob & annotation.type != "MSNovelist",
     compound_name = paste0("Predicted NPC Pathway: ", propagated.annotation.data$canopus.NPC.pathway),
     confidence_level = "4",
     npc_pathway = propagated.annotation.data$canopus.NPC.pathway,
