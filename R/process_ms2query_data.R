@@ -83,6 +83,11 @@ process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, m
 
   if (nrow(ms2query.data.lv3) > 0) {
   ms2query.data.lv3$confidence.level <- "3"
+  ms2query.data.lv3$gnps.shared.peaks <- NA
+  ms2query.data.lv3$library.name <- "ms2query"
+  ms2query.data.lv3$library.quality <- "ms2query"
+  ms2query.data.lv3$gnps.library.usi <- NA
+  ms2query.data.lv3$gnps.in.silico.bile.acid.info <- NA
 }
   # Return both levels
   return(list(
