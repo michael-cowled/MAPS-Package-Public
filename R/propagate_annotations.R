@@ -11,11 +11,10 @@
 propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, paired_feature_finder, get_result) {
 
   # 1. Identify "Targets": Features that need a better ID.
-  # We include Level 3/MSNovelist here so they can be "upgraded" by a Level 1/2 neighbor.
+  # We include Level 3 here so they can be "upgraded" by a Level 1/2 neighbor.
   na.rows <- dplyr::filter(full.annotation.data,
                            is.na(compound.name) |
-                             confidence.level == "3" |
-                             annotation.type == "MSNovelist")
+                             confidence.level == "3")
 
   na.feature.ids <- na.rows$feature.ID
 
@@ -50,11 +49,9 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
       # --- STRICT SOURCE GUARD ---
       # Parent must:
       # 1. Have a confidence level that is NOT "3" (so 1 or 2)
-      # 2. NOT be an MSNovelist annotation type
-      # 3. NOT have a missing confidence level
+      # 2. NOT have a missing confidence level
       is_valid_source <- !is.na(parent_meta$confidence.level) &&
-        parent_meta$confidence.level != "3" &&
-        parent_meta$annotation.type != "MSNovelist"
+        parent_meta$confidence.level != "3"
 
       if (is_valid_source) {
         result_data <- get_result(value, full.annotation.data)

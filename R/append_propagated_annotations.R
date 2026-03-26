@@ -40,7 +40,8 @@ append_propagated_annotations <- function(full.annotation.data,
       parent_mz = as.double(parent_mz),
 
       confidence.level = as.character(confidence.level),
-      propagation_mask = is.na(compound.name) & !is.na(Probable.Analogue.Of),
+      # Logic: Overwrite if name is NA OR if it's already level 3
+      propagation_mask = (is.na(compound.name) | confidence.level == "3") & !is.na(Probable.Analogue.Of),
 
       # --- CALCULATION BLOCK ---
       # Calculate Delta: Target (full.mz) - Source (parent_mz)
@@ -73,9 +74,15 @@ append_propagated_annotations <- function(full.annotation.data,
         compound.name
       ),
 
+      smiles = ifelse(
+        propagation_mask & !is.na(Propagated.Annotation.Smiles),
+        Propagated.Annotation.Smiles,
+        smiles
+      ),
+
       confidence.level = ifelse(
         propagation_mask,
-        "3", # Level 3 for propagated
+        "3",
         confidence.level
       ),
 
