@@ -8,25 +8,37 @@
 #' @importFrom dplyr %>% filter select bind_rows
 #' @export
 append_ms2query_analogues <- function(ms2query_data, existing_annotations) {
-  # Convert the mz.diff.ppm column in existing_annotations to numeric
-  if ("mz.diff.ppm" %in% names(existing_annotations) && is.character(existing_annotations$mz.diff.ppm)) {
-    existing_annotations$mz.diff.ppm <- as.numeric(existing_annotations$mz.diff.ppm)
-  }
-  # Modify compound names to indicate they are analogues
-  ms2query_data$compound.name <- paste0("Analogue of ", ms2query_data$compound.name)
 
-  # Identify and add missing columns to ensure successful binding
-  missing_cols <- colnames(existing_annotations)[!colnames(existing_annotations) %in% colnames(ms2query_data)]
+  # 1. Standardize column names to match existing annotations
+  # This fixes the "Dot vs Underscore" issue (e.g., compound.name vs compound_name)
+  common_cols <- intersect(names(ms2query_data), names(existing_annotations))
 
-  if(length(missing_cols) > 0) {
-    for (col in missing_cols) {
-      ms2query_data[[col]] <- NA
-    }
+  # 2. Handle the Compound Name prefixing safely
+  # Find which 'name' column exists in MS2Query to avoid creating a second one
+  name_col <- if ("compound.name" %in% names(ms2query_data)) "compound.name" else "compound_name"
+
+  if (name_col %in% names(ms2query_data)) {
+    ms2query_data[[name_col]] <- paste0("Analogue of ", ms2query_data[[name_col]])
   }
 
-  # Append the processed data to the existing annotations
-  updated_annotations <- existing_annotations %>%
-    dplyr::bind_rows(ms2query_data)
+  # 3. Ensure critical joining columns (like feature.ID) are the same type (Character)
+  # This prevents bind_rows from failing due to numeric vs character mismatches
+  if ("feature.ID" %in% names(ms2query_data)) {
+    ms2query_data$feature.ID <- as.numeric(ms2query_data$feature.ID)
+  }
+  if ("feature.ID" %in% names(existing_annotations)) {
+    existing_annotations$feature.ID <- as.numeric(existing_annotations$feature.ID)
+  }
 
-  return(list(annotations = updated_annotations))
+  # 4. Handle mz.diff.ppm type safety
+  if ("mz.diff.ppm" %in% names(existing_annotations)) {
+    existing_annotations$mz.diff.ppm <- as.numeric(as.character(existing_annotations$mz.diff.ppm))
+  }
+
+  # 5. Simple Append
+  # bind_rows handles the missing columns automatically (much safer than the manual loop)
+  updated_annotations <- dplyr::bind_rows(existing_annotations, ms2query_data)
+
+  # Return the dataframe directly (simpler than a list)
+  return(updated_annotations)
 }
