@@ -303,8 +303,6 @@ MAPS <- function(
     )
   }
 
-  write_csv(lv1.lv2.lv3.annotations, "test.csv")
-
   # --- MSNovelist Integration (De Novo Structures) ---
   if (msnovelist == TRUE) {
     prog("7/12: Integrating MSNovelist de novo annotations", 0.65)
@@ -322,7 +320,6 @@ MAPS <- function(
   }
 
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
-  write_csv(lv1.lv2.lv3.annotations, "test2.csv")
 
   # --- Creating full annotation table ---
   prog("7/12: Creating full annotation table", 0.68)
@@ -380,7 +377,7 @@ MAPS <- function(
   }
 
   prog("8/12: Propagation complete", 0.80)
-
+  write_csv(propagated.annotation.data, "test4.csv")
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 9. Append level 4 and 5 annotations (0.80 to 0.85)
   prog("9/12: Appending Level 4/5 (CANOPUS) annotations", 0.83)
@@ -395,7 +392,7 @@ MAPS <- function(
   ) %>%
     dplyr::mutate(confidence.level = ifelse(is.na(confidence.level), "5", confidence.level))
   prog("9/12: Level 4/5 assignment complete", 0.85)
-
+  write_csv(propagated.annotation.data, "test5.csv")
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 10. Append Sample List Data and Collapse Ion Identity Networking (0.85 to 0.95)
   prog("10/12: Processing sample data", 0.88)
@@ -413,6 +410,8 @@ MAPS <- function(
   )
   final.annotation.df <- processed_results$final_annotation_df
   samples.df <- processed_results$samples_df
+
+  write_csv(final.annotation.df , "test6.csv")
 
   final.annotation.df <- get_hmdb_from_cid(final.annotation.df, cid_database_path)
   prog("10/12: Network processing complete", 0.95)
