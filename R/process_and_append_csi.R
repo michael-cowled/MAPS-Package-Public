@@ -37,8 +37,10 @@ process_and_append_csi <- function(
       compound.name = name,
       confidence.score = ConfidenceScoreExact,
       smiles = smiles,
-      feature.ID = mappingFeatureId
+      feature.ID = mappingFeatureId,
+      CID = pubchemids
     )
+  csi.data$CID <- sub(";.*", "", csi.data$CID)
 
   # 3. Filter out existing annotations
   csi.data <- csi.data[!(csi.data$feature.ID %in% existing_annotations$feature.ID), ]

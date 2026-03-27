@@ -57,7 +57,9 @@ standardise_annotation <- function(data,
   data[[smiles_col]] <- as.character(data[[smiles_col]])
 
   # Initialize the new columns (must be done regardless of DB status)
-  data$CID <- NA_real_
+  if (!"CID" %in% names(data)) {
+    data$CID <- NA_real_
+  }
   data$Formula <- NA_character_
   data$IUPAC <- NA_character_
   data$Monoisotopic.Mass <- NA_real_
@@ -84,6 +86,11 @@ standardise_annotation <- function(data,
     for (i in seq_len(nrow(data))) {
       name <- data[[name_col]][i]
       smiles <- data[[smiles_col]][i]
+
+      if (!is.na(data$CID[i]) && data$CID[i] != "") {
+        utils::setTxtProgressBar(pb, i)
+        next
+      }
 
       if (is.na(name) || !nzchar(name)) {
         utils::setTxtProgressBar(pb, i)
