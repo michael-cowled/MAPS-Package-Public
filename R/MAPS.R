@@ -287,7 +287,6 @@ MAPS <- function(
   # Find truly new features
   unique_ids <- setdiff(ms2query.data.lv3$feature.ID, lv1.lv2.lv3.annotations$feature.ID)
 
-message(print(nrow(ms2query.data.lv3)))
   if (nrow(ms2query.data.lv3) > 0) {
     # Prefix the names before merging
     ms2query.data.lv3$compound.name <- paste0("Analogue of ", ms2query.data.lv3$compound.name)
@@ -298,7 +297,7 @@ message(print(nrow(ms2query.data.lv3)))
       existing_annotations = lv1.lv2.lv3.annotations
     )
   }
-message(print(lv1.lv2.lv3.annotations))
+write_csv(lv1.lv2.lv3.annotations, "test.csv")
 
   # --- MSNovelist Integration (De Novo Structures) ---
   if (msnovelist == TRUE) {
