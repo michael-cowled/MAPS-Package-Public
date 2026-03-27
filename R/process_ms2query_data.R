@@ -77,8 +77,7 @@ process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, m
   # -------------------------
   ms2query.data.lv3 <- ms2query.data %>%
     filter(confidence.score > ms2query.prob) %>%
-    filter(mz.diff >= 0.001) %>%
-    select(-mz.diff, -precursor_mz)
+    filter(mz.diff >= 0.001)
 
   if (nrow(ms2query.data.lv3) > 0) {
   ms2query.data.lv3$confidence.level <- "3"
