@@ -322,6 +322,7 @@ MAPS <- function(
   }
 
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
+  write_csv(lv1.lv2.lv3.annotations, "test2.csv")
 
   # --- Creating full annotation table ---
   prog("7/12: Creating full annotation table", 0.68)
@@ -335,6 +336,7 @@ MAPS <- function(
     gnps_task_id = gnps.task.id
   )
   prog("7/12: Full annotation table created", 0.70)
+  write_csv(full.annotation.data, "test3.csv")
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Propagation of annotations (0.70 to 0.80)
