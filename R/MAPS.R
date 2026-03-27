@@ -333,7 +333,6 @@ MAPS <- function(
     gnps_task_id = gnps.task.id
   )
   prog("7/12: Full annotation table created", 0.70)
-  write_csv(full.annotation.data, "test3.csv")
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 8. Propagation of annotations (0.70 to 0.80)
@@ -377,7 +376,7 @@ MAPS <- function(
   }
 
   prog("8/12: Propagation complete", 0.80)
-  write_csv(propagated.annotation.data, "test4.csv")
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 9. Append level 4 and 5 annotations (0.80 to 0.85)
   prog("9/12: Appending Level 4/5 (CANOPUS) annotations", 0.83)
@@ -392,7 +391,7 @@ MAPS <- function(
   ) %>%
     dplyr::mutate(confidence.level = ifelse(is.na(confidence.level), "5", confidence.level))
   prog("9/12: Level 4/5 assignment complete", 0.85)
-  write_csv(propagated.annotation.data, "test5.csv")
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 10. Append Sample List Data and Collapse Ion Identity Networking (0.85 to 0.95)
   prog("10/12: Processing sample data", 0.88)
@@ -416,6 +415,7 @@ MAPS <- function(
   final.annotation.df <- get_hmdb_from_cid(final.annotation.df, cid_database_path)
   prog("10/12: Network processing complete", 0.95)
 
+  write_csv(final.annotation.df , "test7.csv")
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 11. Writing Final Files (0.95 to 0.97)
   prog("11/12: Writing final files to disk", 0.97)
@@ -424,7 +424,7 @@ MAPS <- function(
     final.annotation.df, samples.df, folder, dataset.id, mzmine.data, cid_cache_df,
     write_large_csv = MAPS.Package::write_large_csv, cache.location = cache.location
   )
-
+  write_csv(final.annotation.df , "test8.csv")
   cytoscape_df <- MAPS.Package::prepare_cytoscape_file(
     folder, propagated.annotation.data.with.samples,
     read_checked_csv = MAPS.Package::read_checked_csv,
