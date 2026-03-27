@@ -198,6 +198,8 @@ MAPS <- function(
 
   ms2query.data.lv2 <- ms2query_results$lv2.data
   ms2query.data.lv3 <- ms2query_results$lv3.data
+  #debug
+  message(print(ms2query.data.lv3))
 
   lv2_processed_results <- MAPS.Package::standardize_and_compute_all_lv2(
     gnps.data.lv2.low.conf = if (exists("gnps.data.lv2.low.conf")) gnps.data.lv2.low.conf else NULL,
