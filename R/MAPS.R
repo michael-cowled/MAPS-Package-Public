@@ -281,23 +281,29 @@ MAPS <- function(
   prog("7/12: Processing final Level 3 annotations", 0.62)
 
   # Ensure ID types match before comparing
-  ms2query.data.lv3$feature.ID <- as.character(ms2query.data.lv3$feature.ID)
-  lv1.lv2.lv3.annotations$feature.ID <- as.character(lv1.lv2.lv3.annotations$feature.ID)
+  # WARNING: If this throws "NAs introduced by coercion", your IDs have characters in them!
+  ms2query.data.lv3$feature.ID <- as.numeric(ms2query.data.lv3$feature.ID)
+  lv1.lv2.lv3.annotations$feature.ID <- as.numeric(lv1.lv2.lv3.annotations$feature.ID)
 
   # Find truly new features
   unique_ids <- setdiff(ms2query.data.lv3$feature.ID, lv1.lv2.lv3.annotations$feature.ID)
 
-  if (nrow(ms2query.data.lv3) > 0) {
-    # Prefix the names before merging
-    ms2query.data.lv3$compound.name <- paste0("Analogue of ", ms2query.data.lv3$compound.name)
+  # FIX: Actually subset the data to only include the new features
+  ms2query.new <- ms2query.data.lv3[ms2query.data.lv3$feature.ID %in% unique_ids, ]
 
-    # Run the clean merge
+  # FIX: Check the nrow of the subsetted data, not the whole dataset
+  if (nrow(ms2query.new) > 0) {
+    # Prefix the names before merging
+    ms2query.new$compound.name <- paste0("Analogue of ", ms2query.new$compound.name)
+
+    # Run the clean merge with only the new data
     lv1.lv2.lv3.annotations <- merge_and_append_data(
-      new_data = ms2query.data.lv3,
+      new_data = ms2query.new,
       existing_annotations = lv1.lv2.lv3.annotations
     )
   }
-write_csv(lv1.lv2.lv3.annotations, "test.csv")
+
+  write_csv(lv1.lv2.lv3.annotations, "test.csv")
 
   # --- MSNovelist Integration (De Novo Structures) ---
   if (msnovelist == TRUE) {
