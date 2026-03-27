@@ -41,6 +41,7 @@ process_and_append_csi <- function(
       CID = pubchemids
     )
   csi.data$CID <- sub(";.*", "", csi.data$CID)
+  csi.data$CID <- as.numeric(csi.data$CID)
 
   # 3. Filter out existing annotations
   csi.data <- csi.data[!(csi.data$feature.ID %in% existing_annotations$feature.ID), ]
@@ -97,6 +98,7 @@ process_and_append_csi <- function(
 
   existing_annotations$feature.ID <- as.numeric(existing_annotations$feature.ID)
   csi.data$feature.ID <- as.numeric(csi.data$feature.ID)
+  csi.data$CID <- as.numeric(csi.data$CID)
   existing_annotations$confidence.score <- as.numeric(existing_annotations$confidence.score)
   csi.data$confidence.score <- as.numeric(csi.data$confidence.score)
   csi.data$Formula <- as.character(csi.data$Formula)
