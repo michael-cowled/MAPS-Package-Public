@@ -34,7 +34,8 @@ process_and_append_msnovelist <- function(
     dplyr::mutate(confidence.score = as.numeric(confidence.score))
 
   # 2. Filter out features already successfully annotated in Levels 1-3
-  msn.df <- msn.df[!(msn.df$feature.ID %in% existing_annotations$feature.ID), ]
+  unique_in_msn <- setdiff(msn.df$feature.ID, existing_annotations$feature.ID)
+  msn.df<- msn.df %>% dplyr::filter(feature.ID %in% unique_in_msn)
 
   # 3. Sort by Score (Closest to Zero is Best)
   # Since ModelScores are negative, "descending" puts -1.5 above -10.0
