@@ -278,24 +278,31 @@ MAPS <- function(
 
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 7. Appending all other features and annotations (0.65 to 0.70)
-  prog("7/12: Processing final Level 3 annotations & creating full table", 0.62)
-  message("Processing ms2query level 3 annotations:")
-  #First filter to see if any leftover annotations are unique
-  unique_in_ms2query <- setdiff(ms2query.data.lv3$feature.ID, lv1.lv2.lv3.annotations$feature.ID)
-  ms2query.data.lv3 <- ms2query.data.lv3 %>%
-    dplyr::filter(feature.ID %in% unique_in_ms2query) %>%
-    dplyr::select(-mz.diff, -precursor_mz)
+  prog("7/12: Processing final Level 3 annotations", 0.62)
 
-  #debug
-  message(print(ms2query.data.lv3))
+  # Ensure ID types match before comparing
+  ms2query.data.lv3$feature.ID <- as.numeric(ms2query.data.lv3$feature.ID)
+  lv1.lv2.lv3.annotations$feature.ID <- as.numeric(lv1.lv2.lv3.annotations$feature.ID)
 
-  if (nrow(ms2query.data.lv3) > 0) {
+  # Find truly new features
+  unique_ids <- setdiff(ms2query.data.lv3$feature.ID, lv1.lv2.lv3.annotations$feature.ID)
+
+  if (length(unique_ids) > 0) {
+    ms2query_to_append <- ms2query.data.lv3 %>%
+      dplyr::filter(feature.ID %in% unique_ids) %>%
+      dplyr::select(-any_of(c("mz.diff", "precursor_mz"))) # any_of prevents errors if cols missing
+
+    message(paste("Appending", nrow(ms2query_to_append), "new MS2Query analogues..."))
+
     ms2query_results <- MAPS.Package::append_ms2query_analogues(
-      ms2query_data = ms2query.data.lv3,
+      ms2query_data = ms2query_to_append,
       existing_annotations = lv1.lv2.lv3.annotations
     )
-    # Updating the dataframe
+
+    # Update the main object
     lv1.lv2.lv3.annotations <- ms2query_results$annotations
+  } else {
+    message("No unique MS2Query features found to append.")
   }
 
   # --- MSNovelist Integration (De Novo Structures) ---
