@@ -48,8 +48,7 @@ process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, m
 
   # Calculate ppm difference and filter by tolerance
   ms2query.data <- ms2query.data %>%
-    mutate(mz.diff.ppm = mz.diff / precursor_mz * 1e6) %>%
-    filter(mz.diff.ppm <= ppm.tol)
+    mutate(mz.diff.ppm = mz.diff / precursor_mz * 1e6)
 
   # Mark annotation source
   ms2query.data$annotation.type <- "ms2query"
@@ -63,7 +62,7 @@ process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, m
   # -------------------------
   ms2query.data.lv2 <- ms2query.data %>%
     filter(confidence.score > ms2query.prob) %>%
-    filter(mz.diff <= 0.001) %>%
+    filter(mz.diff.ppm <= ppm.tol & mz.diff <= 0.001) %>%
     select(-mz.diff, -precursor_mz)
 
   ms2query.data.lv2$confidence.level <- "2"
@@ -79,7 +78,7 @@ process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, m
   ms2query.data.lv3 <- ms2query.data %>%
     filter(confidence.score > ms2query.prob) %>%
     filter(mz.diff >= 0.001) %>%
-    filter(!feature.ID %in% lv1.and.lv2.annotations$feature.ID)
+    select(-mz.diff, -precursor_mz)
 
   if (nrow(ms2query.data.lv3) > 0) {
   ms2query.data.lv3$confidence.level <- "3"
