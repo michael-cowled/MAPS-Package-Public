@@ -281,8 +281,8 @@ MAPS <- function(
   prog("7/12: Processing final Level 3 annotations", 0.62)
 
   # Ensure ID types match before comparing
-  ms2query.data.lv3$feature.ID <- as.numeric(ms2query.data.lv3$feature.ID)
-  lv1.lv2.lv3.annotations$feature.ID <- as.numeric(lv1.lv2.lv3.annotations$feature.ID)
+  ms2query.data.lv3$feature.ID <- as.character(ms2query.data.lv3$feature.ID)
+  lv1.lv2.lv3.annotations$feature.ID <- as.character(lv1.lv2.lv3.annotations$feature.ID)
 
   # Find truly new features
   unique_ids <- setdiff(ms2query.data.lv3$feature.ID, lv1.lv2.lv3.annotations$feature.ID)
