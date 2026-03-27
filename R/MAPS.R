@@ -287,10 +287,12 @@ MAPS <- function(
     dplyr::select(-mz.diff, -precursor_mz)
 
   if (nrow(ms2query.data.lv3) > 0) {
-    lv1.lv2.lv3.annotations <- MAPS.Package::append_ms2query_analogues(
+    ms2query_results <- MAPS.Package::append_ms2query_analogues(
       ms2query_data = ms2query.data.lv3,
       existing_annotations = lv1.lv2.lv3.annotations
     )
+    # Updating the dataframe
+    lv1.lv2.lv3.annotations <- ms2query_results$annotations
   }
 
   # --- MSNovelist Integration (De Novo Structures) ---

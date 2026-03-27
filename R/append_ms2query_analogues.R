@@ -28,5 +28,5 @@ append_ms2query_analogues <- function(ms2query_data, existing_annotations) {
   updated_annotations <- existing_annotations %>%
     dplyr::bind_rows(ms2query_data)
 
-  return(updated_annotations)
+  return(list(annotations = updated_annotations))
 }
