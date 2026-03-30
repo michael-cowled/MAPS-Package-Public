@@ -410,12 +410,10 @@ MAPS <- function(
   final.annotation.df <- processed_results$final_annotation_df
   samples.df <- processed_results$samples_df
 
-  write_csv(final.annotation.df , "test6.csv")
-
   final.annotation.df <- get_hmdb_from_cid(final.annotation.df, cid_database_path)
   prog("10/12: Network processing complete", 0.95)
 
-  write_csv(final.annotation.df , "test7.csv")
+
   #-----------------------------------------------------------------------------------------------------------------------#
   ## 11. Writing Final Files (0.95 to 0.97)
   prog("11/12: Writing final files to disk", 0.97)
@@ -424,7 +422,7 @@ MAPS <- function(
     final.annotation.df, samples.df, folder, dataset.id, mzmine.data, cid_cache_df,
     write_large_csv = MAPS.Package::write_large_csv, cache.location = cache.location
   )
-  write_csv(final.annotation.df , "test8.csv")
+
   cytoscape_df <- MAPS.Package::prepare_cytoscape_file(
     folder, propagated.annotation.data.with.samples,
     read_checked_csv = MAPS.Package::read_checked_csv,
