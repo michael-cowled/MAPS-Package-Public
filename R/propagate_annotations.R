@@ -80,7 +80,7 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
         Propagated.Feature.ID = selected_paired_value,
         Propagated.Smiles = parent_smiles,
         Propagated.Annotation.Class = final_result_data$column,
-        confidence.score = selected_cosine_score # Pass the cosine score here!
+        Propagated.Confidence.Score = selected_cosine_score # Give it a unique name here!
       )
     } else {
       tibble::tibble()

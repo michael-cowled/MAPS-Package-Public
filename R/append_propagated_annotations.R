@@ -35,16 +35,11 @@ append_propagated_annotations <- function(full.annotation.data,
   propagated_data <- full.annotation.data %>%
     dplyr::left_join(propagated_df_w_mass, by = "feature.ID") %>%
     dplyr::mutate(
-      # FIX 2: Ensure mz and parent_mz are numeric before calculation
+      dplyr::across(tidyselect::where(is.character), ~ dplyr::na_if(.x, "N/A")),
       mz = as.double(mz),
       parent_mz = as.double(parent_mz),
-
       confidence.level = as.character(confidence.level),
-      # Logic: Overwrite if name is NA OR if it's already level 3
       propagation_mask = (is.na(compound.name) | confidence.level == "3") & !is.na(Probable.Analogue.Of),
-
-      # --- CALCULATION BLOCK ---
-      # Calculate Delta: Target (full.mz) - Source (parent_mz)
       mz_delta = ifelse(propagation_mask, mz - parent_mz, NA),
 
       # Identify Modification
@@ -87,8 +82,8 @@ append_propagated_annotations <- function(full.annotation.data,
       ),
 
       confidence.score = ifelse(
-        propagation_mask & !is.na(confidence.score.y), # Or whatever your joined propagated score column is named
-        confidence.score.y,
+        propagation_mask & !is.na(Propagated.Confidence.Score),
+        Propagated.Confidence.Score,
         confidence.score
       ),
 
