@@ -25,15 +25,20 @@ standardize_and_compute_all_lv2 <- function(
     standardisation,
     cache.location) {
 
-  # --- THE FIX: Force numeric types before binding to prevent crashes ---
   if ("confidence.score" %in% names(gnps.data.lv2.low.conf)) {
     gnps.data.lv2.low.conf$confidence.score <- suppressWarnings(as.numeric(gnps.data.lv2.low.conf$confidence.score))
   }
   if ("confidence.score" %in% names(ms2query.data.lv2)) {
     ms2query.data.lv2$confidence.score <- suppressWarnings(as.numeric(ms2query.data.lv2$confidence.score))
   }
+  if ("feature.ID" %in% names(gnps.data.lv2.low.conf)) {
+    gnps.data.lv2.low.conf$feature.ID <- as.character(gnps.data.lv2.low.conf$feature.ID)
+  }
+  if ("feature.ID" %in% names(ms2query.data.lv2)) {
+    ms2query.data.lv2$feature.ID <- as.character(ms2query.data.lv2$feature.ID)
+  }
 
-  # Use dplyr::bind_rows safely handles differing column structures better than rbind
+  # Now bind_rows will work without a type-mismatch error
   lv2.annotations <- dplyr::bind_rows(gnps.data.lv2.low.conf, ms2query.data.lv2)
 
   # Proceed with standardization
