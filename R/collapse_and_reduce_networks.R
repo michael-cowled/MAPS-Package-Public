@@ -1,4 +1,15 @@
 #' @title Collapse Ion Identity Networks and Reduce Redundancy
+#' @description This function collapses ion identity networks to retain the best annotation and then reduces redundancy based on a 3-tier hierarchy (CID, Name, Name+SMILES). It processes the full annotation data, handles samples, and tidies the final output.
+#'
+#' @param propagated.annotation.data.with.samples The main data frame containing all annotations.
+#' @param sample.data2 The processed sample data with peak areas, before presence/absence conversion.
+#' @param process_all_features A function to process all features (e.g., from an external package).
+#' @param update_data_frame A function to update the data frame by removing rows (e.g., from an external package).
+#' @param fix_compound_names A function to fix compound names (e.g., from an external package).
+#' @param redundancy_fixer A function to reduce redundancy (e.g., from an external package).
+#' @return A list containing the final, processed annotation data frame and a samples data frame for visualization.
+#' @importFrom dplyr %>% filter select mutate full_join bind_rows
+#' @importFrom tidyr pivot_longer
 #' @export
 collapse_and_reduce_networks <- function(
     propagated.annotation.data.with.samples,
