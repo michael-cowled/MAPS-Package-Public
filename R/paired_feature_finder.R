@@ -20,9 +20,10 @@ paired_feature_finder <- function(ID, gnps.cluster.pairs) {
     dplyr::filter(CLUSTERID1 == ID | CLUSTERID2 == ID) %>%
     dplyr::arrange(desc(Cosine)) # Sort by decreasing cosine similarity
 
-  paired_values <- filtered_pairs %>%
+  # Return a dataframe with both the paired ID and the Cosine score
+  paired_results <- filtered_pairs %>%
     dplyr::mutate(paired_value = ifelse(CLUSTERID1 == ID, CLUSTERID2, CLUSTERID1)) %>%
-    dplyr::pull(paired_value)
+    dplyr::select(paired_value, Cosine)
 
-  return(paired_values)
+  return(paired_results)
 }

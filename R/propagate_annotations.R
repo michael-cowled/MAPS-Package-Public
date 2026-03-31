@@ -39,17 +39,22 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
     final_result_data <- list(value = NA, column = NA, superclass = NA)
     parent_smiles <- NA_character_
 
-    for (value in paired_values) {
+    # Get the dataframe of paired features and their cosine scores
+    paired_df <- paired_feature_finder(i, gnps.cluster.pairs)
+
+    selected_cosine_score <- NA_real_ # Initialize empty score
+
+    # Iterate over the rows of the new dataframe
+    for (row_idx in seq_len(nrow(paired_df))) {
+      value <- paired_df$paired_value[row_idx]
+      current_cosine <- paired_df$Cosine[row_idx]
+
       # Extract metadata for the potential parent
       parent_meta <- full.annotation.data %>%
         dplyr::filter(feature.ID == value) %>%
         dplyr::select(annotation.type, confidence.level, smiles) %>%
         dplyr::slice(1)
 
-      # --- STRICT SOURCE GUARD ---
-      # Parent must:
-      # 1. Have a confidence level that is NOT "3" (so 1 or 2)
-      # 2. NOT have a missing confidence level
       is_valid_source <- !is.na(parent_meta$confidence.level) &&
         parent_meta$confidence.level != "3"
 
@@ -61,20 +66,21 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
           final_result_data <- result_data
           parent_smiles <- parent_meta$smiles
           final_result_data$column <- parent_meta$annotation.type
+          selected_cosine_score <- current_cosine # Save the winning cosine score
           break
         }
       }
     }
 
-    # 3. Construct the output row
+    # 3. Construct the output row (add confidence.score here)
     if (!is.na(selected_paired_value)) {
       tibble::tibble(
         feature.ID = i,
         Probable.Analogue.Of = final_result_data$value,
         Propagated.Feature.ID = selected_paired_value,
-        Propagated.Annotation.Type = final_result_data$column,
-        Propagated.Annotation.Class = final_result_data$superclass,
-        Propagated.Smiles = parent_smiles
+        Propagated.Smiles = parent_smiles,
+        Propagated.Annotation.Class = final_result_data$column,
+        confidence.score = selected_cosine_score # Pass the cosine score here!
       )
     } else {
       tibble::tibble()

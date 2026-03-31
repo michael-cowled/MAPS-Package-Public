@@ -86,6 +86,12 @@ append_propagated_annotations <- function(full.annotation.data,
         confidence.level
       ),
 
+      confidence.score = ifelse(
+        propagation_mask & !is.na(confidence.score.y), # Or whatever your joined propagated score column is named
+        confidence.score.y,
+        confidence.score
+      ),
+
       NPC.pathway = as.character(NPC.pathway), # Coerce to character for consistent updating
 
       NPC.superclass = ifelse(
