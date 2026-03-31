@@ -47,18 +47,23 @@ merge_and_append_data <- function(new_data, existing_annotations) {
     }
   }
 
-  # --- NEW STEP ---
-  # 3. Explicitly standardize the 'mz.diff.ppm' column to numeric in both data frames
-  # This prevents the <character> and <double> type mismatch error during bind_rows.
-  # Note: If 'mz.diff.ppm' contains non-numeric strings (like "N/A"), they will become NA,
-  # which is the likely source of the warning you saw previously.
+  # --- NEW STEP (Updated) ---
+  # 3. Explicitly standardize problematic columns to consistent types
+
+  # Standardize 'mz.diff.ppm' to numeric
   if ("mz.diff.ppm" %in% colnames(existing_annotations)) {
-    existing_annotations <- existing_annotations %>%
-      dplyr::mutate(mz.diff.ppm = as.numeric(mz.diff.ppm))
+    existing_annotations$mz.diff.ppm <- as.numeric(existing_annotations$mz.diff.ppm)
   }
   if ("mz.diff.ppm" %in% colnames(new_data)) {
-    new_data <- new_data %>%
-      dplyr::mutate(mz.diff.ppm = as.numeric(mz.diff.ppm))
+    new_data$mz.diff.ppm <- as.numeric(new_data$mz.diff.ppm)
+  }
+
+  # Standardize 'feature.ID' to character to prevent type mismatch
+  if ("feature.ID" %in% colnames(existing_annotations)) {
+    existing_annotations$feature.ID <- as.character(existing_annotations$feature.ID)
+  }
+  if ("feature.ID" %in% colnames(new_data)) {
+    new_data$feature.ID <- as.character(new_data$feature.ID)
   }
 
   # 4. Append the new data to the existing annotations
