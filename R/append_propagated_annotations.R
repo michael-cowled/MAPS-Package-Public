@@ -89,12 +89,6 @@ append_propagated_annotations <- function(full.annotation.data,
 
       NPC.pathway = as.character(NPC.pathway), # Coerce to character for consistent updating
 
-      NPC.superclass = ifelse(
-        propagation_mask & !is.na( Propagated.Annotation.Class),
-        Propagated.Annotation.Class,
-        NPC.superclass
-      ),
-
       annotation.type = ifelse(
         propagation_mask,
         "GNPS Propagation",

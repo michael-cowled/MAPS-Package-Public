@@ -79,8 +79,8 @@ propagate_annotations <- function(full.annotation.data, gnps.cluster.pairs, pair
         Probable.Analogue.Of = final_result_data$value,
         Propagated.Feature.ID = selected_paired_value,
         Propagated.Smiles = parent_smiles,
-        Propagated.Annotation.Class = final_result_data$column,
-        Propagated.Confidence.Score = selected_cosine_score # Give it a unique name here!
+        Propagated.Annotation.Type = final_result_data$column, # Changed from .Class to .Type
+        Propagated.Confidence.Score = selected_cosine_score
       )
     } else {
       tibble::tibble()
