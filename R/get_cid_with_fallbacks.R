@@ -70,19 +70,23 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
   # --- 2. PubChem lookup ---
   resolved_cid <- NA_real_
 
-  # Call `get_pubchem_lite` without the "cids" argument
-  resolved_cid <- get_pubchem_lite(name, "name")
+  # Encode slashes as %2F to prevent API path routing errors
+  name_api_safe <- gsub("/", "%2F", name)
+  smiles_api_safe <- if(!is.na(smiles_clean) && smiles_clean != "" && smiles_clean != "N/A") gsub("/", "%2F", smiles) else NA
 
-  if (is.na(resolved_cid) && !is.na(smiles_clean) && smiles_clean != "" && smiles_clean != "N/A") {
+  # Call `get_pubchem_lite` using the API-safe name
+  resolved_cid <- get_pubchem_lite(name_api_safe, "name")
+
+  if (is.na(resolved_cid) && !is.na(smiles_api_safe)) {
     message(paste0("  Name lookup failed for '", name, "'. Trying SMILES: ", smiles))
-    # Call `get_pubchem_lite` without the "cids" argument
-    resolved_cid <- get_pubchem_lite(smiles, "smiles")
+    # Call `get_pubchem_lite` using the API-safe SMILES
+    resolved_cid <- get_pubchem_lite(smiles_api_safe, "smiles")
   }
 
   if (is.na(resolved_cid)) {
     message(paste0("  Name and SMILES failed for '", name, "'. Trying synonym search..."))
-    # Call `get_pubchem_lite` without the "cids" argument
-    resolved_cid <- get_pubchem_lite(name, "synonym")
+    # Call `get_pubchem_lite` using the API-safe name
+    resolved_cid <- get_pubchem_lite(name_api_safe, "synonym")
   }
 
   # --- 3. Update cache ---

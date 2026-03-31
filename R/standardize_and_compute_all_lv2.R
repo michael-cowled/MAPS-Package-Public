@@ -1,6 +1,6 @@
 #' @title Standardize and Compute ID Probability for all Level 2 Annotations
 #' @description Binds different Level 2 annotation data frames and applies a series
-#'     of standardization and deduplication steps.
+#'      of standardization and deduplication steps.
 #'
 #' @param gnps.data.lv2.low.conf A data frame of low confidence GNPS annotations.
 #' @param ms2query.data.lv2 A data frame of Level 2 MS2Query annotations.
@@ -10,9 +10,9 @@
 #' @param ms2query.prob A numeric value. The probability threshold for MS2Query.
 #'
 #' @return A list with two elements: `data` (the processed Level 2 data frame)
-#'     and `cache` (the updated CID cache data frame).
+#'      and `cache` (the updated CID cache data frame).
 #'
-#' @importFrom dplyr %>%
+#' @importFrom dplyr %>% bind_rows
 #'
 #' @export
 standardize_and_compute_all_lv2 <- function(
@@ -25,8 +25,18 @@ standardize_and_compute_all_lv2 <- function(
     standardisation,
     cache.location) {
 
-  lv2.annotations <- rbind(gnps.data.lv2.low.conf, ms2query.data.lv2)
+  # --- THE FIX: Force numeric types before binding to prevent crashes ---
+  if ("confidence.score" %in% names(gnps.data.lv2.low.conf)) {
+    gnps.data.lv2.low.conf$confidence.score <- suppressWarnings(as.numeric(gnps.data.lv2.low.conf$confidence.score))
+  }
+  if ("confidence.score" %in% names(ms2query.data.lv2)) {
+    ms2query.data.lv2$confidence.score <- suppressWarnings(as.numeric(ms2query.data.lv2$confidence.score))
+  }
 
+  # Use dplyr::bind_rows safely handles differing column structures better than rbind
+  lv2.annotations <- dplyr::bind_rows(gnps.data.lv2.low.conf, ms2query.data.lv2)
+
+  # Proceed with standardization
   lv2.annotations$smiles <- trimws(lv2.annotations$smiles)
 
   lv2.annotations$CID <- NA
