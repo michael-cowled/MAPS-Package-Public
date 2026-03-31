@@ -1,5 +1,5 @@
 #' @title Format and Append MS2Query Analogue Annotations
-#' @description Processes MS2Query Level 3 analogue data, calculates mass differences to identify specific modifications, formats the compound names, and prepares the data for merging.
+#' @description Processes MS2Query Level 3 analogue data, calculates absolute mass differences to identify specific modifications, unconditionally formats the compound names as analogues, and prepares the data for merging.
 #'
 #' @param ms2query_data A data frame containing MS2Query Level 3 annotations.
 #' @param existing_annotations A data frame of existing annotations.
@@ -14,40 +14,47 @@ append_ms2query_analogues <- function(ms2query_data, existing_annotations, mod_d
 
   # 1. Standardize column names to match existing annotations
   common_cols <- intersect(names(ms2query_data), names(existing_annotations))
-
-  # Find the correct name column
   name_col <- if ("compound.name" %in% names(ms2query_data)) "compound.name" else "compound_name"
 
-  # 2. Calculate mass deltas and apply the Modification DB
-  if (name_col %in% names(ms2query_data) && "mz" %in% names(ms2query_data) && "analogue_mz" %in% names(ms2query_data)) {
+  if (name_col %in% names(ms2query_data)) {
 
-    ms2query_data <- ms2query_data %>%
-      dplyr::mutate(
-        mz_delta = as.double(mz) - as.double(analogue_mz), # Remember to check 'analogue_mz' name!
+    # 2. Set the baseline assumption: Everything is at least a "Probable" analogue
+    ms2query_data$mod_prefix <- "Probable"
 
-        mod_name = purrr::map_chr(mz_delta, function(x) {
-          if (is.na(x)) return("Probable")
+    # 3. Attempt to upgrade "Probable" to a specific modification (if mass columns exist)
+    # ---> IMPORTANT: Change 'analogue_mz' to whatever MS2Query calls the library match's mass! <---
+    if ("mz" %in% names(ms2query_data) && "analogue_mz" %in% names(ms2query_data)) {
 
-          diffs <- abs(mod_db$Mass.Change - x)
-          match_idx <- which(diffs <= abs_tol)
+      ms2query_data <- ms2query_data %>%
+        dplyr::mutate(
+          mz_delta = as.double(mz) - as.double(analogue_mz),
 
-          if (length(match_idx) > 0) {
-            best_match <- match_idx[which.min(diffs[match_idx])]
-            return(mod_db$Modification[best_match])
-          } else {
-            return("Probable")
-          }
-        })
-      )
+          # Only overwrite the prefix if a specific modification is found within Dalton tolerance
+          mod_prefix = purrr::map_chr(mz_delta, function(x) {
+            if (is.na(x)) return("Probable")
 
-    # Update the compound name using base R to dynamically target 'name_col'
-    ms2query_data[[name_col]] <- paste0(ms2query_data$mod_name, " analogue of: ", ms2query_data[[name_col]])
+            diffs <- abs(mod_db$Mass.Change - x)
+            match_idx <- which(diffs <= abs_tol)
 
-    # Clean up calculation columns
-    ms2query_data <- ms2query_data %>% dplyr::select(-mz_delta, -mod_name)
+            if (length(match_idx) > 0) {
+              best_match <- match_idx[which.min(diffs[match_idx])]
+              return(mod_db$Modification[best_match])
+            } else {
+              return("Probable")
+            }
+          })
+        ) %>%
+        dplyr::select(-mz_delta) # Clean up the delta column
+    }
+
+    # 4. UNCONDITIONALLY apply the analogue naming structure to ALL hits
+    ms2query_data[[name_col]] <- paste0(ms2query_data$mod_prefix, " analogue of: ", ms2query_data[[name_col]])
+
+    # Clean up the temporary prefix column
+    ms2query_data <- ms2query_data %>% dplyr::select(-mod_prefix)
   }
 
-  # 3. Ensure critical joining columns (like feature.ID) are Character/Numeric matched
+  # 5. Ensure critical joining columns are Character/Numeric matched
   if ("feature.ID" %in% names(ms2query_data)) {
     ms2query_data$feature.ID <- as.numeric(ms2query_data$feature.ID)
   }
@@ -55,6 +62,5 @@ append_ms2query_analogues <- function(ms2query_data, existing_annotations, mod_d
     existing_annotations$feature.ID <- as.numeric(existing_annotations$feature.ID)
   }
 
-  # Return the nicely formatted dataframe
   return(ms2query_data)
 }
