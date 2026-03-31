@@ -2,34 +2,26 @@
 % Please edit documentation in R/redundancy_fixer.R
 \name{redundancy_fixer}
 \alias{redundancy_fixer}
-\title{Identify Redundant Features Based on SMILES and Retention Time}
+\title{Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time}
 \usage{
-redundancy_fixer(
-  dataset,
-  column_to_check = "Best.Annotation.Smiles",
-  rt_column = "rt",
-  rt_tolerance = 1
-)
+redundancy_fixer(dataset, rt_column = "rt", rt_tolerance = 1)
 }
 \arguments{
 \item{dataset}{A data frame containing the data to process.}
 
-\item{column_to_check}{Column name (as string) that contains the identifier for grouping (e.g., SMILES).}
-
 \item{rt_column}{Column name (as string) indicating retention time.}
 
-\item{rt_tolerance}{Numeric value specifying the maximum allowable RT difference to consider features redundant.}
+\item{rt_tolerance}{Numeric value specifying the maximum allowable RT difference.}
 }
 \value{
 The original dataset with a new logical column \code{redundant}, indicating flagged redundant rows.
 }
 \description{
-Flags potentially redundant entries in a dataset based on a shared SMILES value and similar retention time (RT).
-Groups features with identical SMILES whose RT values are within a specified tolerance.
-For each RT group, all but the first occurrence are marked as redundant.
-}
-\examples{
-\dontrun{
-cleaned <- redundancy_fixer(mydata, column_to_check = "Best.Annotation.Smiles", rt_column = "rt", rt_tolerance = 1)
+Flags potentially redundant entries in a dataset based on:
+\enumerate{
+\item CID
+\item Identical compound.name
+\item A combination of compound.name AND smiles
+It never checks 'smiles' exclusively.
 }
 }

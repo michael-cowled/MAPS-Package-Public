@@ -290,11 +290,17 @@ MAPS <- function(
   ms2query.new <- ms2query.data.lv3[ms2query.data.lv3$feature.ID %in% unique_ids, ]
 
   if (nrow(ms2query.new) > 0) {
-    # Prefix the names before merging
-    ms2query.new$compound.name <- paste0("Analogue of ", ms2query.new$compound.name)
 
-    # Run the clean merge with only the new data
-    lv1.lv2.lv3.annotations <- merge_and_append_data(
+    # 1. Format the new MS2Query hits and map modifications
+    ms2query.new <- MAPS.Package::append_ms2query_analogues(
+      ms2query_data = ms2query.new,
+      existing_annotations = lv1.lv2.lv3.annotations,
+      mod_db = modification_db,
+      abs_tol = 0.01
+    )
+
+    # 2. Run the clean merge with only the new data
+    lv1.lv2.lv3.annotations <- MAPS.Package::merge_and_append_data(
       new_data = ms2query.new,
       existing_annotations = lv1.lv2.lv3.annotations
     )

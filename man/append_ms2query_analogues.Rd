@@ -2,18 +2,27 @@
 % Please edit documentation in R/append_ms2query_analogues.R
 \name{append_ms2query_analogues}
 \alias{append_ms2query_analogues}
-\title{Append MS2Query Analogue Annotations}
+\title{Format and Append MS2Query Analogue Annotations}
 \usage{
-append_ms2query_analogues(ms2query_data, existing_annotations)
+append_ms2query_analogues(
+  ms2query_data,
+  existing_annotations,
+  mod_db,
+  abs_tol = 0.01
+)
 }
 \arguments{
 \item{ms2query_data}{A data frame containing MS2Query Level 3 annotations.}
 
-\item{existing_annotations}{A data frame of existing annotations (lv1, lv2, lv3).}
+\item{existing_annotations}{A data frame of existing annotations.}
+
+\item{mod_db}{The modification dataframe.}
+
+\item{abs_tol}{The absolute mass tolerance in Daltons (default 0.01).}
 }
 \value{
-The updated annotations data frame with MS2Query data appended.
+The updated MS2Query data frame, formatted and ready for merging.
 }
 \description{
-Processes and appends MS2Query Level 3 analogue data to existing annotations.
+Processes MS2Query Level 3 analogue data, calculates mass differences to identify specific modifications, formats the compound names, and prepares the data for merging.
 }

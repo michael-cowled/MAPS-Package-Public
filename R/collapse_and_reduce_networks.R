@@ -1,5 +1,5 @@
 #' @title Collapse Ion Identity Networks and Reduce Redundancy
-#' @description This function collapses ion identity networks to retain the best annotation and then reduces redundancy based on SMILES. It processes the full annotation data, handles samples, and tidies the final output.
+#' @description This function collapses ion identity networks to retain the best annotation and then reduces redundancy based on a 3-tier hierarchy (CID, Name, Name+SMILES). It processes the full annotation data, handles samples, and tidies the final output.
 #'
 #' @param propagated.annotation.data.with.samples The main data frame containing all annotations.
 #' @param sample.data2 The processed sample data with peak areas, before presence/absence conversion.
@@ -8,7 +8,7 @@
 #' @param fix_compound_names A function to fix compound names (e.g., from an external package).
 #' @param redundancy_fixer A function to reduce redundancy (e.g., from an external package).
 #' @return A list containing the final, processed annotation data frame and a samples data frame for visualization.
-#' @importFrom dplyr %>% filter select mutate full_join
+#' @importFrom dplyr %>% filter select mutate full_join bind_rows
 #' @importFrom tidyr pivot_longer
 #' @export
 collapse_and_reduce_networks <- function(
@@ -57,29 +57,28 @@ collapse_and_reduce_networks <- function(
   protected_data <- final_annotation_df %>%
     dplyr::filter(annotation.type == "ms2query" & confidence.level == "3")
 
-  # 2. Dataset for Redundancy Check: Has SMILES and is NOT protected
+  # 2. Dataset for Redundancy Check: ALL unprotected data (SMILES or no SMILES)
+  # Because the new redundancy fixer checks CID and Name, we evaluate everything else here.
   dataset <- final_annotation_df %>%
-    dplyr::filter(!is.na(smiles) & smiles != "N/A") %>%
-    dplyr::filter(!(feature.ID %in% protected_data$feature.ID))
-
-  # 3. Other Data: No SMILES
-  other_data <- final_annotation_df %>%
-    dplyr::filter((is.na(smiles) | smiles == "N/A")) %>%
     dplyr::filter(!(feature.ID %in% protected_data$feature.ID))
 
   # Ensure RT is numeric for safe processing
   if("rt" %in% names(dataset)) dataset$rt <- as.numeric(dataset$rt)
-  if("rt" %in% names(other_data)) other_data$rt <- as.numeric(other_data$rt)
   if("rt" %in% names(protected_data)) protected_data$rt <- as.numeric(protected_data$rt)
 
   # Run redundancy fixer only on the unprotected dataset
   if(nrow(dataset) > 0) {
-    dataset$redundant <- FALSE
-    dataset <- redundancy_fixer(dataset, column_to_check = "smiles")
+    # THE FIX: Removed column_to_check, calling the 3-tier function directly
+    dataset <- redundancy_fixer(dataset, rt_column = "rt", rt_tolerance = 1)
   }
 
-  # Combine all three streams back together
-  final_annotation_df <- dplyr::bind_rows(dataset, other_data, protected_data)
+  # Ensure protected data gets the 'redundant' column so bind_rows doesn't create NAs
+  if(nrow(protected_data) > 0) {
+    protected_data$redundant <- FALSE
+  }
+
+  # Combine streams back together (Now just two streams instead of three)
+  final_annotation_df <- dplyr::bind_rows(dataset, protected_data)
 
   return(list(
     final_annotation_df = final_annotation_df,
