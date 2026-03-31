@@ -30,5 +30,5 @@ collapse_and_reduce_networks(
 A list containing the final, processed annotation data frame and a samples data frame for visualization.
 }
 \description{
-This function collapses ion identity networks to retain the best annotation and then reduces redundancy based on SMILES. It processes the full annotation data, handles samples, and tidies the final output.
+This function collapses ion identity networks to retain the best annotation and then reduces redundancy based on a 3-tier hierarchy (CID, Name, Name+SMILES). It processes the full annotation data, handles samples, and tidies the final output.
 }

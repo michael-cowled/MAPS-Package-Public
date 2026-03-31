@@ -24,5 +24,5 @@ append_ms2query_analogues(
 The updated MS2Query data frame, formatted and ready for merging.
 }
 \description{
-Processes MS2Query Level 3 analogue data, calculates mass differences to identify specific modifications, formats the compound names, and prepares the data for merging.
+Processes MS2Query Level 3 analogue data, maps the existing mz.diff against a modification database, unconditionally formats the compound names, and prepares the data for merging.
 }

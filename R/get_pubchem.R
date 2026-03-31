@@ -21,7 +21,10 @@ get_pubchem_lite <- function(query, type, property = "cids") {
 
   # Name and synonym lookups still use GET
   if (type == "name") {
-    url <- paste0(base_url, "/compound/name/", URLencode(query), "/cids/JSON")
+    # THE FIX: Added reserved = TRUE so slashes become %2F instead of breaking the URL path
+    safe_query <- URLencode(query, reserved = TRUE)
+    url <- paste0(base_url, "/compound/name/", safe_query, "/cids/JSON")
+
     response <- tryCatch(fromJSON(url), error = function(e) {
       message("[get_pubchem ERROR] Name CID lookup failed for '", query, "': ", e$message)
       return(NULL)
@@ -31,7 +34,10 @@ get_pubchem_lite <- function(query, type, property = "cids") {
   }
 
   if (type == "synonym") {
-    url <- paste0(base_url, "/compound/name/", URLencode(query), "/synonyms/JSON")
+    # THE FIX: Added reserved = TRUE here as well
+    safe_query <- URLencode(query, reserved = TRUE)
+    url <- paste0(base_url, "/compound/name/", safe_query, "/synonyms/JSON")
+
     response <- tryCatch(fromJSON(url), error = function(e) {
       message("[get_pubchem ERROR] Synonym CID lookup failed for '", query, "': ", e$message)
       return(NULL)
@@ -47,6 +53,7 @@ get_pubchem_lite <- function(query, type, property = "cids") {
   if (type == "smiles") {
     url <- paste0(base_url, "/compound/smiles/cids/JSON")
     response <- tryCatch({
+      # POST requests automatically encode the body, so slashes in SMILES are 100% safe here!
       res <- POST(url, body = list(smiles = query), encode = "form")
       if (status_code(res) != 200) stop("HTTP error ", status_code(res))
       fromJSON(content(res, as = "text", encoding = "UTF-8"))

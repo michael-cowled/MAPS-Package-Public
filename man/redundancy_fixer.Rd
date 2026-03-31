@@ -14,7 +14,7 @@ redundancy_fixer(dataset, rt_column = "rt", rt_tolerance = 1)
 \item{rt_tolerance}{Numeric value specifying the maximum allowable RT difference.}
 }
 \value{
-The original dataset with a new logical column \code{redundant}, indicating flagged redundant rows.
+The original dataset with a new logical column \code{redundant}.
 }
 \description{
 Flags potentially redundant entries in a dataset based on:
@@ -22,6 +22,6 @@ Flags potentially redundant entries in a dataset based on:
 \item CID
 \item Identical compound.name
 \item A combination of compound.name AND smiles
-It never checks 'smiles' exclusively.
+Explicitly sorts by confidence to protect Level 1/2 annotations.
 }
 }
