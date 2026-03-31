@@ -44,7 +44,9 @@ process_ms2query_data <- function(ms2query.data.path, lv1.and.lv2.annotations, m
 
   # Standardise compound names
   ms2query.data <- fix_compound_names(ms2query.data, "compound.name")
-  ms2query.data$mz.diff <- as.numeric(ms2query.data$mz.diff)
+  ms2query.data$mz.diff <- suppressWarnings(as.numeric(ms2query.data$mz.diff))
+  ms2query.data$confidence.score <- suppressWarnings(as.numeric(ms2query.data$confidence.score))
+  ms2query.data$precursor_mz <- suppressWarnings(as.numeric(ms2query.data$precursor_mz))
 
   # Calculate ppm difference and filter by tolerance
   ms2query.data <- ms2query.data %>%
