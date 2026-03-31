@@ -287,11 +287,8 @@ MAPS <- function(
 
   # Find truly new features
   unique_ids <- setdiff(ms2query.data.lv3$feature.ID, lv1.lv2.lv3.annotations$feature.ID)
-
-  # FIX: Actually subset the data to only include the new features
   ms2query.new <- ms2query.data.lv3[ms2query.data.lv3$feature.ID %in% unique_ids, ]
 
-  # FIX: Check the nrow of the subsetted data, not the whole dataset
   if (nrow(ms2query.new) > 0) {
     # Prefix the names before merging
     ms2query.new$compound.name <- paste0("Analogue of ", ms2query.new$compound.name)
