@@ -11,7 +11,7 @@ fix_compound_names <- function(df, columns) {
   requireNamespace("data.table", quietly = TRUE)
   dt <- data.table::as.data.table(df)
 
-  # Added the "::" pattern at the beginning to strip metadata early
+  # 30 Patterns
   patterns <- c(
     "[[:space:]]*::.*", "\\.(alpha|beta|gamma|omega)\\.-", "\\.(DELTA)\\.",
     "[[:space:]]*\\[IIN-based(?:[[:space:]]+on)?[[:space:]]*:[[:space:]]*[^)]*\\]",
@@ -21,17 +21,19 @@ fix_compound_names <- function(df, columns) {
     "_", "\\[", "\\]", "\\{", "\\}", " :102040", " :205060",
     " - ", "30.0 eV", "Massbank:[[:alnum:]]+\\s? ", "MassbankEU:[[:alnum:]]+\\s? ",
     "MoNA:[[:alnum:]]+\\s? ", " \\(Chimeric precursor selection\\)",
-    "; \\(M\\+.*", " M+formate"
+    "; \\(M\\+.*", " M\\+formate" # <- Added \\ to escape the plus sign
   )
 
+  # 30 Replacements (Added the missing "" at position 15)
   replacements <- c(
     "", "\\1-", "delta-", "", "", "", "", "", "",
-    "", "", "", "", "", " ", "(", ")", "(", ")", "",
-    "", "", "", "", "", "", "", "", ""
+    "", "", "", "", "", "", # <- The missing "" for "\\|.*" is added here
+    " ", "(", ")", "(", ")", "", "",
+    "", "", "", "", "", "", "", ""
   )
 
   for (col in columns) {
-    # Vectorized cleanup is significantly faster than row-wise loops
+    # Vectorized cleanup
     for (i in seq_along(patterns)) {
       dt[[col]] <- gsub(patterns[i], replacements[i], dt[[col]], ignore.case = TRUE)
     }
