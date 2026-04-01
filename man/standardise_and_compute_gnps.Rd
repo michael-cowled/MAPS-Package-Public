@@ -12,8 +12,8 @@ standardise_and_compute_gnps(
   gnps.prob,
   standardisation = standardisation,
   cache.location,
-  enable_local_db = TRUE,
-  enable_api = TRUE
+  enable_local_db = enable_local_db,
+  enable_api = enable_api
 )
 }
 \arguments{

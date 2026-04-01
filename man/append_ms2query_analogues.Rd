@@ -8,7 +8,14 @@ append_ms2query_analogues(
   ms2query_data,
   existing_annotations,
   mod_db,
-  abs_tol = 0.01
+  abs_tol = 0.01,
+  cid_cache_df,
+  lipids.file,
+  cid_database_path,
+  standardise_annotation,
+  standardisation,
+  cache.location,
+  enable_local_db = TRUE
 )
 }
 \arguments{
@@ -19,10 +26,24 @@ append_ms2query_analogues(
 \item{mod_db}{The modification dataframe.}
 
 \item{abs_tol}{The absolute mass tolerance in Daltons (default 0.01).}
+
+\item{cid_cache_df}{A data frame used for caching CID lookups.}
+
+\item{lipids.file}{Path to a lipids file for standardization.}
+
+\item{cid_database_path}{Path to the PubChem CID database.}
+
+\item{standardise_annotation}{A function to standardize annotations.}
+
+\item{standardisation}{Logical; whether to run the standardisation passes.}
+
+\item{cache.location}{Path to save the updated cache.}
+
+\item{enable_local_db}{Logical; whether to use the local SQLite DB for property lookups.}
 }
 \value{
-The updated MS2Query data frame, formatted and ready for merging.
+A list containing the updated annotations data frame and the updated CID cache.
 }
 \description{
-Processes MS2Query Level 3 analogue data, maps the existing mz.diff against a modification database, unconditionally formats the compound names, and prepares the data for merging.
+Processes MS2Query Level 3 analogue data. Standardises base annotations offline, maps the existing mz.diff against a modification database, unconditionally formats the compound names, and prepares the data for merging.
 }

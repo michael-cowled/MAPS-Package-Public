@@ -23,8 +23,8 @@ MAPS(
   msnovelist,
   modification_db,
   updateProgress = NULL,
-  enable_local_db = TRUE,
-  enable_api = TRUE
+  enable_local_db = enable_local_db,
+  enable_api = enable_api
 )
 }
 \arguments{

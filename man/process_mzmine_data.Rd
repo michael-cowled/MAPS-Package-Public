@@ -11,8 +11,8 @@ process_mzmine_data(
   lipids.file.path = lipids.location,
   cid.database.path = NULL,
   standardisation,
-  enable_local_db = TRUE,
-  enable_api = TRUE
+  enable_local_db = enable_local_db,
+  enable_api = enable_api
 )
 }
 \arguments{
