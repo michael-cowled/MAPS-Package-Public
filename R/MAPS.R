@@ -308,7 +308,14 @@ MAPS <- function(
       ms2query_data = ms2query.new,
       existing_annotations = lv1.lv2.lv3.annotations,
       mod_db = modification_db,
-      abs_tol = 0.01
+      abs_tol = 0.01,
+      cid_cache_df = cid_cache_df,
+      lipids.file = lipids.file,
+      cid_database_path = cid_database_path,
+      standardise_annotation = MAPS.Package::standardise_annotation,
+      standardisation = standardisation,
+      cache.location = cache.location,
+      enable_local_db = enable_local_db
     )
 
     # 2. Run the clean merge with only the new data
