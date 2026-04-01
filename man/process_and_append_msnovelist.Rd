@@ -10,7 +10,11 @@ process_and_append_msnovelist(
   cid_cache_df,
   lipids.file,
   cid_database_path,
-  compute_id_prob
+  compute_id_prob,
+  standardise_annotation,
+  standardisation,
+  cache.location,
+  enable_local_db = TRUE
 )
 }
 \arguments{
@@ -26,11 +30,17 @@ process_and_append_msnovelist(
 
 \item{compute_id_prob}{A function to compute identification probability.}
 
+\item{standardise_annotation}{A function to standardize annotations.}
+
+\item{standardisation}{Logical; whether to run the standardisation passes.}
+
+\item{cache.location}{Path to save the updated cache.}
+
+\item{enable_local_db}{Logical; whether to use the local SQLite DB for property lookups.}
+
 \item{msn.threshold}{A numeric threshold for MSNovelist ModelScore.}
 
 \item{deduplicate_data}{A function to remove duplicate annotations.}
-
-\item{standardise_annotation}{A function to standardize annotations.}
 }
 \value{
 A list containing the updated annotations data frame and the updated CID cache.

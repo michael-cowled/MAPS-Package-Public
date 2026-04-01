@@ -34,7 +34,9 @@ MAPS <- function(
     lv2.mzmine,
     msnovelist,
     modification_db,
-    updateProgress = NULL # <--- NEW ARGUMENT
+    updateProgress = NULL,
+    enable_local_db = enable_local_db,
+    enable_api = enable_api
 ) {
 
   # Helper function to safely call the progress update
@@ -85,7 +87,9 @@ MAPS <- function(
   processed_data <- MAPS.Package::process_mzmine_data(mzmine.annotations, gnps.prob,
                                                       cid.cache.path = cache.location,
                                                       lipids.file.path = lipids.location,
-                                                      standardisation = standardisation)
+                                                      standardisation = standardisation,
+                                                      enable_local_db = enable_local_db,
+                                                      enable_api = enable_api)
 
   mzmine.annotations.final <- processed_data$annotations.data
   cid_cache_df <- processed_data$cid.cache
@@ -103,7 +107,8 @@ MAPS <- function(
                                                                    cid_cache_df, lipids.file, gnps.prob,
                                                                    cid_database_path, standardisation,
                                                                    level = "1", type = "authentic standard",
-                                                                   cache.location)
+                                                                   cache.location, enable_local_db = enable_local_db,
+                                                                   enable_api = enable_api)
       mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
     }
@@ -117,7 +122,8 @@ MAPS <- function(
                                                                  cid_cache_df, lipids.file, gnps.prob,
                                                                  cid_database_path, standardisation,
                                                                  level = "2", type = "mzmine",
-                                                                 cache.location)
+                                                                 cache.location, enable_local_db = enable_local_db,
+                                                                 enable_api = enable_api)
     mzmine.annotations.final <- processed_data$annotations.data
     cid_cache_df <- processed_data$cid.cache
   }
@@ -166,7 +172,9 @@ MAPS <- function(
       prog("3/12: Standardizing GNPS Level 2 (High Conf)", 0.30)
       gnps_lv2_results <- MAPS.Package::standardise_and_compute_gnps(
         gnps.data.lv2.high.conf, cid_cache_df, lipids.file,
-        cid_database_path, gnps.prob, standardisation, cache.location
+        cid_database_path, gnps.prob, standardisation, cache.location,
+        enable_local_db = enable_local_db,
+        enable_api = enable_api
       )
 
       gnps.data.lv2.high.conf <- gnps_lv2_results$data
@@ -211,7 +219,9 @@ MAPS <- function(
     cid_database.path = cid_database_path,
     ms2query.prob = ms2query.prob,
     standardisation = standardisation,
-    cache.location
+    cache.location,
+    enable_local_db = enable_local_db,
+    enable_api = enable_api
   )
 
   lv2.annotations <- lv2_processed_results$data
@@ -269,7 +279,9 @@ MAPS <- function(
     deduplicate_data = MAPS.Package::deduplicate_data,
     standardise_annotation = MAPS.Package::standardise_annotation,
     standardisation = standardisation,
-    cache.location
+    cache.location,
+    enable_local_db = enable_local_db,
+    enable_api = enable_api
   )
 
   # Update annotations and cache before MSNovelist
@@ -294,14 +306,25 @@ MAPS <- function(
   ms2query.new <- ms2query.data.lv3[ms2query.data.lv3$feature.ID %in% unique_ids, ]
 
   if (nrow(ms2query.new) > 0) {
-
+    message("Processing MS2Query analogues")
     # 1. Format the new MS2Query hits and map modifications
-    ms2query.new <- MAPS.Package::append_ms2query_analogues(
+    analogue_results <- MAPS.Package::append_ms2query_analogues(
       ms2query_data = ms2query.new,
       existing_annotations = lv1.lv2.lv3.annotations,
       mod_db = modification_db,
-      abs_tol = 0.01
+      abs_tol = 0.01,
+      cid_cache_df = cid_cache_df,
+      lipids.file = lipids.file,
+      cid_database_path = cid_database_path,
+      standardise_annotation = MAPS.Package::standardise_annotation,
+      standardisation = standardisation,
+      cache.location = cache.location,
+      enable_local_db = enable_local_db
     )
+
+    # --- EXTRACT THE RESULTS ---
+    ms2query.new <- analogue_results$annotations
+    cid_cache_df <- analogue_results$cache # Keep the master cache updated!
 
     # 2. Run the clean merge with only the new data
     lv1.lv2.lv3.annotations <- MAPS.Package::merge_and_append_data(
@@ -312,18 +335,24 @@ MAPS <- function(
 
   # --- MSNovelist Integration (De Novo Structures) ---
   if (msnovelist == TRUE) {
+    message("Processing MSNovelist annotations")
     prog("7/12: Integrating MSNovelist de novo annotations", 0.65)
     msn_results <- MAPS.Package::process_and_append_msnovelist(
       msn.data = msn.data,
       existing_annotations = lv1.lv2.lv3.annotations,
-      cid_cache_df = cid_cache_df,
+      cid_cache_df = cid_cache_df, # This now benefits from the MS2Query cache updates!
       lipids.file = lipids.file,
       cid_database_path = cid_database_path,
-      compute_id_prob = MAPS.Package::compute_id_prob
+      compute_id_prob = MAPS.Package::compute_id_prob,
+      standardise_annotation = MAPS.Package::standardise_annotation,
+      standardisation = standardisation,
+      cache.location = cache.location,
+      enable_local_db = enable_local_db
     )
 
-    # Final Update
+    # --- EXTRACT THE RESULTS ---
     lv1.lv2.lv3.annotations <- msn_results$annotations
+    cid_cache_df <- msn_results$cache # Keep the master cache updated!
   }
 
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)

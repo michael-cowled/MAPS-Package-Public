@@ -10,6 +10,9 @@
 #' @param compute_id_prob A function to compute identification probability.
 #' @param deduplicate_data A function to remove duplicate annotations.
 #' @param standardise_annotation A function to standardize annotations.
+#' @param standardisation Logical; whether to run the standardisation passes.
+#' @param cache.location Path to save the updated cache.
+#' @param enable_local_db Logical; whether to use the local SQLite DB for property lookups.
 #'
 #' @return A list containing the updated annotations data frame and the updated CID cache.
 #' @export
@@ -19,7 +22,12 @@ process_and_append_msnovelist <- function(
     cid_cache_df,
     lipids.file,
     cid_database_path,
-    compute_id_prob
+    compute_id_prob,
+    standardise_annotation,
+    standardisation,
+    cache.location,
+    enable_local_db = TRUE
+    # Notice we don't pass enable_api here, preventing it from being toggled on
 ) {
   # 1. Load and Initial Clean
   msn.df <- read_checked_tsv(msn.data)
@@ -40,7 +48,7 @@ process_and_append_msnovelist <- function(
   # 3. Sort by Score (Closest to Zero is Best)
   # Since ModelScores are negative, "descending" puts -1.5 above -10.0
   msn.df <- msn.df %>%
-    dplyr::arrange(feature.ID, desc(confidence.score))
+    dplyr::arrange(feature.ID, dplyr::desc(confidence.score))
 
   # 4. Preparation for MAPS Pipeline
   missing_cols <- setdiff(colnames(existing_annotations), colnames(msn.df))
@@ -49,9 +57,25 @@ process_and_append_msnovelist <- function(
   # 5. ID Probability (We pass a dummy threshold of -Inf since you want all hits)
   msn.df <- compute_id_prob(msn.df, "confidence.score", threshold = -Inf)
 
-  final_msn <- msn.df
+  # 6. Standardise Annotations (FORCED OFFLINE MODE)
+  # We hardcode enable_api = FALSE so MSNovelist never reaches out to PubChem API
+  result <- standardise_annotation(
+    data = msn.df,
+    name_col = "compound.name",
+    smiles_col = "smiles",
+    cid_cache_df = cid_cache_df,
+    lipids.file = lipids.file,
+    cid_database_path = cid_database_path,
+    standardisation = standardisation,
+    cache.location = cache.location,
+    enable_local_db = enable_local_db,
+    enable_api = FALSE  # <-- Hardcoded to strictly block API overwrites
+  )
 
-  # 8. Metadata and Type Correction
+  final_msn <- result$data
+  updated_cid_cache_df <- result$cache
+
+  # 7. Metadata and Type Correction
   final_msn$annotation.type <- "MSNovelist"
   final_msn$confidence.level <- "3" # Per your previous setting
 
@@ -62,13 +86,15 @@ process_and_append_msnovelist <- function(
       confidence.score = as.numeric(confidence.score),
       Formula = as.character(Formula),
       IUPAC = as.character(IUPAC),
-      Monoisotopic.Mass = as.numeric(Monoisotopic.Mass)
+      Monoisotopic.Mass = as.numeric(Monoisotopic.Mass),
+      CID = as.numeric(CID) # Added to ensure CID matches existing annotations
     )
 
-  # 9. Final Merge
+  # 8. Final Merge
   updated_annotations <- existing_annotations %>%
     dplyr::mutate(feature.ID = as.numeric(feature.ID)) %>%
     dplyr::bind_rows(final_msn)
 
-  return(list(annotations = updated_annotations))
+  # Return both the annotations and the updated cache
+  return(list(annotations = updated_annotations, cache = updated_cid_cache_df))
 }

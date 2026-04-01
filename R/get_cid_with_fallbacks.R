@@ -7,70 +7,87 @@
 #' @param smiles A character string representing the compound SMILES (optional).
 #' @param cid_cache_df The data frame to be used as a cache, with columns LookupName and CID.
 #' @param lipids.file A data frame to use to lookup lipid names for PubChem CID lookups.
+#' @param offline Logical; if TRUE, strictly avoids live PubChem API lookups.
 #'
 #' @return A named list with keys: \code{CID} and the updated \code{cid_cache_df}.
 #' @export
-get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.file) {
+get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.file, offline = FALSE) {
 
-  # --- 0. Clean input for comparison ---
   name_clean <- trimws(tolower(name))
   smiles_clean <- if(!is.na(smiles)) trimws(tolower(smiles)) else NA
 
-  # --- 1. Check cache first ---
-  cached_entry <- cid_cache_df %>%
-    filter(!is.na(LookupName) & LookupName == name |
-             !is.na(SMILES) & SMILES == smiles) %>%
-    slice(1)
+  # ======================================================================
+  # --- 1. Fast Cache Check (Base R) ---
+  # ======================================================================
+  cache_idx <- which((!is.na(cid_cache_df$LookupName) & cid_cache_df$LookupName == name) |
+                       (!is.na(cid_cache_df$SMILES) & !is.na(smiles) & cid_cache_df$SMILES == smiles))
 
-  if (nrow(cached_entry) > 0 && !is.na(cached_entry$CID[1])) {
-    message(paste0("  [CACHE HIT] CID found for '", name, "' (CID: ", cached_entry$CID[1], ")"))
-    return(list(CID = cached_entry$CID[1], cache = cid_cache_df))
+  if (length(cache_idx) > 0) {
+    match_row <- cid_cache_df[cache_idx[1], ]
+    if (!is.na(match_row$CID)) {
+      message(paste0("  [CACHE HIT] CID found for '", name, "' (CID: ", match_row$CID, ")"))
+      return(list(CID = match_row$CID, cache = cid_cache_df))
+    }
   }
 
-  # --- 1b. Clean LipidMaps file ---
-  lipids.file.clean <- lipids.file %>%
-    mutate(CID_numeric = suppressWarnings(as.numeric(CID))) %>%
-    filter(!is.na(CID_numeric) & CID_numeric > 0) %>%
-    group_by(CID_numeric) %>%
-    summarise(
-      Name = first(na.omit(Name)),
-      Systematic.Name = first(na.omit(Systematic.Name)),
-      Abbreviation = first(na.omit(Abbreviation)),
-      HMDB.ID = first(na.omit(HMDB.ID)),
-      Synonyms = paste(unique(na.omit(Synonyms)), collapse = "; "),
-      smiles = first(na.omit(smiles)),
-      .groups = "drop"
+  # ======================================================================
+  # --- 2. EARLY EXIT: Offline Check ---
+  # ======================================================================
+  # If offline is TRUE, we stop right here and skip LipidMaps and PubChem.
+  if (offline) {
+    message(paste0("  [OFFLINE] Not found in cache. Skipping LipidMaps & PubChem API for '", name, "'."))
+    return(list(CID = NA_real_, cache = cid_cache_df))
+  }
+
+  # ======================================================================
+  # --- 3. Fast LipidMaps Check ---
+  # ======================================================================
+  if (!is.null(lipids.file) && nrow(lipids.file) > 0) {
+    synonym_pattern <- paste0("(^|;\\s*)", stringr::str_escape(name_clean), "(\\s*;|$)")
+
+    lipid_names <- if ("Name" %in% names(lipids.file)) tolower(trimws(lipids.file$Name)) else NA
+    lipid_sys <- if ("Systematic.Name" %in% names(lipids.file)) tolower(trimws(lipids.file$Systematic.Name)) else NA
+    lipid_abb <- if ("Abbreviation" %in% names(lipids.file)) tolower(trimws(lipids.file$Abbreviation)) else NA
+    lipid_syn <- if ("Synonyms" %in% names(lipids.file)) lipids.file$Synonyms else NA
+    lipid_smiles <- if ("smiles" %in% names(lipids.file)) tolower(trimws(lipids.file$smiles)) else NA
+
+    lipid_idx <- which(
+      (!is.na(lipid_names) & lipid_names == name_clean) |
+        (!is.na(lipid_sys) & lipid_sys == name_clean) |
+        (!is.na(lipid_abb) & lipid_abb == name_clean) |
+        (!is.na(lipid_syn) & grepl(synonym_pattern, tolower(lipid_syn))) |
+        (!is.na(smiles_clean) & !is.na(lipid_smiles) & lipid_smiles == smiles_clean)
     )
 
-  # --- 1c. Check LipidMaps ---
-  lipid_match <- lipids.file.clean %>%
-    rowwise() %>%
-    filter(
-      tolower(trimws(Name)) == name_clean |
-        tolower(trimws(Systematic.Name)) == name_clean |
-        tolower(trimws(Abbreviation)) == name_clean |
-        (!is.na(Synonyms) && name_clean %in% tolower(trimws(str_split(Synonyms, ";\\s*")[[1]]))) |
-        (!is.na(smiles) && !is.na(.data$smiles) && tolower(trimws(.data$smiles)) == smiles_clean)
-    ) %>%
-    ungroup()
+    if (length(lipid_idx) > 0) {
+      if (length(lipid_idx) > 1) {
+        message(paste0("  [LIPID DB WARNING] Multiple matches found for '", name, "'. Using first match."))
+      }
 
-  if (nrow(lipid_match) > 1) {
-    message(paste0("  [LIPID DB WARNING] Multiple matches found for '", name,
-                   "'. Using first match (CID: ", lipid_match$CID_numeric[1], ")"))
-    lipid_match <- lipid_match %>% slice(1)
+      lipid_match <- lipids.file[lipid_idx[1], ]
+
+      match_cid <- if ("CID_numeric" %in% names(lipid_match)) {
+        lipid_match$CID_numeric
+      } else if ("CID" %in% names(lipid_match)) {
+        suppressWarnings(as.numeric(lipid_match$CID))
+      } else {
+        NA_real_
+      }
+
+      if (!is.na(match_cid) && match_cid > 0) {
+        message(paste0("  [LIPID DB] Found CID for '", name, "' in lipids.file (CID: ", match_cid, ")"))
+        new_entry <- data.frame(LookupName = name, CID = match_cid, stringsAsFactors = FALSE)
+        if ("SMILES" %in% names(cid_cache_df)) new_entry$SMILES <- smiles
+
+        cid_cache_df <- rbind(cid_cache_df, new_entry)
+        return(list(CID = match_cid, cache = cid_cache_df))
+      }
+    }
   }
 
-  if (nrow(lipid_match) > 0 && !is.na(lipid_match$CID_numeric[1])) {
-    message(paste0("  [LIPID DB] Found CID for '", name, "' in lipids.file (CID: ", lipid_match$CID_numeric[1], ")"))
-    new_entry <- data.frame(LookupName = name, CID = lipid_match$CID_numeric[1], stringsAsFactors = FALSE)
-    cid_cache_df <- bind_rows(cid_cache_df, new_entry)
-    return(list(CID = lipid_match$CID_numeric[1], cache = cid_cache_df))
-  }
-
-  # --- 2. PubChem lookup ---
-  resolved_cid <- NA_real_
-
-  # Reverted: Send the raw, unencoded strings directly to the downstream function
+  # ======================================================================
+  # --- 4. PubChem API ---
+  # ======================================================================
   resolved_cid <- get_pubchem_lite(name, "name")
 
   if (is.na(resolved_cid) && !is.na(smiles_clean) && smiles_clean != "" && smiles_clean != "N/A") {
@@ -83,15 +100,20 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
     resolved_cid <- get_pubchem_lite(name, "synonym")
   }
 
-  # --- 3. Update cache ---
+  # ======================================================================
+  # --- 5. Update cache ---
+  # ======================================================================
   if (!is.na(resolved_cid)) {
     message(paste0("  [PUBCHEM] Found CID for '", name, "': ", resolved_cid))
-    new_entry <- data.frame(LookupName = name, CID = resolved_cid, stringsAsFactors = FALSE)
+    new_cid <- resolved_cid
   } else {
     message(paste0("  [PUBCHEM] No CID found for '", name, "'."))
-    new_entry <- data.frame(LookupName = name, CID = -1, stringsAsFactors = FALSE)
+    new_cid <- -1
   }
 
-  cid_cache_df <- bind_rows(cid_cache_df, new_entry)
-  return(list(CID = new_entry$CID[1], cache = cid_cache_df))
+  new_entry <- data.frame(LookupName = name, CID = new_cid, stringsAsFactors = FALSE)
+  if ("SMILES" %in% names(cid_cache_df)) new_entry$SMILES <- smiles
+
+  cid_cache_df <- rbind(cid_cache_df, new_entry)
+  return(list(CID = new_entry$CID, cache = cid_cache_df))
 }

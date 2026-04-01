@@ -12,20 +12,7 @@ append_propagated_annotations(
   abs_tol = 0.01
 )
 }
-\arguments{
-\item{full.annotation.data}{The original full annotation data frame. Must contain 'feature.ID' and 'mz'.}
-
-\item{propagated_df}{The data frame of newly propagated annotations. Must contain 'feature.ID' (the target) and 'Propagated.Feature.ID' (the source/parent feature ID).}
-
-\item{mod_db}{The modification dataframe (defaults to the modification_db defined above).}
-
-\item{ppm_tol}{The mass tolerance in ppm (default 10).}
-
-\item{abs_tol}{The absolute mass tolerance in Daltons (default 0.01).}
-}
-\value{
-A single data frame with the propagated annotations appended and specific modifications named.
-}
 \description{
-Merges propagated annotations into the main annotation data frame, calculates mass differences to identify specific modifications, and updates compound names.
+Merges propagated annotations into the main annotation data frame,
+calculates mass differences to identify specific modifications, and updates compound names.
 }
