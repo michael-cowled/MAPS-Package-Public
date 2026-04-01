@@ -1,8 +1,21 @@
 #' Standardise Compound Annotations
 #'
 #' Prioritises a fully vectorized cache lookup before falling back to individual
-#' PubChem API lookups and local DB property retrieval.
+#' PubChem API lookups and local DB property retrieval. Gracefully handles
+#' missing CID columns in the input data.
 #'
+#' @param data A data frame containing compound annotations.
+#' @param name_col Name of the column in `data` containing compound names.
+#' @param smiles_col Name of the column in `data` containing SMILES strings.
+#' @param cid_cache_df A data frame to use as a cache for CID lookups.
+#' @param lipids.file A data frame to use to lookup lipid names for CID lookups.
+#' @param cid_database_path Path to the local "SQLite database" file.
+#' @param standardisation Logical; whether to run the standardisation passes.
+#' @param cache.location Path to save the updated cache.
+#' @param enable_local_db Logical; if TRUE, executes Pass 2 (SQLite DB lookup).
+#' @param enable_api Logical; if TRUE, allows API calls in Pass 1 and executes Pass 3.
+#'
+#' #' @return A list with two elements: `data` (the updated data frame) and `cache` (the updated CID cache).
 #' @export
 standardise_annotation <- function(data,
                                    name_col = "compound_name",
@@ -26,14 +39,23 @@ standardise_annotation <- function(data,
     enable_local_db <- FALSE
   }
 
-  # --- Initialise ---
+  # --- Initialise and filter ---
   data <- data[!grepl("candidate", data[[name_col]], ignore.case = TRUE), ]
   if (nrow(data) == 0) return(list(data = data, cache = cid_cache_df))
 
   data[[name_col]] <- as.character(data[[name_col]])
   data[[smiles_col]] <- as.character(data[[smiles_col]])
 
-  if (!"CID" %in% names(data)) data$CID <- NA_real_
+  # 1. FORCE INPUT DATA CID TO NUMERIC
+  if (!"CID" %in% names(data)) {
+    data$CID <- NA_real_
+  } else {
+    data$CID <- suppressWarnings(as.numeric(data$CID))
+  }
+
+  # 2. FORCE CACHE CID TO NUMERIC (This prevents the coalesce double/character error)
+  cid_cache_df$CID <- suppressWarnings(as.numeric(cid_cache_df$CID))
+
   data$Formula <- NA_character_
   data$IUPAC <- NA_character_
   data$Monoisotopic.Mass <- NA_real_
@@ -45,11 +67,10 @@ standardise_annotation <- function(data,
     # BULK CACHE LOOKUP (Lightning Fast Vectorized Joins)
     # ======================================================================
     message("Performing bulk cache lookups...")
-    initial_nas <- sum(is.na(data$CID))
+    initial_nas <- sum(is.na(data$CID) | data$CID == "")
 
     # 1. Match by Name
     cache_by_name <- cid_cache_df[!is.na(cid_cache_df$LookupName), c("LookupName", "CID")]
-    # Ensure distinct names in cache to avoid row duplication in join
     cache_by_name <- cache_by_name[!duplicated(cache_by_name$LookupName), ]
 
     data <- data %>%
@@ -68,7 +89,8 @@ standardise_annotation <- function(data,
         dplyr::select(-CID.x, -CID.y)
     }
 
-    resolved_from_cache <- initial_nas - sum(is.na(data$CID))
+    current_nas <- sum(is.na(data$CID) | data$CID == "")
+    resolved_from_cache <- initial_nas - current_nas
     message(sprintf("[CACHE HIT] Bulk resolved %d CIDs directly from cache.", resolved_from_cache))
 
     # ======================================================================
@@ -77,7 +99,7 @@ standardise_annotation <- function(data,
     missing_idx <- which(is.na(data$CID) | data$CID == "")
 
     if (length(missing_idx) > 0) {
-      message(sprintf("Processing %d unresolved compounds...", length(missing_idx)))
+      message(sprintf("Processing %d unresolved compounds via fallbacks...", length(missing_idx)))
       pb <- utils::txtProgressBar(min = 0, max = length(missing_idx), style = 3)
 
       for (idx in seq_along(missing_idx)) {
@@ -90,7 +112,7 @@ standardise_annotation <- function(data,
           next
         }
 
-        # Call helper function (it handles lipids.file and API checks)
+        # Uses the fast base-R helper we optimized previously
         pubchem_result <- get_cid_only_with_fallbacks(name, smiles, cid_cache_df, lipids.file, offline = !enable_api)
         data$CID[i] <- pubchem_result$CID
         cid_cache_df <- pubchem_result$cache
@@ -99,7 +121,7 @@ standardise_annotation <- function(data,
       }
       close(pb)
 
-      # Save cache ONCE at the end
+      # Save cache ONCE at the end of the fallback loop
       tryCatch({
         readr::write_csv(cid_cache_df, cache.location)
         message("Cache updated and saved successfully.")
@@ -107,7 +129,7 @@ standardise_annotation <- function(data,
         warning("Failed to save cache: ", e$message, call. = FALSE)
       })
     } else {
-      message("All compounds resolved from cache. Skipping API loop.")
+      message("All compounds resolved from cache. Skipping fallback loop.")
     }
 
     # ======================================================================
