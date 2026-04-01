@@ -9,11 +9,9 @@ process_and_append_sample_data(sample.data, propagated.annotation.data)
 \arguments{
 \item{sample.data}{A data frame containing sample information, including peak areas.}
 
-\item{propagated.annotation.data}{A data frame of existing annotations to which the sample data will be appended.}
-}
-\value{
-A list containing two data frames: \code{combined_data} (the merged annotation and sample data) and \code{sample.data2} (the processed sample data before presence/absence conversion).
+\item{propagated.annotation.data}{A data frame of existing annotations.}
 }
 \description{
-Cleans and processes sample data to create a presence/absence list, then appends it to a main annotation data frame. Also returns the intermediate \code{sample.data2} data frame.
+Cleans and processes sample data to create a presence/absence list,
+then appends it to a main annotation data frame.
 }

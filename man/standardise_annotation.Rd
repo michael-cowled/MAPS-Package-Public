@@ -2,7 +2,7 @@
 % Please edit documentation in R/standardise_annotation.R
 \name{standardise_annotation}
 \alias{standardise_annotation}
-\title{Standardise Compound Annotations Using PubChem}
+\title{Standardise Compound Annotations}
 \usage{
 standardise_annotation(
   data,
@@ -11,31 +11,37 @@ standardise_annotation(
   cid_cache_df = NULL,
   lipids.file = NULL,
   cid_database_path = NULL,
-  standardisation = standardisation,
-  cache.location
+  standardisation = TRUE,
+  cache.location,
+  enable_local_db = TRUE,
+  enable_api = TRUE
 )
 }
 \arguments{
 \item{data}{A data frame containing compound annotations.}
 
-\item{name_col}{Name of the column in \code{data} containing compound names (as a string).}
+\item{name_col}{Name of the column in \code{data} containing compound names.}
 
-\item{smiles_col}{Name of the column in \code{data} containing SMILES strings (as a string).}
+\item{smiles_col}{Name of the column in \code{data} containing SMILES strings.}
 
-\item{cid_cache_df}{A data frame to use as a cache for PubChem CID lookups.}
+\item{cid_cache_df}{A data frame to use as a cache for CID lookups.}
 
-\item{lipids.file}{A data frame to use to lookup lipid names for PubChem CID lookups.}
+\item{lipids.file}{A data frame to use to lookup lipid names for CID lookups.}
 
-\item{cid_database_path}{Path to the "SQLite database" file.}
-}
-\value{
-A list with two elements: \code{data} (the updated data frame) and \code{cache} (the updated CID cache).
+\item{cid_database_path}{Path to the local "SQLite database" file.}
+
+\item{standardisation}{Logical; whether to run the standardisation passes.}
+
+\item{cache.location}{Path to save the updated cache.}
+
+\item{enable_local_db}{Logical; if TRUE, executes Pass 2 (SQLite DB lookup).}
+
+\item{enable_api}{Logical; if TRUE, allows API calls in Pass 1 and executes Pass 3.
+
+#' @return A list with two elements: \code{data} (the updated data frame) and \code{cache} (the updated CID cache).}
 }
 \description{
-For each row in a data frame, attempts to resolve compound CIDs using PubChem.
-Then, uses the resolved CIDs to retrieve and update compound name (with PubChem Title),
-SMILES, Formula, IUPAC, and Monoisotopic.Mass from a local SQLite database.
-Rows containing "candidate" (case-insensitive) in the name column are excluded.
-NOTE: The function is modified to proceed even if the local SQLite database is missing,
-by skipping the property retrieval step (Pass 2).
+Prioritises a fully vectorized cache lookup before falling back to individual
+PubChem API lookups and local DB property retrieval. Gracefully handles
+missing CID columns in the input data.
 }
