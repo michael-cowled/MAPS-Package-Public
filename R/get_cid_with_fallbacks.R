@@ -16,7 +16,9 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
   name_clean <- trimws(tolower(name))
   smiles_clean <- if(!is.na(smiles)) trimws(tolower(smiles)) else NA
 
+  # ======================================================================
   # --- 1. Fast Cache Check (Base R) ---
+  # ======================================================================
   cache_idx <- which((!is.na(cid_cache_df$LookupName) & cid_cache_df$LookupName == name) |
                        (!is.na(cid_cache_df$SMILES) & !is.na(smiles) & cid_cache_df$SMILES == smiles))
 
@@ -28,7 +30,18 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
     }
   }
 
-  # --- 1b. Fast LipidMaps Check ---
+  # ======================================================================
+  # --- 2. EARLY EXIT: Offline Check ---
+  # ======================================================================
+  # If offline is TRUE, we stop right here and skip LipidMaps and PubChem.
+  if (offline) {
+    message(paste0("  [OFFLINE] Not found in cache. Skipping LipidMaps & PubChem API for '", name, "'."))
+    return(list(CID = NA_real_, cache = cid_cache_df))
+  }
+
+  # ======================================================================
+  # --- 3. Fast LipidMaps Check ---
+  # ======================================================================
   if (!is.null(lipids.file) && nrow(lipids.file) > 0) {
     synonym_pattern <- paste0("(^|;\\s*)", stringr::str_escape(name_clean), "(\\s*;|$)")
 
@@ -72,13 +85,9 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
     }
   }
 
-  # --- 2. Offline Check ---
-  if (offline) {
-    message(paste0("  [OFFLINE] Skipping PubChem API for '", name, "'."))
-    return(list(CID = NA_real_, cache = cid_cache_df))
-  }
-
-  # --- 3. PubChem API ---
+  # ======================================================================
+  # --- 4. PubChem API ---
+  # ======================================================================
   resolved_cid <- get_pubchem_lite(name, "name")
 
   if (is.na(resolved_cid) && !is.na(smiles_clean) && smiles_clean != "" && smiles_clean != "N/A") {
@@ -91,7 +100,9 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
     resolved_cid <- get_pubchem_lite(name, "synonym")
   }
 
-  # --- 4. Update cache ---
+  # ======================================================================
+  # --- 5. Update cache ---
+  # ======================================================================
   if (!is.na(resolved_cid)) {
     message(paste0("  [PUBCHEM] Found CID for '", name, "': ", resolved_cid))
     new_cid <- resolved_cid
