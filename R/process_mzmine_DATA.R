@@ -26,8 +26,8 @@ process_mzmine_data <- function(mzmine.annotations, gnps.prob,
                                 lipids.file.path = lipids.location,
                                 cid.database.path = NULL,
                                 standardisation,
-                                enable_local_db = TRUE,
-                                enable_api = TRUE) {
+                                enable_local_db = enable_local_db,
+                                enable_api = enable_api) {
 
   # The code from your original function, with explicit package calls
   mzmine.annotations <- read_checked_csv(mzmine.annotations)
@@ -87,8 +87,8 @@ process_mzmine_data <- function(mzmine.annotations, gnps.prob,
     cid_database_path = cid.database.path,
     standardisation = standardisation,
     cache.location = cid.cache.path,
-    enable_local_db = TRUE,
-    enable_api = TRUE
+    enable_local_db = enable_local_db,
+    enable_api = enable_api
   )
 
   mzmine.annotations <- result$data

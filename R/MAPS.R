@@ -35,8 +35,8 @@ MAPS <- function(
     msnovelist,
     modification_db,
     updateProgress = NULL,
-    enable_local_db = TRUE,
-    enable_api = TRUE
+    enable_local_db = enable_local_db,
+    enable_api = enable_api
 ) {
 
   # Helper function to safely call the progress update
@@ -88,8 +88,8 @@ MAPS <- function(
                                                       cid.cache.path = cache.location,
                                                       lipids.file.path = lipids.location,
                                                       standardisation = standardisation,
-                                                      enable_local_db = TRUE,
-                                                      enable_api = TRUE)
+                                                      enable_local_db = enable_local_db,
+                                                      enable_api = enable_api)
 
   mzmine.annotations.final <- processed_data$annotations.data
   cid_cache_df <- processed_data$cid.cache
@@ -107,8 +107,8 @@ MAPS <- function(
                                                                    cid_cache_df, lipids.file, gnps.prob,
                                                                    cid_database_path, standardisation,
                                                                    level = "1", type = "authentic standard",
-                                                                   cache.location, enable_local_db = TRUE,
-                                                                   enable_api = TRUE)
+                                                                   cache.location, enable_local_db = enable_local_db,
+                                                                   enable_api = enable_api)
       mzmine.annotations.final <- processed_data$annotations.data
       cid_cache_df <- processed_data$cid.cache
     }
@@ -122,8 +122,8 @@ MAPS <- function(
                                                                  cid_cache_df, lipids.file, gnps.prob,
                                                                  cid_database_path, standardisation,
                                                                  level = "2", type = "mzmine",
-                                                                 cache.location, enable_local_db = TRUE,
-                                                                 enable_api = TRUE)
+                                                                 cache.location, enable_local_db = enable_local_db,
+                                                                 enable_api = enable_api)
     mzmine.annotations.final <- processed_data$annotations.data
     cid_cache_df <- processed_data$cid.cache
   }
@@ -169,8 +169,8 @@ MAPS <- function(
       gnps_lv2_results <- MAPS.Package::standardise_and_compute_gnps(
         gnps.data.lv2.high.conf, cid_cache_df, lipids.file,
         cid_database_path, gnps.prob, standardisation, cache.location,
-        enable_local_db = TRUE,
-        enable_api = TRUE
+        enable_local_db = enable_local_db,
+        enable_api = enable_api
       )
 
       gnps.data.lv2.high.conf <- gnps_lv2_results$data
@@ -216,8 +216,8 @@ MAPS <- function(
     ms2query.prob = ms2query.prob,
     standardisation = standardisation,
     cache.location,
-    enable_local_db = TRUE,
-    enable_api = TRUE
+    enable_local_db = enable_local_db,
+    enable_api = enable_api
   )
 
   lv2.annotations <- lv2_processed_results$data
@@ -276,8 +276,8 @@ MAPS <- function(
     standardise_annotation = MAPS.Package::standardise_annotation,
     standardisation = standardisation,
     cache.location,
-    enable_local_db = TRUE,
-    enable_api = TRUE
+    enable_local_db = enable_local_db,
+    enable_api = enable_api
   )
 
   # Update annotations and cache before MSNovelist

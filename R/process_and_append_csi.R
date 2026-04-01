@@ -25,8 +25,8 @@ process_and_append_csi <- function(
     standardise_annotation,
     standardisation,
     cache.location,
-    enable_local_db = TRUE,
-    enable_api = TRUE
+    enable_local_db = enable_local_db,
+    enable_api = enable_api
 ) {
   # Data Cleaning and Initial Processing
   # 1. Load the data
@@ -80,8 +80,8 @@ process_and_append_csi <- function(
     cid_database_path = cid_database_path,
     standardisation = standardisation,
     cache.location,
-    enable_local_db = TRUE,
-    enable_api = TRUE
+    enable_local_db = enable_local_db,
+    enable_api = enable_api
   )
 
   csi.data <- result$data
