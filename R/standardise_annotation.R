@@ -53,7 +53,7 @@ standardise_annotation <- function(data,
     data$CID <- suppressWarnings(as.numeric(data$CID))
   }
 
-  # 2. FORCE CACHE CID TO NUMERIC (This prevents the coalesce double/character error)
+  # 2. FORCE CACHE CID TO NUMERIC (Prevents coalesce double/character errors)
   cid_cache_df$CID <- suppressWarnings(as.numeric(cid_cache_df$CID))
 
   data$Formula <- NA_character_
@@ -64,7 +64,7 @@ standardise_annotation <- function(data,
     message("--- PASS 1: Resolving CIDs ---")
 
     # ======================================================================
-    # BULK CACHE LOOKUP (Lightning Fast Vectorized Joins)
+    # BULK CACHE LOOKUP
     # ======================================================================
     message("Performing bulk cache lookups...")
     initial_nas <- sum(is.na(data$CID) | data$CID == "")
@@ -94,7 +94,7 @@ standardise_annotation <- function(data,
     message(sprintf("[CACHE HIT] Bulk resolved %d CIDs directly from cache.", resolved_from_cache))
 
     # ======================================================================
-    # LOOP FOR MISSING ITEMS ONLY (API & Fallbacks)
+    # LOOP FOR MISSING ITEMS ONLY
     # ======================================================================
     missing_idx <- which(is.na(data$CID) | data$CID == "")
 
@@ -107,7 +107,6 @@ standardise_annotation <- function(data,
         name <- data[[name_col]][i]
         smiles <- data[[smiles_col]][i]
 
-        # Only skip if BOTH name and smiles are completely missing
         name_missing <- is.na(name) || !nzchar(name)
         smiles_missing <- is.na(smiles) || !nzchar(smiles)
 
@@ -116,7 +115,6 @@ standardise_annotation <- function(data,
           next
         }
 
-        # Uses the fast base-R helper we optimized previously
         pubchem_result <- get_cid_only_with_fallbacks(name, smiles, cid_cache_df, lipids.file, offline = !enable_api)
         data$CID[i] <- pubchem_result$CID
         cid_cache_df <- pubchem_result$cache
@@ -125,7 +123,6 @@ standardise_annotation <- function(data,
       }
       close(pb)
 
-      # Save cache ONCE at the end of the fallback loop
       tryCatch({
         readr::write_csv(cid_cache_df, cache.location)
         message("Cache updated and saved successfully.")
@@ -137,7 +134,7 @@ standardise_annotation <- function(data,
     }
 
     # ======================================================================
-    # --- PASS 2: Local DB (Optional) ---
+    # --- PASS 2: Local DB ---
     # ======================================================================
     if (enable_local_db) {
       message("\n--- PASS 2: Retrieving Properties from Local DB ---")
@@ -152,10 +149,13 @@ standardise_annotation <- function(data,
 
         if (!is.null(db_props) && nrow(db_props) > 0) {
           if ("CID" %in% colnames(db_props)) db_props$CID <- as.numeric(db_props$CID)
+
+          # We create DB_Preferred_Name to lock the DB matches and protect them from Pass 3
           data <- data %>%
             dplyr::left_join(db_props, by = "CID") %>%
             dplyr::mutate(
-              !!rlang::sym(name_col) := dplyr::coalesce(Title, IUPAC_db, !!rlang::sym(name_col)),
+              DB_Preferred_Name = dplyr::coalesce(Title, IUPAC_db),
+              !!rlang::sym(name_col) := dplyr::coalesce(DB_Preferred_Name, !!rlang::sym(name_col)),
               !!rlang::sym(smiles_col) := dplyr::coalesce(SMILES, !!rlang::sym(smiles_col)),
               Formula = dplyr::coalesce(Formula_db, Formula),
               IUPAC = dplyr::coalesce(IUPAC_db, IUPAC),
@@ -168,13 +168,37 @@ standardise_annotation <- function(data,
     }
 
     # ======================================================================
-    # --- PASS 3: API Enrichment (Optional) ---
+    # --- PASS 3: API Enrichment ---
     # ======================================================================
     if (enable_api) {
       message("\n--- PASS 3: PubChem API Lookup ---")
       if (requireNamespace("jsonlite", quietly = TRUE)) {
-        data <- update_compound_names(data, name_col = name_col, cid_col = "CID")
+
+        # Isolate ONLY the rows that have a CID, but were NOT found in the local DB
+        if ("DB_Preferred_Name" %in% names(data)) {
+          api_idx <- which(!is.na(data$CID) & data$CID > 0 & is.na(data$DB_Preferred_Name))
+        } else {
+          api_idx <- which(!is.na(data$CID) & data$CID > 0)
+        }
+
+        if (length(api_idx) > 0) {
+          message(sprintf("Sending %d unresolved rows to PubChem API for name enrichment...", length(api_idx)))
+
+          # Subset, run API, and perfectly overwrite the specific rows
+          data_for_api <- data[api_idx, ]
+          data_for_api <- update_compound_names(data_for_api, name_col = name_col, cid_col = "CID")
+          data[api_idx, ] <- data_for_api
+
+          message("PubChem API enrichment complete.")
+        } else {
+          message("All valid CIDs successfully mapped to names locally. Skipping API enrichment.")
+        }
       }
+    }
+
+    # Clean up the DB Lock column before returning
+    if ("DB_Preferred_Name" %in% names(data)) {
+      data$DB_Preferred_Name <- NULL
     }
   }
   return(list(data = data, cache = cid_cache_df))
