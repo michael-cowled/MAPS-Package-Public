@@ -107,7 +107,11 @@ standardise_annotation <- function(data,
         name <- data[[name_col]][i]
         smiles <- data[[smiles_col]][i]
 
-        if (is.na(name) || !nzchar(name)) {
+        # Only skip if BOTH name and smiles are completely missing
+        name_missing <- is.na(name) || !nzchar(name)
+        smiles_missing <- is.na(smiles) || !nzchar(smiles)
+
+        if (name_missing && smiles_missing) {
           utils::setTxtProgressBar(pb, idx)
           next
         }
