@@ -17,40 +17,55 @@ get_cid_only_with_fallbacks <- function(name, smiles = NA, cid_cache_df, lipids.
   smiles_clean <- if(!is.na(smiles)) trimws(tolower(smiles)) else NA
 
   # --- 1. Fast Cache Check (Base R) ---
-  # Only grab the first matching row to mimic slice(1)
   cache_idx <- which((!is.na(cid_cache_df$LookupName) & cid_cache_df$LookupName == name) |
                        (!is.na(cid_cache_df$SMILES) & !is.na(smiles) & cid_cache_df$SMILES == smiles))
 
   if (length(cache_idx) > 0) {
     match_row <- cid_cache_df[cache_idx[1], ]
     if (!is.na(match_row$CID)) {
-      # message(paste0("  [CACHE HIT] CID found for '", name, "' (CID: ", match_row$CID, ")"))
       return(list(CID = match_row$CID, cache = cid_cache_df))
     }
   }
 
   # --- 1b. Fast LipidMaps Check ---
   if (!is.null(lipids.file) && nrow(lipids.file) > 0) {
-    # Using vectorized grepl instead of rowwise() + str_split()
     synonym_pattern <- paste0("(^|;\\s*)", stringr::str_escape(name_clean), "(\\s*;|$)")
 
+    # Safely extract columns, ignoring them if they are missing from the file
+    lipid_names <- if ("Name" %in% names(lipids.file)) tolower(trimws(lipids.file$Name)) else NA
+    lipid_sys <- if ("Systematic.Name" %in% names(lipids.file)) tolower(trimws(lipids.file$Systematic.Name)) else NA
+    lipid_abb <- if ("Abbreviation" %in% names(lipids.file)) tolower(trimws(lipids.file$Abbreviation)) else NA
+    lipid_syn <- if ("Synonyms" %in% names(lipids.file)) lipids.file$Synonyms else NA
+    lipid_smiles <- if ("smiles" %in% names(lipids.file)) tolower(trimws(lipids.file$smiles)) else NA
+
     lipid_idx <- which(
-      tolower(trimws(lipids.file$Name)) == name_clean |
-        tolower(trimws(lipids.file$Systematic.Name)) == name_clean |
-        tolower(trimws(lipids.file$Abbreviation)) == name_clean |
-        (!is.na(lipids.file$Synonyms) & grepl(synonym_pattern, tolower(lipids.file$Synonyms))) |
-        (!is.na(smiles_clean) & !is.na(lipids.file$smiles) & tolower(trimws(lipids.file$smiles)) == smiles_clean)
+      (!is.na(lipid_names) & lipid_names == name_clean) |
+        (!is.na(lipid_sys) & lipid_sys == name_clean) |
+        (!is.na(lipid_abb) & lipid_abb == name_clean) |
+        (!is.na(lipid_syn) & grepl(synonym_pattern, tolower(lipid_syn))) |
+        (!is.na(smiles_clean) & !is.na(lipid_smiles) & lipid_smiles == smiles_clean)
     )
 
     if (length(lipid_idx) > 0) {
       lipid_match <- lipids.file[lipid_idx[1], ]
-      # message(paste0("  [LIPID DB] Found CID for '", name, "' (CID: ", lipid_match$CID_numeric, ")"))
 
-      new_entry <- data.frame(LookupName = name, CID = lipid_match$CID_numeric, stringsAsFactors = FALSE)
-      if ("SMILES" %in% names(cid_cache_df)) new_entry$SMILES <- smiles # keep schema aligned
+      # BULLETPROOF CID EXTRACTION
+      # Try CID_numeric first, fallback to standard CID, otherwise NA
+      match_cid <- if ("CID_numeric" %in% names(lipid_match)) {
+        lipid_match$CID_numeric
+      } else if ("CID" %in% names(lipid_match)) {
+        suppressWarnings(as.numeric(lipid_match$CID))
+      } else {
+        NA_real_
+      }
 
-      cid_cache_df <- rbind(cid_cache_df, new_entry)
-      return(list(CID = lipid_match$CID_numeric, cache = cid_cache_df))
+      if (!is.na(match_cid) && match_cid > 0) {
+        new_entry <- data.frame(LookupName = name, CID = match_cid, stringsAsFactors = FALSE)
+        if ("SMILES" %in% names(cid_cache_df)) new_entry$SMILES <- smiles
+
+        cid_cache_df <- rbind(cid_cache_df, new_entry)
+        return(list(CID = match_cid, cache = cid_cache_df))
+      }
     }
   }
 
