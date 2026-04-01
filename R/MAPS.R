@@ -135,6 +135,7 @@ MAPS <- function(
   if (!("spectral_db_matches.compound_name" %in% names(mzmine.data))) {
     mzmine.data$spectral_db_matches.compound_name <- NA
   }
+
   if (!("ion_identities.iin_id" %in% names(mzmine.data))) {
     mzmine.data$ion_identities.iin_id <- NA
   }
@@ -305,9 +306,9 @@ MAPS <- function(
   ms2query.new <- ms2query.data.lv3[ms2query.data.lv3$feature.ID %in% unique_ids, ]
 
   if (nrow(ms2query.new) > 0) {
-
+    message("Processing MS2Query analogues")
     # 1. Format the new MS2Query hits and map modifications
-    ms2query.new <- MAPS.Package::append_ms2query_analogues(
+    analogue_results <- MAPS.Package::append_ms2query_analogues(
       ms2query_data = ms2query.new,
       existing_annotations = lv1.lv2.lv3.annotations,
       mod_db = modification_db,
@@ -321,6 +322,10 @@ MAPS <- function(
       enable_local_db = enable_local_db
     )
 
+    # --- EXTRACT THE RESULTS ---
+    ms2query.new <- analogue_results$annotations
+    cid_cache_df <- analogue_results$cache # Keep the master cache updated!
+
     # 2. Run the clean merge with only the new data
     lv1.lv2.lv3.annotations <- MAPS.Package::merge_and_append_data(
       new_data = ms2query.new,
@@ -330,11 +335,12 @@ MAPS <- function(
 
   # --- MSNovelist Integration (De Novo Structures) ---
   if (msnovelist == TRUE) {
+    message("Processing MSNovelist annotations")
     prog("7/12: Integrating MSNovelist de novo annotations", 0.65)
     msn_results <- MAPS.Package::process_and_append_msnovelist(
       msn.data = msn.data,
       existing_annotations = lv1.lv2.lv3.annotations,
-      cid_cache_df = cid_cache_df,
+      cid_cache_df = cid_cache_df, # This now benefits from the MS2Query cache updates!
       lipids.file = lipids.file,
       cid_database_path = cid_database_path,
       compute_id_prob = MAPS.Package::compute_id_prob,
@@ -344,8 +350,9 @@ MAPS <- function(
       enable_local_db = enable_local_db
     )
 
-    # Final Update
+    # --- EXTRACT THE RESULTS ---
     lv1.lv2.lv3.annotations <- msn_results$annotations
+    cid_cache_df <- msn_results$cache # Keep the master cache updated!
   }
 
   lv1.lv2.lv3.annotations$mz.diff.ppm <- as.numeric(lv1.lv2.lv3.annotations$mz.diff.ppm)
