@@ -1,21 +1,8 @@
-#' Standardise Compound Annotations (Multi-Scenario)
+#' Standardise Compound Annotations
 #'
-#' For each row in a data frame, attempts to resolve compound CIDs.
-#' Features explicit toggles for local SQLite database lookups (Pass 2)
-#' and live PubChem API enrichment (Pass 3) to support various network scenarios.
+#' Prioritises a fully vectorized cache lookup before falling back to individual
+#' PubChem API lookups and local DB property retrieval.
 #'
-#' @param data A data frame containing compound annotations.
-#' @param name_col Name of the column in `data` containing compound names.
-#' @param smiles_col Name of the column in `data` containing SMILES strings.
-#' @param cid_cache_df A data frame to use as a cache for CID lookups.
-#' @param lipids.file A data frame to use to lookup lipid names for CID lookups.
-#' @param cid_database_path Path to the local "SQLite database" file.
-#' @param standardisation Logical; whether to run the standardisation passes.
-#' @param cache.location Path to save the updated cache.
-#' @param enable_local_db Logical; if TRUE, executes Pass 2 (SQLite DB lookup).
-#' @param enable_api Logical; if TRUE, allows API calls in Pass 1 and executes Pass 3.
-#'
-#' @return A list with two elements: `data` (the updated data frame) and `cache` (the updated CID cache).
 #' @export
 standardise_annotation <- function(data,
                                    name_col = "compound_name",
@@ -34,15 +21,12 @@ standardise_annotation <- function(data,
   if (!(smiles_col %in% names(data))) stop("Missing column: ", smiles_col)
   if (nrow(data) == 0) return(list(data = data, cache = cid_cache_df))
 
-  # Verify local DB status if requested
-  if (enable_local_db) {
-    if (is.null(cid_database_path) || !file.exists(cid_database_path)) {
-      warning("Local PubChem database is missing or path is invalid. Forcing enable_local_db = FALSE.")
-      enable_local_db <- FALSE
-    }
+  if (enable_local_db && (is.null(cid_database_path) || !file.exists(cid_database_path))) {
+    warning("Local PubChem database is missing or path is invalid. Forcing enable_local_db = FALSE.")
+    enable_local_db <- FALSE
   }
 
-  # --- Filter and Initialise ---
+  # --- Initialise ---
   data <- data[!grepl("candidate", data[[name_col]], ignore.case = TRUE), ]
   if (nrow(data) == 0) return(list(data = data, cache = cid_cache_df))
 
@@ -54,79 +38,94 @@ standardise_annotation <- function(data,
   data$IUPAC <- NA_character_
   data$Monoisotopic.Mass <- NA_real_
 
-  # --- DB Connection (Conditional) ---
-  if (enable_local_db) {
-    message("[DB CONNECT] Connecting to local CID SQLite DB...")
-    db_con <- DBI::dbConnect(RSQLite::SQLite(), cid_database_path)
-    on.exit({
-      if (DBI::dbIsValid(db_con)) {
-        DBI::dbDisconnect(db_con)
-        message("[DB DISCONNECT] Closed DB connection.")
-      }
-    }, add = TRUE)
-  }
-
   if (standardisation) {
-    # ======================================================================
-    # --- PASS 1: Resolve CIDs ---
-    # ======================================================================
     message("--- PASS 1: Resolving CIDs ---")
-    pb <- utils::txtProgressBar(min = 0, max = nrow(data), style = 3)
 
-    for (i in seq_len(nrow(data))) {
-      name <- data[[name_col]][i]
-      smiles <- data[[smiles_col]][i]
+    # ======================================================================
+    # BULK CACHE LOOKUP (Lightning Fast Vectorized Joins)
+    # ======================================================================
+    message("Performing bulk cache lookups...")
+    initial_nas <- sum(is.na(data$CID))
 
-      if (!is.na(data$CID[i]) && data$CID[i] != "") {
-        utils::setTxtProgressBar(pb, i)
-        next
+    # 1. Match by Name
+    cache_by_name <- cid_cache_df[!is.na(cid_cache_df$LookupName), c("LookupName", "CID")]
+    # Ensure distinct names in cache to avoid row duplication in join
+    cache_by_name <- cache_by_name[!duplicated(cache_by_name$LookupName), ]
+
+    data <- data %>%
+      dplyr::left_join(cache_by_name, by = stats::setNames("LookupName", name_col)) %>%
+      dplyr::mutate(CID = dplyr::coalesce(CID.x, CID.y)) %>%
+      dplyr::select(-CID.x, -CID.y)
+
+    # 2. Match by SMILES (for remaining NAs)
+    if ("SMILES" %in% names(cid_cache_df)) {
+      cache_by_smiles <- cid_cache_df[!is.na(cid_cache_df$SMILES) & cid_cache_df$SMILES != "", c("SMILES", "CID")]
+      cache_by_smiles <- cache_by_smiles[!duplicated(cache_by_smiles$SMILES), ]
+
+      data <- data %>%
+        dplyr::left_join(cache_by_smiles, by = stats::setNames("SMILES", smiles_col)) %>%
+        dplyr::mutate(CID = dplyr::coalesce(CID.x, CID.y)) %>%
+        dplyr::select(-CID.x, -CID.y)
+    }
+
+    resolved_from_cache <- initial_nas - sum(is.na(data$CID))
+    message(sprintf("[CACHE HIT] Bulk resolved %d CIDs directly from cache.", resolved_from_cache))
+
+    # ======================================================================
+    # LOOP FOR MISSING ITEMS ONLY (API & Fallbacks)
+    # ======================================================================
+    missing_idx <- which(is.na(data$CID) | data$CID == "")
+
+    if (length(missing_idx) > 0) {
+      message(sprintf("Processing %d unresolved compounds...", length(missing_idx)))
+      pb <- utils::txtProgressBar(min = 0, max = length(missing_idx), style = 3)
+
+      for (idx in seq_along(missing_idx)) {
+        i <- missing_idx[idx]
+        name <- data[[name_col]][i]
+        smiles <- data[[smiles_col]][i]
+
+        if (is.na(name) || !nzchar(name)) {
+          utils::setTxtProgressBar(pb, idx)
+          next
+        }
+
+        # Call helper function (it handles lipids.file and API checks)
+        pubchem_result <- get_cid_only_with_fallbacks(name, smiles, cid_cache_df, lipids.file, offline = !enable_api)
+        data$CID[i] <- pubchem_result$CID
+        cid_cache_df <- pubchem_result$cache
+
+        utils::setTxtProgressBar(pb, idx)
       }
-      if (is.na(name) || !nzchar(name)) {
-        utils::setTxtProgressBar(pb, i)
-        next
-      }
+      close(pb)
 
-      # If enable_api is FALSE, we enforce offline mode in the helper function
-      pubchem_result <- get_cid_only_with_fallbacks(name, smiles, cid_cache_df, lipids.file, offline = !enable_api)
-      data$CID[i] <- pubchem_result$CID
-      cid_cache_df <- pubchem_result$cache
-
+      # Save cache ONCE at the end
       tryCatch({
         readr::write_csv(cid_cache_df, cache.location)
+        message("Cache updated and saved successfully.")
       }, error = function(e) {
         warning("Failed to save cache: ", e$message, call. = FALSE)
       })
-
-      utils::setTxtProgressBar(pb, i)
+    } else {
+      message("All compounds resolved from cache. Skipping API loop.")
     }
-    close(pb)
 
     # ======================================================================
-    # --- PASS 2: Retrieve Properties from Local DB ---
+    # --- PASS 2: Local DB (Optional) ---
     # ======================================================================
     if (enable_local_db) {
       message("\n--- PASS 2: Retrieving Properties from Local DB ---")
+      db_con <- DBI::dbConnect(RSQLite::SQLite(), cid_database_path)
       cids_to_lookup <- unique(data$CID[!is.na(data$CID) & data$CID > 0])
 
       if (length(cids_to_lookup) > 0) {
         cid_str <- paste(cids_to_lookup, collapse = ", ")
-        query <- sprintf("SELECT CID, Title, SMILES,
-                                 Formula AS Formula_db, IUPAC AS IUPAC_db,
-                                 `Monoisotopic.Mass` AS Monoisotopic_Mass_db
-                          FROM pubchem_data WHERE CID IN (%s) GROUP BY CID", cid_str)
+        query <- sprintf("SELECT CID, Title, SMILES, Formula AS Formula_db, IUPAC AS IUPAC_db, `Monoisotopic.Mass` AS Monoisotopic_Mass_db FROM pubchem_data WHERE CID IN (%s) GROUP BY CID", cid_str)
 
-        db_props <- tryCatch(
-          DBI::dbGetQuery(db_con, query),
-          error = function(e) {
-            stop(sprintf("\n[FATAL DB ERROR] %s\nPlease check your connection to: %s", e$message, cid_database_path), call. = FALSE)
-          }
-        )
+        db_props <- tryCatch(DBI::dbGetQuery(db_con, query), error = function(e) stop(e$message, call. = FALSE))
 
         if (!is.null(db_props) && nrow(db_props) > 0) {
           if ("CID" %in% colnames(db_props)) db_props$CID <- as.numeric(db_props$CID)
-
-          message("[DB LOOKUP] Retrieved ", nrow(db_props), " rows")
-
           data <- data %>%
             dplyr::left_join(db_props, by = "CID") %>%
             dplyr::mutate(
@@ -137,33 +136,20 @@ standardise_annotation <- function(data,
               Monoisotopic.Mass = dplyr::coalesce(Monoisotopic_Mass_db, Monoisotopic.Mass)
             ) %>%
             dplyr::select(-Title, -SMILES, -Formula_db, -IUPAC_db, -Monoisotopic_Mass_db)
-        } else {
-          message("[DB LOOKUP] No rows returned.")
         }
       }
-    } else {
-      message("\n--- PASS 2 SKIPPED: Local DB disabled. ---")
+      DBI::dbDisconnect(db_con)
     }
 
     # ======================================================================
-    # --- PASS 3: PubChem Lookup Integration (API) ---
+    # --- PASS 3: API Enrichment (Optional) ---
     # ======================================================================
     if (enable_api) {
       message("\n--- PASS 3: PubChem API Lookup ---")
-      if (!requireNamespace("jsonlite", quietly = TRUE)) {
-        warning("PubChem lookup is enabled, but 'jsonlite' is not installed. Skipping.")
-      } else {
-        message("Starting live PubChem lookup...")
+      if (requireNamespace("jsonlite", quietly = TRUE)) {
         data <- update_compound_names(data, name_col = name_col, cid_col = "CID")
-        message("PubChem name enrichment complete.")
       }
-    } else {
-      message("\n--- PASS 3 SKIPPED: API disabled (Offline Mode). ---")
     }
-
-  } else {
-    message("Skipping standardisation entirely.")
   }
-
   return(list(data = data, cache = cid_cache_df))
 }
