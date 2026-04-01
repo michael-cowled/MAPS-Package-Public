@@ -14,7 +14,9 @@ process_mzmine_sublevel_data(
   standardisation,
   level,
   type,
-  cache.location
+  cache.location,
+  enable_local_db = TRUE,
+  enable_api = TRUE
 )
 }
 \arguments{

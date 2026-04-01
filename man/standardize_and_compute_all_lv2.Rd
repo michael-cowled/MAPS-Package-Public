@@ -12,7 +12,9 @@ standardize_and_compute_all_lv2(
   cid_database.path,
   ms2query.prob,
   standardisation,
-  cache.location
+  cache.location,
+  enable_local_db = TRUE,
+  enable_api = TRUE
 )
 }
 \arguments{

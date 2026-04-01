@@ -23,7 +23,9 @@ standardize_and_compute_all_lv2 <- function(
     cid_database.path,
     ms2query.prob,
     standardisation,
-    cache.location) {
+    cache.location,
+    enable_local_db = TRUE,
+    enable_api = TRUE) {
 
   if ("confidence.score" %in% names(gnps.data.lv2.low.conf)) {
     gnps.data.lv2.low.conf$confidence.score <- suppressWarnings(as.numeric(gnps.data.lv2.low.conf$confidence.score))
@@ -56,7 +58,9 @@ standardize_and_compute_all_lv2 <- function(
     lipids.file = lipids.file,
     cid_database_path = cid_database.path,
     standardisation = standardisation,
-    cache.location
+    cache.location,
+    enable_local_db = TRUE,
+    enable_api = TRUE
   )
 
   lv2.annotations <- result$data

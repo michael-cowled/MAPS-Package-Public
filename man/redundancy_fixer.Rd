@@ -2,15 +2,7 @@
 % Please edit documentation in R/redundancy_fixer.R
 \name{redundancy_fixer}
 \alias{redundancy_fixer}
-\title{Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time#' Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time
-
-Flags potentially redundant entries in a dataset based on:
-\enumerate{
-\item CID
-\item Identical compound.name
-\item A combination of compound.name AND smiles
-Explicitly sorts by confidence to protect Level 1/2 annotations.
-}}
+\title{Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time}
 \usage{
 redundancy_fixer(dataset, rt_column = "rt", rt_tolerance = 1)
 }
@@ -25,13 +17,5 @@ redundancy_fixer(dataset, rt_column = "rt", rt_tolerance = 1)
 The original dataset with a new logical column \code{redundant}.
 }
 \description{
-Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time#' Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time
-
-Flags potentially redundant entries in a dataset based on:
-\enumerate{
-\item CID
-\item Identical compound.name
-\item A combination of compound.name AND smiles
-Explicitly sorts by confidence to protect Level 1/2 annotations.
-}
+Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time
 }

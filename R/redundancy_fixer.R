@@ -1,10 +1,4 @@
-#' @title Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time#' Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time
-#'
-#' Flags potentially redundant entries in a dataset based on:
-#' 1. CID
-#' 2. Identical compound.name
-#' 3. A combination of compound.name AND smiles
-#' Explicitly sorts by confidence to protect Level 1/2 annotations.
+#' @title Identify Redundant Features Based on 3-Tier Hierarchy and Retention Time
 #'
 #' @param dataset A data frame containing the data to process.
 #' @param rt_column Column name (as string) indicating retention time.

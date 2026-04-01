@@ -22,7 +22,9 @@ MAPS(
   lv2.mzmine,
   msnovelist,
   modification_db,
-  updateProgress = NULL
+  updateProgress = NULL,
+  enable_local_db = TRUE,
+  enable_api = TRUE
 )
 }
 \arguments{

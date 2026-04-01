@@ -11,7 +11,9 @@ standardise_and_compute_gnps(
   cid_database_path,
   gnps.prob,
   standardisation = standardisation,
-  cache.location
+  cache.location,
+  enable_local_db = TRUE,
+  enable_api = TRUE
 )
 }
 \arguments{

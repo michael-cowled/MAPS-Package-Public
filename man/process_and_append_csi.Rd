@@ -15,7 +15,9 @@ process_and_append_csi(
   deduplicate_data,
   standardise_annotation,
   standardisation,
-  cache.location
+  cache.location,
+  enable_local_db = TRUE,
+  enable_api = TRUE
 )
 }
 \arguments{
