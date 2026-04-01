@@ -327,7 +327,11 @@ MAPS <- function(
       cid_cache_df = cid_cache_df,
       lipids.file = lipids.file,
       cid_database_path = cid_database_path,
-      compute_id_prob = MAPS.Package::compute_id_prob
+      compute_id_prob = MAPS.Package::compute_id_prob,
+      standardise_annotation = MAPS.Package::standardise_annotation,
+      standardisation = standardisation,
+      cache.location = cache.location,
+      enable_local_db = enable_local_db
     )
 
     # Final Update
