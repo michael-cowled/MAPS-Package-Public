@@ -135,6 +135,9 @@ MAPS <- function(
   if (!("spectral_db_matches.compound_name" %in% names(mzmine.data))) {
     mzmine.data$spectral_db_matches.compound_name <- NA
   }
+  if (!("ion_identities.iin_id" %in% names(mzmine.data))) {
+    mzmine.data$ion_identities.iin_id <- NA
+  }
 
   sample.data <- mzmine.data # creating a copy for later
 
