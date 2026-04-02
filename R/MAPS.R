@@ -307,7 +307,9 @@ MAPS <- function(
 
   if (nrow(ms2query.new) > 0) {
     message("Processing MS2Query analogues")
+
     # 1. Format the new MS2Query hits and map modifications
+    # Save the output to a temporary variable (it contains the list!)
     analogue_results <- MAPS.Package::append_ms2query_analogues(
       ms2query_data = ms2query.new,
       existing_annotations = lv1.lv2.lv3.annotations,
@@ -322,11 +324,10 @@ MAPS <- function(
       enable_local_db = enable_local_db
     )
 
-    # --- EXTRACT THE RESULTS ---
     ms2query.new <- analogue_results$annotations
-    cid_cache_df <- analogue_results$cache # Keep the master cache updated!
+    cid_cache_df <- analogue_results$cache
 
-    # 2. Run the clean merge with only the new data
+    # 2. Run the clean merge with only the extracted data frame
     lv1.lv2.lv3.annotations <- MAPS.Package::merge_and_append_data(
       new_data = ms2query.new,
       existing_annotations = lv1.lv2.lv3.annotations
