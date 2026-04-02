@@ -94,6 +94,9 @@ write_final_files <- function(
   delete_if_exists(paste0(folder, "/", dataset.id, "-counts.csv"))
   delete_if_exists(paste0(folder, "/gnps/cytoscape-v2.csv"))
 
+  message("Waiting for filesystem to release file locks...")
+  Sys.sleep(3)
+
   # Step 4: Writing all files
   message("Writing new files...")
   if (Sys.getenv("USER_DOMAIN") == "unimelb") {
